@@ -22,6 +22,7 @@ import Reports from './pages/admin/Reports';
 import Filters from './pages/admin/Filters';
 import Brands from './pages/admin/Brands';
 import Locations from './pages/admin/Locations';
+import ModerationLogs from './pages/admin/ModerationLogs';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -103,6 +104,7 @@ function App() {
                 <Route path="/admin/brands" element={<AdminLayout><Brands /></AdminLayout>} />
                 <Route path="/admin/locations" element={<AdminLayout><Locations /></AdminLayout>} />
                 <Route path="/admin/reports" element={<AdminLayout><Reports /></AdminLayout>} />
+                <Route path="/admin/moderation-logs" element={<AdminLayout><ModerationLogs /></AdminLayout>} />
                 {/* Autres routes admin seront ajoutées ici */}
               </Routes>
             </Router>
