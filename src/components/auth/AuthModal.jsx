@@ -964,4 +964,3 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
   );
 };
 
-export default AuthModal;

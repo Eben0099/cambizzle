@@ -187,180 +187,188 @@ const Dashboard = () => {
 
   const stats = getStats();
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Tableau de Bord</h1>
-          <p className="text-muted-foreground mt-1">Vue d'ensemble de la plateforme Cambizzle</p>
-        </div>
-        <button 
-          onClick={fetchDashboardData}
-          className="px-3 py-2 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 flex items-center gap-2"
+return (
+  <div className="space-y-6">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-gray-600 mt-1 text-sm sm:text-base">Cambizzle platform overview</p>
+      </div>
+      <button 
+        onClick={fetchDashboardData}
+        className="bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] px-4 py-2 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2 whitespace-nowrap"
+        disabled={logsLoading}
+      >
+        <TrendingUp className="h-4 w-4" />
+        <span>Refresh Data</span>
+      </button>
+    </div>
+
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {stats.map((stat) => (
+        <div 
+          key={stat.title} 
+          className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 p-6"
         >
-          <TrendingUp className="h-4 w-4" />
-          Actualiser
-        </button>
-      </div>
+          <div className="flex flex-row items-center justify-between pb-3">
+            <h3 className="text-sm font-medium text-gray-600">
+              {stat.title}
+            </h3>
+            <stat.icon className={`h-5 w-5 ${stat.color}`} />
+          </div>
+          <div className="space-y-2">
+            <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
+            <div className="flex items-center gap-1">
+              <TrendingUp className="h-4 w-4 text-green-600" />
+              <p className="text-xs text-gray-600">{stat.change}</p>
+            </div>
+            {stat.subtitle && (
+              <p className="text-xs text-gray-500">{stat.subtitle}</p>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {stats.map((stat) => (
-          <Card key={stat.title} className="border-border hover:shadow-lg transition-all duration-200">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
-              </CardTitle>
-              <stat.icon className={`h-5 w-5 ${stat.color}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{stat.value}</div>
-              <div className="flex items-center gap-1 mt-1">
-                <TrendingUp className="h-4 w-4 text-green-600" />
-                <p className="text-xs text-muted-foreground">{stat.change}</p>
-              </div>
-              {stat.subtitle && (
-                <p className="text-xs text-muted-foreground mt-1">{stat.subtitle}</p>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="border-border">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-primary" />
-              Activité Récente
-            </CardTitle>
+    <div className="grid gap-6 lg:grid-cols-2">
+      {/* Recent Activity Card */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div className="p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
+            <div className="flex items-center gap-2 mb-2 sm:mb-0">
+              <Shield className="h-5 w-5 text-[#D6BA69]" />
+              <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
+            </div>
             <Link 
               to="/admin/moderation-logs" 
-              className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"
+              className="text-sm text-[#D6BA69] hover:text-[#D6BA69]/80 font-medium flex items-center gap-1 transition-colors"
             >
-              Voir tout
-              <ExternalLink className="h-3 w-3" />
+              View All
+              <ExternalLink className="h-4 w-4" />
             </Link>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {logsLoading ? (
-                <div className="flex items-center justify-center py-4">
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                </div>
-              ) : recentLogs && recentLogs.length > 0 ? (
-                recentLogs.map((log) => (
-                  <div key={log.id} className="flex items-start gap-3 pb-3 border-b last:border-0">
-                    <div className="mt-1">
-                      {getActionIcon(log.actionType)}
+          </div>
+          <div className="space-y-4">
+            {logsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-5 w-5 animate-spin text-gray-400 mr-2" />
+                <span className="text-sm text-gray-500">Loading activity...</span>
+              </div>
+            ) : recentLogs && recentLogs.length > 0 ? (
+              recentLogs.map((log) => (
+                <div key={log.id} className="flex items-start gap-3 pb-4 border-b border-gray-100 last:border-0">
+                  <div className="mt-1 flex-shrink-0">
+                    {getActionIcon(log.actionType)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start gap-2 mb-2">
+                      <Badge className={`${getActionColor(log.actionType)} text-xs px-2 py-1`}>
+                        {getActionLabel(log.actionType)}
+                      </Badge>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start gap-2 mb-1">
-                        <Badge className={`${getActionColor(log.actionType)} text-xs`}>
-                          {getActionLabel(log.actionType)}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        {log.targetType === 'ad' ? (
-                          <FileText className="h-3 w-3" />
-                        ) : (
-                          <User className="h-3 w-3" />
-                        )}
-                        <span>
-                          {log.targetType === 'ad' ? 'Annonce' : 'Utilisateur'} #{log.targetId}
-                        </span>
-                        <span>•</span>
-                        <span>{formatTimeAgo(log.createdAt)}</span>
-                      </div>
-                      {log.reason && (
-                        <p className="text-xs text-muted-foreground mt-1 truncate">
-                          {log.reason}
-                        </p>
+                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                      {log.targetType === 'ad' ? (
+                        <FileText className="h-4 w-4 text-gray-400" />
+                      ) : (
+                        <User className="h-4 w-4 text-gray-400" />
                       )}
+                      <span className="truncate">
+                        {log.targetType === 'ad' ? 'Ad' : 'User'} #{log.targetId}
+                      </span>
+                      <span className="text-gray-400 mx-1">•</span>
+                      <span>{formatTimeAgo(log.createdAt)}</span>
                     </div>
+                    {log.reason && (
+                      <p className="text-xs text-gray-500 truncate">{log.reason}</p>
+                    )}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p className="text-sm">No recent activity</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Stats & Top Categories Card */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div className="p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">Statistics & Top Categories</h3>
+          <div className="space-y-6">
+            {/* Ads Distribution */}
+            <div>
+              <h4 className="text-sm font-medium text-gray-900 mb-4">Ads Distribution</h4>
+              {dashboardData.ads.byStatus.map((statusData, i) => {
+                const percentage = Math.round((parseInt(statusData.count) / dashboardData.ads.total) * 100);
+                const getColor = (status) => {
+                  switch (status) {
+                    case 'approved': return 'bg-green-600';
+                    case 'pending': return 'bg-yellow-600';
+                    case 'rejected': return 'bg-red-600';
+                    default: return 'bg-gray-600';
+                  }
+                };
+                const getLabel = (status) => {
+                  switch (status) {
+                    case 'approved': return 'Approved';
+                    case 'pending': return 'Pending';
+                    case 'rejected': return 'Rejected';
+                    default: return status;
+                  }
+                };
+                
+                return (
+                  <div key={i} className="space-y-2 mb-4 last:mb-0">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">{getLabel(statusData.moderationStatus)}</span>
+                      <span className="font-medium text-gray-900">{percentage}% ({statusData.count})</span>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full ${getColor(statusData.moderationStatus)} rounded-full transition-all duration-300`} 
+                        style={{ width: `${percentage}%` }} 
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Top Categories */}
+            <div className="pt-4 border-t border-gray-200">
+              <h4 className="text-sm font-medium text-gray-900 mb-4">Top Categories</h4>
+              {dashboardData.topCategories && dashboardData.topCategories.length > 0 ? (
+                dashboardData.topCategories.map((category, i) => (
+                  <div key={i} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 w-2 rounded-full bg-[#D6BA69]" />
+                      <span className="text-sm text-gray-900 font-medium truncate">{category.name}</span>
+                    </div>
+                    <span className="text-xs text-gray-600">{category.adCount} ads</span>
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">Aucune activité récente</p>
+                <p className="text-sm text-gray-500 py-4">No data available</p>
               )}
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border">
-          <CardHeader>
-            <CardTitle>Statistiques & Top Catégories</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <h4 className="text-sm font-medium text-foreground mb-3">Répartition des Annonces</h4>
-                {dashboardData.ads.byStatus.map((statusData, i) => {
-                  const percentage = Math.round((parseInt(statusData.count) / dashboardData.ads.total) * 100);
-                  const getColor = (status) => {
-                    switch (status) {
-                      case 'approved': return 'bg-green-600';
-                      case 'pending': return 'bg-yellow-600';
-                      case 'rejected': return 'bg-red-600';
-                      default: return 'bg-gray-600';
-                    }
-                  };
-                  const getLabel = (status) => {
-                    switch (status) {
-                      case 'approved': return 'Approuvées';
-                      case 'pending': return 'En attente';
-                      case 'rejected': return 'Rejetées';
-                      default: return status;
-                    }
-                  };
-                  
-                  return (
-                    <div key={i} className="space-y-1 mb-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">{getLabel(statusData.moderationStatus)}</span>
-                        <span className="font-medium text-foreground">{percentage}% ({statusData.count})</span>
-                      </div>
-                      <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full ${getColor(statusData.moderationStatus)} rounded-full`} 
-                          style={{ width: `${percentage}%` }} 
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="pt-3 border-t">
-                <h4 className="text-sm font-medium text-foreground mb-3">Top Catégories</h4>
-                {dashboardData.topCategories && dashboardData.topCategories.length > 0 ? (
-                  dashboardData.topCategories.map((category, i) => (
-                    <div key={i} className="flex items-center justify-between py-2">
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-primary" />
-                        <span className="text-sm text-foreground">{category.name}</span>
-                      </div>
-                      <span className="text-xs text-muted-foreground">{category.adCount} annonces</span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">Aucune donnée disponible</p>
-                )}
-              </div>
-              
-              <div className="pt-3 border-t">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Activité cette semaine</span>
-                  <span className="font-medium text-foreground">
-                    {dashboardData.activity.ads7Days} annonces, {dashboardData.activity.users7Days} utilisateurs
-                  </span>
-                </div>
+            
+            {/* Weekly Activity */}
+            <div className="pt-4 border-t border-gray-200">
+              <div className="flex items-center justify-between text-sm py-2">
+                <span className="text-gray-600">This Week Activity</span>
+                <span className="font-medium text-gray-900">
+                  {dashboardData.activity.ads7Days} ads, {dashboardData.activity.users7Days} users
+                </span>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default Dashboard;

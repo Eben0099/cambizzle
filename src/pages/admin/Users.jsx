@@ -47,6 +47,7 @@ import {
   XCircle
 } from "lucide-react";
 import adminService from "../../services/adminService";
+import { API_CONFIG } from "../../utils/constants";
 
 const Users = () => {
   // États pour les données
@@ -298,453 +299,335 @@ const Users = () => {
     );
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Gestion des Utilisateurs</h1>
-          <p className="text-muted-foreground mt-1">Gérer et modérer les comptes utilisateurs</p>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <User className="h-4 w-4" />
-          <span>{totalUsers} utilisateurs au total</span>
-        </div>
+return (
+  <div className="space-y-8">
+    {/* Header */}
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">User Management</h1>
+        <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage and moderate user accounts</p>
       </div>
+      <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-lg">
+        <User className="h-4 w-4 text-[#D6BA69]" />
+        <span>{totalUsers} total users</span>
+      </div>
+    </div>
 
-      {/* Filtres */}
-      <Card className="border-border">
-        <CardHeader>
-          <CardTitle>Recherche et Filtres</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher..."
-                className="pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
-                <SelectItem value="active">Actifs</SelectItem>
-                <SelectItem value="suspended">Suspendus</SelectItem>
-                <SelectItem value="deleted">Supprimés</SelectItem>
-              </SelectContent>
-            </Select>
+    {/* Filters - Fixed Selects */}
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">Search & Filters</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search users..."
+            className="pl-11 pr-4 py-3 border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69] rounded-lg bg-white"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="py-3 border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69] rounded-lg bg-white">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent className="bg-white border-gray-200">
+            <SelectItem value="all" className="bg-white hover:bg-gray-50">All Statuses</SelectItem>
+            <SelectItem value="active" className="bg-white hover:bg-gray-50">Active</SelectItem>
+            <SelectItem value="suspended" className="bg-white hover:bg-gray-50">Suspended</SelectItem>
+            <SelectItem value="deleted" className="bg-white hover:bg-gray-50">Deleted</SelectItem>
+          </SelectContent>
+        </Select>
 
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Rôle" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les rôles</SelectItem>
-                <SelectItem value="1">Admin</SelectItem>
-                <SelectItem value="2">Utilisateur</SelectItem>
-              </SelectContent>
-            </Select>
+        <Select value={roleFilter} onValueChange={setRoleFilter}>
+          <SelectTrigger className="py-3 border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69] rounded-lg bg-white">
+            <SelectValue placeholder="Role" />
+          </SelectTrigger>
+          <SelectContent className="bg-white border-gray-200">
+            <SelectItem value="all" className="bg-white hover:bg-gray-50">All Roles</SelectItem>
+            <SelectItem value="1" className="bg-white hover:bg-gray-50">Admin</SelectItem>
+            <SelectItem value="2" className="bg-white hover:bg-gray-50">User</SelectItem>
+          </SelectContent>
+        </Select>
 
-            <Select value={verifiedFilter} onValueChange={setVerifiedFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Vérification" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous</SelectItem>
-                <SelectItem value="verified">Vérifiés</SelectItem>
-                <SelectItem value="unverified">Non vérifiés</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+        <Select value={verifiedFilter} onValueChange={setVerifiedFilter}>
+          <SelectTrigger className="py-3 border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69] rounded-lg bg-white">
+            <SelectValue placeholder="Verification" />
+          </SelectTrigger>
+          <SelectContent className="bg-white border-gray-200">
+            <SelectItem value="all" className="bg-white hover:bg-gray-50">All</SelectItem>
+            <SelectItem value="verified" className="bg-white hover:bg-gray-50">Verified</SelectItem>
+            <SelectItem value="unverified" className="bg-white hover:bg-gray-50">Unverified</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
 
-      {/* Liste des utilisateurs */}
-      <Card className="border-border">
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Utilisateur</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Rôle</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Vérification</TableHead>
-                  <TableHead>Inscription</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.idUser}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        {user.photoUrl ? (
-                          <img 
-                            src={user.photoUrl} 
-                            alt={`${user.firstName} ${user.lastName}`}
-                            className="h-10 w-10 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                            <span className="text-sm font-semibold text-primary">
-                              {user.firstName[0]}{user.lastName[0]}
-                            </span>
-                          </div>
-                        )}
-                        <div>
-                          <div className="font-medium text-foreground">
-                            {user.firstName} {user.lastName}
-                          </div>
-                          <div className="text-xs text-muted-foreground">#{user.idUser}</div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        <div className="flex items-center gap-1 text-foreground">
-                          <Mail className="h-3 w-3" />
-                          {user.email}
-                        </div>
-                        <div className="flex items-center gap-1 text-muted-foreground mt-1">
-                          <Phone className="h-3 w-3" />
-                          {user.phone}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {getRoleBadge(user.roleId)}
-                    </TableCell>
-                    <TableCell>
-                      {getStatusBadge(user)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
-                        {user.isVerified === "1" ? (
-                          <Badge variant="default" className="w-fit">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Email vérifié
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary" className="w-fit">
-                            <XCircle className="h-3 w-3 mr-1" />
-                            Non vérifié
-                          </Badge>
-                        )}
-                        {user.isIdentityVerified === "1" && (
-                          <Badge variant="default" className="w-fit">
-                            <Shield className="h-3 w-3 mr-1" />
-                            Identité vérifiée
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        {formatDate(user.createdAt)}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => fetchUserDetails(user.idUser)}
-                          disabled={actionLoading}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        
-                        {user.isIdentityVerified === "0" && (
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setVerifyModalOpen(true);
-                            }}
-                          >
-                            <Shield className="h-4 w-4" />
-                          </Button>
-                        )}
-                        
-                        {user.isSuspended === "0" ? (
-                          <Button 
-                            size="sm" 
-                            variant="destructive"
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setSuspendModalOpen(true);
-                            }}
-                          >
-                            <Ban className="h-4 w-4" />
-                          </Button>
-                        ) : (
-                          <Button 
-                            size="sm" 
-                            variant="default"
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setUnsuspendModalOpen(true);
-                            }}
-                          >
-                            <UserCheck className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+    {/* Users Grid - 4 per row */}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {filteredUsers.length > 0 ? (
+        filteredUsers.map((user) => (
+          <div key={user.idUser} className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 overflow-hidden">
+            {/* User Header */}
+            <div className="p-4 sm:p-6 border-b border-gray-100">
+              <div className="flex items-start gap-3 sm:gap-4">
+                <div className="relative flex-shrink-0">
+                  {user.photoUrl ? (
+                    <img 
+                      src={`${API_CONFIG.BASE_URL}/${user.photoUrl}`} 
+                      alt={`${user.firstName} ${user.lastName}`}
+                      className="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover ring-2 ring-gray-200"
+                    />
+                  ) : (
+                    <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-[#D6BA69] flex items-center justify-center ring-2 ring-gray-200">
+                      <span className="text-white text-base sm:text-lg font-bold">
+                        {user.firstName[0]}{user.lastName[0]}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
+                    {user.firstName} {user.lastName}
+                  </h4>
+                  <p className="text-xs sm:text-sm text-gray-500 mb-2">ID: #{user.idUser}</p>
+                  
+                  {/* Status & Role Badges */}
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {getRoleBadge(user.roleId)}
+                    {getStatusBadge(user)}
+                  </div>
 
-            {filteredUsers.length === 0 && (
-              <div className="text-center py-8">
-                <AlertTriangle className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-muted-foreground">Aucun utilisateur trouvé</p>
+                  {/* Contact Info */}
+                  <div className="space-y-1 text-xs sm:text-sm">
+                    <div className="flex items-center gap-2 text-gray-700">
+                      <Mail className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 flex-shrink-0" />
+                      <span className="truncate">{user.email}</span>
+                    </div>
+                    {user.phone && (
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Phone className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 flex-shrink-0" />
+                        <span className="truncate">{user.phone}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-          >
-            <ChevronLeft className="h-4 w-4 mr-2" />
-            Précédent
-          </Button>
-          
-          <span className="px-4 py-2 text-sm text-muted-foreground">
-            Page {currentPage} sur {totalPages}
-          </span>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-          >
-            Suivant
-            <ChevronRight className="h-4 w-4 ml-2" />
-          </Button>
+            {/* User Footer - Actions */}
+            <div className="p-4 bg-gray-50">
+              <div className="flex flex-wrap gap-2 justify-center sm:justify-between items-center">
+                {/* Actions */}
+                <div className="flex gap-1 sm:gap-2 flex-wrap justify-center sm:justify-start">
+                  <Button 
+                    size="sm"
+                    className="bg-black hover:bg-gray-800 text-[#D6BA69] border-black px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-xs sm:text-sm"
+                    onClick={() => fetchUserDetails(user.idUser)}
+                    disabled={actionLoading}
+                  >
+                    <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                    View
+                  </Button>
+                  
+                  {user.isIdentityVerified === "0" && (
+                    <Button 
+                      size="sm"
+                      className="bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-gray-800 border-[#D6BA69] px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg font-medium transition-colors shadow-sm text-xs sm:text-sm"
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setVerifyModalOpen(true);
+                      }}
+                    >
+                      <Shield className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                      Verify
+                    </Button>
+                  )}
+                </div>
+
+                {/* Suspend/Unsuspend Button */}
+                <div className="flex gap-1 sm:gap-2">
+                  {user.isSuspended === "0" ? (
+                    <Button 
+                      size="sm"
+                      className="bg-red-600 hover:bg-red-700 text-white border-red-600 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-xs sm:text-sm"
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setSuspendModalOpen(true);
+                      }}
+                    >
+                      <Ban className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                      Suspend
+                    </Button>
+                  ) : (
+                    <Button 
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700 text-white border-green-600 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-xs sm:text-sm"
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setUnsuspendModalOpen(true);
+                      }}
+                    >
+                      <UserCheck className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                      Unsuspend
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Registration Date & Verification */}
+              <div className="mt-3 pt-3 border-t border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs sm:text-sm text-gray-500">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>Joined {formatDate(user.createdAt)}</span>
+                </div>
+                <div className="flex flex-wrap gap-2 justify-center sm:justify-end">
+                  {user.isVerified === "1" ? (
+                    <span className="text-green-600 flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3" />
+                      Email verified
+                    </span>
+                  ) : (
+                    <span className="text-yellow-600 flex items-center gap-1">
+                      <XCircle className="h-3 w-3" />
+                      Email unverified
+                    </span>
+                  )}
+                  {user.isIdentityVerified === "1" && (
+                    <span className="text-green-600 flex items-center gap-1">
+                      <Shield className="h-3 w-3" />
+                      ID verified
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))
+      ) : (
+        <div className="col-span-full bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+          <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No users found</h3>
+          <p className="text-gray-500">Try adjusting your search or filter criteria</p>
         </div>
       )}
-
-      {/* Modales d'action */}
-      {/* Modal Suspension */}
-      <Dialog open={suspendModalOpen} onOpenChange={setSuspendModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Suspendre l'utilisateur</DialogTitle>
-            <DialogDescription>
-              Êtes-vous sûr de vouloir suspendre {selectedUser?.firstName} {selectedUser?.lastName} ?
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="suspend-reason">Raison de la suspension *</Label>
-              <Input
-                id="suspend-reason"
-                value={suspendReason}
-                onChange={(e) => setSuspendReason(e.target.value)}
-                placeholder="Ex: Violation des conditions d'utilisation"
-              />
-            </div>
-            <div>
-              <Label htmlFor="suspend-notes">Notes complémentaires</Label>
-              <Textarea
-                id="suspend-notes"
-                value={suspendNotes}
-                onChange={(e) => setSuspendNotes(e.target.value)}
-                placeholder="Détails supplémentaires..."
-                rows={3}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setSuspendModalOpen(false);
-              resetSuspendForm();
-            }}>
-              Annuler
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleSuspendUser}
-              disabled={actionLoading || !suspendReason.trim()}
-            >
-              {actionLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Suspendre
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal Réactivation */}
-      <Dialog open={unsuspendModalOpen} onOpenChange={setUnsuspendModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Réactiver l'utilisateur</DialogTitle>
-            <DialogDescription>
-              Êtes-vous sûr de vouloir réactiver {selectedUser?.firstName} {selectedUser?.lastName} ?
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="unsuspend-notes">Notes complémentaires</Label>
-              <Textarea
-                id="unsuspend-notes"
-                value={unsuspendNotes}
-                onChange={(e) => setUnsuspendNotes(e.target.value)}
-                placeholder="Raison de la réactivation..."
-                rows={3}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setUnsuspendModalOpen(false);
-              resetUnsuspendForm();
-            }}>
-              Annuler
-            </Button>
-            <Button 
-              onClick={handleUnsuspendUser}
-              disabled={actionLoading}
-            >
-              {actionLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Réactiver
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal Vérification */}
-      <Dialog open={verifyModalOpen} onOpenChange={setVerifyModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Vérifier l'identité</DialogTitle>
-            <DialogDescription>
-              Confirmer la vérification d'identité de {selectedUser?.firstName} {selectedUser?.lastName}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="verify-notes">Notes de vérification</Label>
-              <Textarea
-                id="verify-notes"
-                value={verifyNotes}
-                onChange={(e) => setVerifyNotes(e.target.value)}
-                placeholder="Ex: Documents validés - CNI conforme"
-                rows={3}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setVerifyModalOpen(false);
-              resetVerifyForm();
-            }}>
-              Annuler
-            </Button>
-            <Button 
-              onClick={handleVerifyUser}
-              disabled={actionLoading}
-            >
-              {actionLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Vérifier
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal Détails utilisateur */}
-      <Dialog open={userDetailsModalOpen} onOpenChange={setUserDetailsModalOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Détails de l'utilisateur</DialogTitle>
-          </DialogHeader>
-          
-          {selectedUserDetails && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="font-semibold">Nom complet</Label>
-                  <p>{selectedUserDetails.firstName} {selectedUserDetails.lastName}</p>
-                </div>
-                <div>
-                  <Label className="font-semibold">Email</Label>
-                  <p>{selectedUserDetails.email}</p>
-                </div>
-                <div>
-                  <Label className="font-semibold">Téléphone</Label>
-                  <p>{selectedUserDetails.phone}</p>
-                </div>
-                <div>
-                  <Label className="font-semibold">Date d'inscription</Label>
-                  <p>{formatDate(selectedUserDetails.createdAt)}</p>
-                </div>
-              </div>
-              
-              {selectedUserDetails.identityDocumentType && (
-                <div>
-                  <Label className="font-semibold">Vérification d'identité</Label>
-                  <div className="mt-2 space-y-2">
-                    <p><span className="font-medium">Type:</span> {selectedUserDetails.identityDocumentType}</p>
-                    <p><span className="font-medium">Numéro:</span> {selectedUserDetails.identityDocumentNumber}</p>
-                    {selectedUserDetails.identityVerifiedAt && (
-                      <p><span className="font-medium">Vérifié le:</span> {formatDate(selectedUserDetails.identityVerifiedAt)}</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {selectedUserDetails.isSuspended === "1" && (
-                <div className="bg-red-50 p-4 rounded-lg">
-                  <Label className="font-semibold text-red-800">Informations de suspension</Label>
-                  <div className="mt-2 space-y-1 text-sm">
-                    {selectedUserDetails.suspendedAt && (
-                      <p><span className="font-medium">Suspendu le:</span> {formatDate(selectedUserDetails.suspendedAt)}</p>
-                    )}
-                    {selectedUserDetails.suspensionReason && (
-                      <p><span className="font-medium">Raison:</span> {selectedUserDetails.suspensionReason}</p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button onClick={() => setUserDetailsModalOpen(false)}>
-              Fermer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
-  );
+
+    {/* Pagination */}
+    {totalPages > 1 && (
+      <div className="flex items-center justify-center gap-4 bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <Button
+          className="bg-black hover:bg-gray-800 text-[#D6BA69] border-black px-4 py-2 rounded-lg font-medium transition-colors"
+          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+        >
+          <ChevronLeft className="h-4 w-4 mr-2" />
+          Previous
+        </Button>
+        
+        <span className="px-4 py-2 text-sm text-gray-600 font-medium">
+          Page {currentPage} of {totalPages}
+        </span>
+        
+        <Button
+          className="bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-gray-800 border-[#D6BA69] px-4 py-2 rounded-lg font-medium transition-colors shadow-sm"
+          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+          disabled={currentPage === totalPages}
+        >
+          Next
+          <ChevronRight className="h-4 w-4 ml-2" />
+        </Button>
+      </div>
+    )}
+
+    {/* Modale - Détails utilisateur (View) */}
+    <Dialog open={userDetailsModalOpen} onOpenChange={setUserDetailsModalOpen}>
+      <DialogContent className="max-w-lg bg-white shadow-xl border border-gray-200" style={{background: '#fff', boxShadow: '0 8px 32px rgba(0,0,0,0.12)'}}>
+        <DialogHeader>
+          <DialogTitle>Détails de l'utilisateur</DialogTitle>
+        </DialogHeader>
+        {selectedUserDetails ? (
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              {selectedUserDetails.photoUrl ? (
+                <img src={`${API_CONFIG.BASE_URL}/${selectedUserDetails.photoUrl}`} alt="Photo" className="h-12 w-12 rounded-full object-cover" />
+              ) : (
+                <div className="h-12 w-12 rounded-full bg-[#D6BA69] flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">{selectedUserDetails.firstName[0]}{selectedUserDetails.lastName[0]}</span>
+                </div>
+              )}
+              <div>
+                <div className="font-semibold">{selectedUserDetails.firstName} {selectedUserDetails.lastName}</div>
+                <div className="text-xs text-gray-500">ID: #{selectedUserDetails.idUser}</div>
+              </div>
+            </div>
+            <div className="text-sm text-gray-700">Email: {selectedUserDetails.email}</div>
+            <div className="text-sm text-gray-700">Téléphone: {selectedUserDetails.phone || 'N/A'}</div>
+            <div className="text-sm text-gray-700">Rôle: {getRoleBadge(selectedUserDetails.roleId)}</div>
+            <div className="text-sm text-gray-700">Statut: {getStatusBadge(selectedUserDetails)}</div>
+            <div className="text-sm text-gray-700">Inscrit le: {formatDate(selectedUserDetails.createdAt)}</div>
+          </div>
+        ) : (
+          <div className="text-center text-gray-500">Chargement...</div>
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setUserDetailsModalOpen(false)} className="bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-white border-[#D6BA69]">Fermer</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    {/* Modale - Vérification identité (Verify) */}
+    <Dialog open={verifyModalOpen} onOpenChange={setVerifyModalOpen}>
+      <DialogContent className="max-w-md bg-white shadow-xl border border-gray-200" style={{background: '#fff', boxShadow: '0 8px 32px rgba(0,0,0,0.12)'}}>
+        <DialogHeader>
+          <DialogTitle>Vérifier l'identité</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="text-sm text-gray-700">Raison de la vérification :</div>
+          <Textarea
+            placeholder="Ajouter une note ou raison (optionnel)"
+            value={verifyNotes}
+            onChange={e => setVerifyNotes(e.target.value)}
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setVerifyModalOpen(false)} className="bg-gray-200 text-gray-700">Annuler</Button>
+          <Button onClick={handleVerifyUser} disabled={actionLoading} className="bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-white border-[#D6BA69]">Valider</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    {/* Modale - Suspension utilisateur (Suspend) */}
+    <Dialog open={suspendModalOpen} onOpenChange={setSuspendModalOpen}>
+      <DialogContent className="max-w-md bg-white shadow-xl border border-gray-200" style={{background: '#fff', boxShadow: '0 8px 32px rgba(0,0,0,0.12)'}}>
+        <DialogHeader>
+          <DialogTitle>Suspendre l'utilisateur</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <Label htmlFor="suspendReason">Raison de la suspension *</Label>
+          <Input
+            id="suspendReason"
+            placeholder="Raison de la suspension"
+            value={suspendReason}
+            onChange={e => setSuspendReason(e.target.value)}
+            required
+          />
+          <Label htmlFor="suspendNotes">Notes (optionnel)</Label>
+          <Textarea
+            id="suspendNotes"
+            placeholder="Notes supplémentaires"
+            value={suspendNotes}
+            onChange={e => setSuspendNotes(e.target.value)}
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setSuspendModalOpen(false)} className="bg-gray-200 text-gray-700">Annuler</Button>
+          <Button onClick={handleSuspendUser} disabled={actionLoading} className="bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-white border-[#D6BA69]">Suspendre</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </div>
+);
 };
 
 export default Users;

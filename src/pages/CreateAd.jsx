@@ -1,3 +1,4 @@
+import Select from 'react-select';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Euro, MapPin, Tag, Loader2 } from 'lucide-react';
@@ -25,6 +26,7 @@ const CreateAd = () => {
     // Champs dynamiques pour les filtres
     filters: {}
   });
+  const [subcategories, setSubcategories] = useState([]);
 
   const [images, setImages] = useState([]);
   
@@ -60,6 +62,8 @@ const CreateAd = () => {
     loadSubcategoryFields
   } = useAdCreation();
 
+  // ...existing code...
+
   if (!isAuthenticated) {
     navigate('/login');
     return null;
@@ -72,9 +76,30 @@ const CreateAd = () => {
     }
   }, [formData.subcategory, loadSubcategoryFields]);
 
-  const handleChange = (e) => {
+  const handleChange = async (e) => {
     const { name, value, type, checked } = e.target;
-    
+
+    if (name === 'category') {
+      setFormData(prev => ({ ...prev, category: value, subcategory: '' }));
+      setSubcategories([]);
+      if (value) {
+        try {
+          const res = await adsService.getSubcategoriesByCategory(value);
+          if (res.status === 'success' && Array.isArray(res.data)) {
+            setSubcategories(res.data);
+            console.log('Sous-catégories chargées:', res.data);
+          } else {
+            setSubcategories([]);
+            console.log('Aucune sous-catégorie trouvée pour cette catégorie');
+          }
+        } catch (err) {
+          setSubcategories([]);
+          console.error('Erreur chargement sous-catégories:', err);
+        }
+      }
+      return;
+    }
+
     if (name.includes('.')) {
       const [parent, child] = name.split('.');
       setFormData(prev => ({
@@ -90,7 +115,7 @@ const CreateAd = () => {
         [name]: type === 'checkbox' ? checked : value
       }));
     }
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
@@ -133,16 +158,13 @@ const CreateAd = () => {
       if (!formData.subcategory) {
         newErrors.subcategory = 'La sous-catégorie est requise';
       } else if (formData.category) {
-        // Vérifier si le slug de subcategory existe et peut être résolu en ID
-        const selectedCategory = creationData.categories.find(cat => cat.id === formData.category);
-        const selectedSubcategory = selectedCategory?.subcategories.find(sub => sub.slug === formData.subcategory);
-        
+      setIsLoading(true);
+        const selectedSubcategory = subcategories.find(sub => sub.slug === formData.subcategory);
         if (!selectedSubcategory?.id) {
           newErrors.subcategory = 'ID de sous-catégorie invalide';
           console.log('❌ Validation subcategory échouée:', {
             value: formData.subcategory,
             type: typeof formData.subcategory,
-            categoryFound: !!selectedCategory,
             subcategoryFound: !!selectedSubcategory
           });
         } else {
@@ -183,13 +205,20 @@ const CreateAd = () => {
       // Validation des champs dynamiques requis
       if (subcategoryFields.filters) {
         subcategoryFields.filters.forEach(filter => {
+          const value = formData.filters[filter.id];
+          let hasValue = false;
+          if (Array.isArray(value)) {
+            hasValue = value.length > 0;
+          } else {
+            hasValue = !!(value && typeof value === 'string' && value.trim() !== '');
+          }
           console.log(`🔍 Vérification filtre ${filter.id} (${filter.name}):`, {
             isRequired: filter.isRequired,
-            currentValue: formData.filters[filter.id],
-            hasValue: !!(formData.filters[filter.id] && formData.filters[filter.id].trim() !== '')
+            currentValue: value,
+            hasValue
           });
 
-          if (filter.isRequired && (!formData.filters[filter.id] || formData.filters[filter.id].trim() === '')) {
+          if (filter.isRequired && !hasValue) {
             newErrors[`filters.${filter.id}`] = `${filter.name} est requis`;
             console.log(`❌ Erreur ajoutée pour ${filter.name}`);
           }
@@ -298,9 +327,7 @@ const CreateAd = () => {
       
       // Convertir subcategory slug en ID avant envoi
       if (formData.subcategory && formData.category) {
-        const selectedCategory = creationData.categories.find(cat => cat.id === formData.category);
-        const selectedSubcategory = selectedCategory?.subcategories.find(sub => sub.slug === formData.subcategory);
-        
+        const selectedSubcategory = subcategories.find(sub => sub.slug === formData.subcategory);
         if (selectedSubcategory?.id) {
           formDataToSend.append('subcategory_id', selectedSubcategory.id);
           console.log('🔄 Conversion subcategory:', {
@@ -381,7 +408,7 @@ const CreateAd = () => {
       console.log('📡 Réponse API reçue:', result);
 
       if (result.success) {
-        navigate(`/ads/${result.data.slug}`);
+        window.history.back();
       }
     } catch (err) {
       console.error('Erreur création annonce:', err);
@@ -412,108 +439,106 @@ const CreateAd = () => {
     { number: 4, title: 'Photos', icon: MapPin }
   ];
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex items-center mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => navigate(-1)}
-            className="mr-4"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Create an Ad
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Easily sell or rent your items
-            </p>
-          </div>
+return (
+  <div className="min-h-screen bg-gray-50">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      {/* Header */}
+      <div className="flex items-center mb-8">
+        <Button
+          variant="ghost"
+          onClick={() => navigate(-1)}
+          className="mr-4 bg-black hover:bg-gray-800 text-white border-black"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            Create an Ad
+          </h1>
+          <p className="text-gray-600 mt-1 text-sm sm:text-base">
+            Easily sell or rent your items
+          </p>
         </div>
+      </div>
 
-        {/* Progress Steps */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            {steps.map((step, index) => {
-              const Icon = step.icon;
-              const isActive = currentStep === step.number;
-              const isCompleted = currentStep > step.number;
-              
-              return (
-                <div key={step.number} className="flex items-center">
-                  <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
-                    isCompleted 
-                      ? 'bg-[#D6BA69] border-[#D6BA69] text-black' 
-                      : isActive 
-                        ? 'border-[#D6BA69] text-[#D6BA69]' 
-                        : 'border-gray-300 text-gray-400'
+      {/* Progress Steps */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          {steps.map((step, index) => {
+            const Icon = step.icon;
+            const isActive = currentStep === step.number;
+            const isCompleted = currentStep > step.number;
+           
+            return (
+              <div key={step.number} className="flex items-center flex-1">
+                <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${
+                  isCompleted
+                    ? 'bg-[#D6BA69] border-[#D6BA69] text-black'
+                    : isActive
+                      ? 'border-[#D6BA69] bg-[#D6BA69]/10 text-[#D6BA69]'
+                      : 'border-gray-300 bg-white text-gray-400'
+                }`}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                <div className="ml-3 hidden sm:block">
+                  <p className={`text-sm font-medium ${
+                    isActive ? 'text-[#D6BA69]' : 'text-gray-500'
                   }`}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div className="ml-3">
-                    <p className={`text-sm font-medium ${
-                      isActive ? 'text-[#D6BA69]' : 'text-gray-500'
-                    }`}>
-                      Step {step.number}
-                    </p>
-                    <p className={`text-xs ${
-                      isActive ? 'text-gray-900' : 'text-gray-500'
-                    }`}>
-                      {step.title}
-                    </p>
-                  </div>
-                  {index < steps.length - 1 && (
-                    <div className={`flex-1 h-0.5 mx-4 ${
-                      isCompleted ? 'bg-[#D6BA69]' : 'bg-gray-300'
-                    }`} />
-                  )}
+                    Step {step.number}
+                  </p>
+                  <p className={`text-xs ${
+                    isActive ? 'text-gray-900' : 'text-gray-500'
+                  }`}>
+                    {step.title}
+                  </p>
                 </div>
-              );
-            })}
-          </div>
+                {index < steps.length - 1 && (
+                  <div className={`flex-1 h-0.5 mx-4 ${
+                    isCompleted ? 'bg-[#D6BA69]' : 'bg-gray-200'
+                  }`} />
+                )}
+              </div>
+            );
+          })}
         </div>
+      </div>
 
-        <form onSubmit={handleSubmit}>
-          {/* Step 1: General Information */}
-          {currentStep === 1 && (
-            <Card>
-              <div className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Step 1: General Information */}
+        {currentStep === 1 && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                  General Information
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                    General Information
-                  </h2>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Ad Type
+                  </label>
+                  <select
+                    name="type"
+                    value={formData.type}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
+                  >
+                    {typeOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Type d'annonce
-                    </label>
-                    <select
-                      name="type"
-                      value={formData.type}
-                      onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
-                    >
-                      {typeOptions.map(option => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Catégorie *
-                    </label>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Category *
+                  </label>
                   {creationLoading ? (
-                    <div className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 flex items-center">
+                    <div className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 flex items-center">
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      Chargement des catégories...
+                      Loading categories...
                     </div>
                   ) : (
                     <select
@@ -521,7 +546,6 @@ const CreateAd = () => {
                       value={formData.category}
                       onChange={(e) => {
                         handleChange(e);
-                        // Reset subcategory when category changes
                         setFormData(prev => ({
                           ...prev,
                           subcategory: '',
@@ -529,9 +553,9 @@ const CreateAd = () => {
                           filters: {}
                         }));
                       }}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                     >
-                      <option value="">Sélectionner une catégorie</option>
+                      <option value="">Select a category</option>
                       {creationData.categories.map(category => (
                         <option key={category.id} value={category.id}>
                           {category.name}
@@ -539,22 +563,20 @@ const CreateAd = () => {
                       ))}
                     </select>
                   )}
-                    {errors.category && (
-                      <p className="text-sm text-red-600 mt-1">{errors.category}</p>
-                    )}
-                  </div>
-
-                {/* Sous-catégorie */}
-                <div>
+                  {errors.category && (
+                    <p className="text-sm text-red-600 mt-1">{errors.category}</p>
+                  )}
+                </div>
+                {/* Subcategory */}
+                <div className="lg:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Sous-catégorie *
+                    Subcategory *
                   </label>
                   <select
                     name="subcategory"
                     value={formData.subcategory}
                     onChange={(e) => {
                       handleChange(e);
-                      // Reset brand and filters when subcategory changes
                       setFormData(prev => ({
                         ...prev,
                         brandId: '',
@@ -562,13 +584,13 @@ const CreateAd = () => {
                       }));
                     }}
                     disabled={!formData.category}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] disabled:bg-gray-100 disabled:cursor-not-allowed transition-all bg-white"
                   >
                     <option value="">
-                      {formData.category ? 'Sélectionner une sous-catégorie' : 'Sélectionnez d\'abord une catégorie'}
+                      {formData.category ? 'Select a subcategory' : 'Select a category first'}
                     </option>
-                    {formData.category && creationData.categories
-                      .find(cat => cat.id === formData.category)?.subcategories
+                    {formData.category && subcategories.length > 0 && [...subcategories]
+                      .sort((a, b) => a.name.localeCompare(b.name))
                       .map(subcategory => (
                         <option key={subcategory.id} value={subcategory.slug}>
                           {subcategory.name}
@@ -579,7 +601,6 @@ const CreateAd = () => {
                     <p className="text-sm text-red-600 mt-1">{errors.subcategory}</p>
                   )}
                 </div>
-
                 <Input
                   label="Ad Title *"
                   name="title"
@@ -588,9 +609,9 @@ const CreateAd = () => {
                   error={errors.title}
                   placeholder="Ex: iPhone 14 Pro Max 256GB - Like new"
                   helperText="Be precise and attractive (min. 10 characters)"
+                  className="lg:col-span-2"
                 />
-
-                <div>
+                <div className="lg:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Description *
                   </label>
@@ -599,7 +620,7 @@ const CreateAd = () => {
                     value={formData.description}
                     onChange={handleChange}
                     rows={6}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] resize-vertical transition-all bg-white"
                     placeholder="Describe your item in detail: condition, features, reason for selling..."
                   />
                   {errors.description && (
@@ -609,7 +630,6 @@ const CreateAd = () => {
                     {formData.description.length} characters (min. 20)
                   </p>
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Condition
@@ -618,7 +638,7 @@ const CreateAd = () => {
                     name="condition"
                     value={formData.condition}
                     onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                   >
                     {conditionOptions.map(option => (
                       <option key={option.value} value={option.value}>
@@ -627,7 +647,6 @@ const CreateAd = () => {
                     ))}
                   </select>
                 </div>
-
                 <Input
                   label="Keywords (optional)"
                   name="tags"
@@ -636,291 +655,353 @@ const CreateAd = () => {
                   placeholder="smartphone, apple, iphone (separated by commas)"
                   helperText="Add keywords to improve visibility"
                 />
-                </div>
               </div>
-            </Card>
-          )}
+            </div>
+          </div>
+        )}
 
-          {/* Step 2: Price and Location */}
-          {currentStep === 2 && (
-            <Card>
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                    Price and Location
-                  </h2>
+        {/* Step 2: Price and Location */}
+        {currentStep === 2 && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                  Price and Location
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Input
+                  label="Selling Price *"
+                  type="number"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleChange}
+                  error={errors.price}
+                  placeholder="0"
+                  min="0"
+                  step="0.01"
+                />
+                <Input
+                  label="Original Price (optional)"
+                  type="number"
+                  name="originalPrice"
+                  value={formData.originalPrice}
+                  onChange={handleChange}
+                  onBlur={calculateDiscount}
+                  error={errors.originalPrice}
+                  placeholder="0"
+                  min="0"
+                  step="0.01"
+                  helperText="To display a discount"
+                />
+              </div>
+              {formData.discountPercent && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <p className="text-green-800 font-medium">
+                    {formData.discountPercent}% discount displayed!
+                  </p>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Input
-                    label="Selling Price *"
-                    type="number"
-                    name="price"
-                    value={formData.price}
-                    onChange={handleChange}
-                    error={errors.price}
-                    placeholder="0"
-                    min="0"
-                    step="0.01"
-                  />
-
-                  <Input
-                    label="Original Price (optional)"
-                    type="number"
-                    name="originalPrice"
-                    value={formData.originalPrice}
-                    onChange={handleChange}
-                    onBlur={calculateDiscount}
-                    error={errors.originalPrice}
-                    placeholder="0"
-                    min="0"
-                    step="0.01"
-                    helperText="To display a discount"
-                  />
-                </div>
-
-                {formData.discountPercent && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <p className="text-green-800">
-                      🎉 {formData.discountPercent}% discount displayed!
-                    </p>
+              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Location *
+                </label>
+                {creationLoading ? (
+                  <div className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 flex items-center">
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Loading locations...
                   </div>
+                ) : (
+                  <select
+                    name="locationId"
+                    value={formData.locationId}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
+                  >
+                    <option value="">Select a location</option>
+                    {creationData.locations.map(location => (
+                      <option key={location.id} value={location.id}>
+                        {location.city} - {location.region}
+                      </option>
+                    ))}
+                  </select>
                 )}
+                {errors.locationId && (
+                  <p className="text-sm text-red-600 mt-1">{errors.locationId}</p>
+                )}
+              </div>
+              <div className="flex items-start">
+                <input
+                  id="isPremium"
+                  name="isPremium"
+                  type="checkbox"
+                  checked={formData.isPremium}
+                  onChange={handleChange}
+                  className="h-5 w-5 text-[#D6BA69] focus:ring-[#D6BA69] border-gray-300 rounded mt-1"
+                />
+                <label htmlFor="isPremium" className="ml-3 block text-sm text-gray-900 leading-relaxed">
+                  Premium ad (+€5) - Featured listing and premium badge
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
 
+        {/* Step 3: Specific Characteristics */}
+        {currentStep === 3 && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                  Specific Characteristics
+                </h2>
+                <p className="text-gray-600">
+                  Fill in the specific characteristics of your product
+                </p>
+              </div>
+              {/* Brand Selection */}
+              {subcategoryFields.brands && subcategoryFields.brands.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Localisation *
+                    Brand
                   </label>
-                  {creationLoading ? (
-                    <div className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 flex items-center">
+                  {fieldsLoading ? (
+                    <div className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 flex items-center">
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      Chargement des localisations...
+                      Loading brands...
                     </div>
                   ) : (
                     <select
-                      name="locationId"
-                      value={formData.locationId}
-                    onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
+                      name="brandId"
+                      value={formData.brandId}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                     >
-                      <option value="">Sélectionner une localisation</option>
-                      {creationData.locations.map(location => (
-                        <option key={location.id} value={location.id}>
-                          {location.city} - {location.region}
+                      <option value="">Select a brand (optional)</option>
+                      {subcategoryFields.brands.map(brand => (
+                        <option key={brand.id} value={brand.id}>
+                          {brand.name}
                         </option>
                       ))}
                     </select>
                   )}
-                  {errors.locationId && (
-                    <p className="text-sm text-red-600 mt-1">{errors.locationId}</p>
+                </div>
+              )}
+              {/* Dynamic Filters */}
+              {subcategoryFields.filters && subcategoryFields.filters.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-gray-900">Technical Characteristics</h3>
+                  {fieldsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin mr-2" />
+                      Loading characteristics...
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {subcategoryFields.filters.map(filter => (
+                        <div key={filter.id}>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            {filter.name}
+                            {filter.isRequired && <span className="text-red-500 ml-1">*</span>}
+                          </label>
+                          {filter.type === 'select' && filter.options.length > 0 ? (
+                            <select
+                              name={`filters.${filter.id}`}
+                              value={formData.filters[filter.id] || ''}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setFormData(prev => ({
+                                  ...prev,
+                                  filters: {
+                                    ...prev.filters,
+                                    [filter.id]: value
+                                  }
+                                }));
+                              }}
+                              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
+                            >
+                              <option value="">Select {filter.name.toLowerCase()}</option>
+                              {filter.options.map(option => (
+                                <option key={option} value={option}>
+                                  {option}
+                                </option>
+                              ))}
+                            </select>
+                          ) : filter.type === 'number' ? (
+                            <input
+                              type="number"
+                              name={`filters.${filter.id}`}
+                              value={formData.filters[filter.id] || ''}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setFormData(prev => ({
+                                  ...prev,
+                                  filters: {
+                                    ...prev.filters,
+                                    [filter.id]: value
+                                  }
+                                }));
+                              }}
+                              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
+                              placeholder={`Enter ${filter.name.toLowerCase()}`}
+                            />
+                          ) : filter.type === 'date' ? (
+                            <input
+                              type="date"
+                              name={`filters.${filter.id}`}
+                              value={formData.filters[filter.id] || ''}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setFormData(prev => ({
+                                  ...prev,
+                                  filters: {
+                                    ...prev.filters,
+                                    [filter.id]: value
+                                  }
+                                }));
+                              }}
+                              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
+                            />
+                          ) : filter.type === 'checkbox' && filter.options.length > 0 ? (
+                            <Select
+                              isMulti
+                              name={`filters.${filter.id}`}
+                              options={filter.options.map(option => ({ value: option, label: option }))}
+                              value={(formData.filters[filter.id] || []).map(val => ({ value: val, label: val }))}
+                              onChange={selected => {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  filters: {
+                                    ...prev.filters,
+                                    [filter.id]: selected ? selected.map(opt => opt.value) : []
+                                  }
+                                }));
+                              }}
+                              classNamePrefix="react-select"
+                              styles={{
+                                control: (base) => ({ 
+                                  ...base, 
+                                  borderColor: '#D6BA69', 
+                                  minHeight: 44,
+                                  borderRadius: '8px',
+                                  boxShadow: 'none',
+                                  '&:focus': { borderColor: '#D6BA69' }
+                                }),
+                                multiValue: (base) => ({ ...base, backgroundColor: '#F3F4F6' }),
+                                option: (base, state) => ({ 
+                                  ...base, 
+                                  backgroundColor: state.isSelected ? '#D6BA69' : '#fff', 
+                                  color: state.isSelected ? 'white' : '#222',
+                                  '&:hover': { backgroundColor: state.isSelected ? '#D6BA69' : '#f9fafb' }
+                                })
+                              }}
+                              placeholder={`Select ${filter.name.toLowerCase()}`}
+                            />
+                          ) : (
+                            <input
+                              type="text"
+                              name={`filters.${filter.id}`}
+                              value={formData.filters[filter.id] || ''}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setFormData(prev => ({
+                                  ...prev,
+                                  filters: {
+                                    ...prev.filters,
+                                    [filter.id]: value
+                                  }
+                                }));
+                              }}
+                              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
+                              placeholder={`Enter ${filter.name.toLowerCase()}`}
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
-
-                <div className="flex items-center">
-                  <input
-                    id="isPremium"
-                    name="isPremium"
-                    type="checkbox"
-                    checked={formData.isPremium}
-                    onChange={handleChange}
-                    className="h-4 w-4 text-[#D6BA69] focus:ring-[#D6BA69] border-gray-300 rounded"
-                  />
-                  <label htmlFor="isPremium" className="ml-2 block text-sm text-gray-900">
-                    Premium ad (+€5) - Featured listing and premium badge
-                  </label>
-                </div>
-              </div>
-            </Card>
-          )}
-
-          {/* Step 3: Specific Characteristics */}
-          {currentStep === 3 && (
-            <Card>
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                    Caractéristiques spécifiques
-                  </h2>
-                  <p className="text-gray-600">
-                    Renseignez les caractéristiques spécifiques à votre produit
-                  </p>
-                </div>
-
-                {/* Brand Selection */}
-                {subcategoryFields.brands && subcategoryFields.brands.length > 0 && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Marque
-                    </label>
-                    {fieldsLoading ? (
-                      <div className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 flex items-center">
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                        Chargement des marques...
-                      </div>
-                    ) : (
-                      <select
-                        name="brandId"
-                        value={formData.brandId}
-                        onChange={handleChange}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
-                      >
-                        <option value="">Sélectionner une marque (optionnel)</option>
-                        {subcategoryFields.brands.map(brand => (
-                          <option key={brand.id} value={brand.id}>
-                            {brand.name}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  </div>
-                )}
-
-                {/* Dynamic Filters */}
-                {subcategoryFields.filters && subcategoryFields.filters.length > 0 && (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-gray-900">Caractéristiques techniques</h3>
-                    {fieldsLoading ? (
-                      <div className="flex items-center justify-center py-8">
-                        <Loader2 className="w-6 h-6 animate-spin mr-2" />
-                        Chargement des caractéristiques...
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {subcategoryFields.filters.map(filter => (
-                          <div key={filter.id}>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              {filter.name}
-                              {filter.isRequired && <span className="text-red-500 ml-1">*</span>}
-                            </label>
-                            {filter.type === 'select' ? (
-                              <select
-                                name={`filters.${filter.id}`}
-                                value={formData.filters[filter.id] || ''}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  setFormData(prev => ({
-                                    ...prev,
-                                    filters: {
-                                      ...prev.filters,
-                                      [filter.id]: value
-                                    }
-                                  }));
-                                }}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
-                              >
-                                <option value="">Sélectionner {filter.name.toLowerCase()}</option>
-                                {filter.options.map(option => (
-                                  <option key={option} value={option}>
-                                    {option}
-                                  </option>
-                                ))}
-                              </select>
-                            ) : (
-                              <input
-                                type={filter.type}
-                                name={`filters.${filter.id}`}
-                                value={formData.filters[filter.id] || ''}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  setFormData(prev => ({
-                                    ...prev,
-                                    filters: {
-                                      ...prev.filters,
-                                      [filter.id]: value
-                                    }
-                                  }));
-                                }}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
-                                placeholder={`Entrer ${filter.name.toLowerCase()}`}
-                              />
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {!formData.subcategory && (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>Sélectionnez d'abord une catégorie et sous-catégorie pour voir les caractéristiques spécifiques.</p>
-                  </div>
-                )}
-              </div>
-            </Card>
-          )}
-
-          {/* Step 4: Photos */}
-          {currentStep === 4 && (
-            <Card>
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                    Ad Photos
-                  </h2>
-                  <p className="text-gray-600">
-                    Add quality photos to attract more buyers
-                  </p>
-                </div>
-
-                <ImageUpload
-                  images={images}
-                  onImagesChange={handleImagesChange}
-                  maxImages={10}
-                />
-
-                {errors.images && (
-                  <p className="text-sm text-red-600">{errors.images}</p>
-                )}
-              </div>
-            </Card>
-          )}
-
-          {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8">
-            <div>
-              {currentStep > 1 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handlePrevious}
-                >
-                  Previous
-                </Button>
               )}
-            </div>
-
-            <div>
-              {currentStep < 4 ? (
-                <Button
-                  type="button"
-                  variant="primary"
-                  onClick={handleNext}
-                >
-                  Suivant
-                </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  variant="primary"
-                  loading={isLoading}
-                  disabled={isLoading}
-                >
-                  Publier l'annonce
-                </Button>
+              {!formData.subcategory && (
+                <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
+                  <p>Select a category and subcategory first to see specific characteristics.</p>
+                </div>
               )}
             </div>
           </div>
+        )}
 
-          {errors.submit && (
-            <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-sm text-red-600">{errors.submit}</p>
+        {/* Step 4: Photos */}
+        {currentStep === 4 && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                  Ad Photos
+                </h2>
+                <p className="text-gray-600">
+                  Add quality photos to attract more buyers
+                </p>
+              </div>
+              <ImageUpload
+                images={images}
+                onImagesChange={handleImagesChange}
+                maxImages={10}
+              />
+              {errors.images && (
+                <p className="text-sm text-red-600">{errors.images}</p>
+              )}
             </div>
-          )}
-        </form>
-      </div>
+          </div>
+        )}
+
+        {/* Navigation Buttons */}
+        <div className="flex flex-col sm:flex-row justify-between gap-4 mt-8 pt-6 border-t border-gray-200">
+          <div>
+            {currentStep > 1 && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handlePrevious}
+                className="bg-white border-black text-black hover:bg-gray-50 hover:border-gray-300 px-6 py-3 rounded-lg font-medium transition-colors"
+              >
+                Previous
+              </Button>
+            )}
+          </div>
+          <div>
+            {currentStep < 4 ? (
+              <Button
+                type="button"
+                variant="primary"
+                onClick={handleNext}
+                className="bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
+              >
+                Next
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                variant="primary"
+                loading={isLoading}
+                disabled={isLoading}
+                className="bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] px-8 py-3 rounded-lg font-semibold transition-colors shadow-sm disabled:opacity-50"
+              >
+                Publish Ad
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {errors.submit && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-sm text-red-600">{errors.submit}</p>
+          </div>
+        )}
+      </form>
     </div>
-  );
+  </div>
+);
 };
 
 export default CreateAd;

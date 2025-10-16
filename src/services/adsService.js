@@ -468,6 +468,19 @@ const mockAds = [
 const API_BASE_URL = 'http://localhost:8080/api';
 
 class AdsService {
+  async getSubcategoriesByCategory(categoryId) {
+    try {
+      this.token = localStorage.getItem('token');
+      this.setAuthHeader();
+      const response = await axios.get(`${API_BASE_URL}/categories/${categoryId}/subcategories`);
+      console.log('✅ Sous-catégories récupérées:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Erreur récupération sous-catégories:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Erreur lors de la récupération des sous-catégories';
+      throw new Error(errorMessage);
+    }
+  }
   constructor() {
     this.token = localStorage.getItem('token');
   }

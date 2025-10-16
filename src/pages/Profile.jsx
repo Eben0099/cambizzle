@@ -204,109 +204,121 @@ const Profile = () => {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Message d'information sur les fonctionnalités en développement */}
-        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-blue-800">
-                Fonctionnalités en développement
-              </h3>
-              <div className="mt-2 text-sm text-blue-700">
-                <p>
-                  Les annonces et favoris ne sont pas encore disponibles côté backend.
-                  Les informations du profil utilisateur et vendeur sont maintenant disponibles.
-                </p>
-              </div>
-            </div>
+return (
+  <div className="min-h-screen bg-gray-50">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      {/* Development notice */}
+      <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4 sm:p-6">
+        <div className="flex items-start">
+          <div className="flex-shrink-0 mt-0.5">
+            <svg className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="ml-3 flex-1">
+            <h3 className="text-sm font-medium text-blue-800 mb-1">
+              Features under development
+            </h3>
+            <p className="text-sm text-blue-700 leading-relaxed">
+              Ads and favorites are not yet available on the backend. 
+              User and seller profile information is now available.
+            </p>
           </div>
         </div>
+      </div>
 
-        <ProfileHeader
-          user={user}
-          sellerProfile={sellerProfile}
-          onEdit={handleEditProfile}
-          onBecomeSeller={handleBecomeSeller}
-        />
+      <ProfileHeader
+        user={user}
+        sellerProfile={sellerProfile}
+        onEdit={handleEditProfile}
+        onBecomeSeller={handleBecomeSeller}
+        className="mb-6"
+      />
 
-        <ProfileStats
-          user={user}
-          userAds={userAds}
-          favoriteAds={favoriteAds}
-        />
+      <ProfileStats
+        user={user}
+        userAds={userAds}
+        favoriteAds={favoriteAds}
+        className="mb-6"
+      />
 
-        <ProfileTabs
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          sellerProfile={sellerProfile}
-        />
+      <ProfileTabs
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        sellerProfile={sellerProfile}
+        className="mb-6"
+      />
 
-        <div className="bg-white rounded-b-xl shadow-sm min-h-[400px]">
-          <div className="p-6">
-            {activeTab === 'overview' && (
+      {/* Main content container */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div className="p-6 sm:p-8">
+          {activeTab === 'overview' && (
+            <div className="space-y-6">
               <ProfileOverview
                 user={user}
                 userAds={userAds}
                 onVerifyIdentity={handleVerifyIdentity}
               />
-            )}
+            </div>
+          )}
 
-            {activeTab === 'ads' && (
+          {activeTab === 'ads' && (
+            <div className="space-y-6">
               <ProfileAds
                 userAds={userAds}
                 onCreateAd={handleCreateAd}
                 onEditAd={handleEditAd}
                 onDeleteAd={handleDeleteAd}
               />
-            )}
+            </div>
+          )}
 
-            {activeTab === 'favorites' && (
+          {activeTab === 'favorites' && (
+            <div className="space-y-6">
               <ProfileFavorites
                 favoriteAds={favoriteAds}
                 onRemoveFavorite={handleRemoveFavorite}
               />
-            )}
+            </div>
+          )}
 
-            {activeTab === 'business' && sellerProfile && (
+          {activeTab === 'business' && sellerProfile && (
+            <div className="space-y-6">
               <ProfileBusiness
                 sellerProfile={sellerProfile}
                 onEditBusiness={handleEditBusiness}
                 onDeleteBusiness={handleDeleteBusiness}
               />
-            )}
+            </div>
+          )}
 
-            {activeTab === 'settings' && (
+          {activeTab === 'settings' && (
+            <div className="space-y-6">
               <ProfileSettings
                 user={user}
                 onUpdateProfile={handleUpdateProfile}
                 onDeleteAccount={handleDeleteAccount}
               />
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
-
-      <SellerModal
-        isOpen={isSellerModalOpen}
-        onClose={() => setIsSellerModalOpen(false)}
-        onSubmit={handleCreateSellerProfile}
-      />
-
-      <BusinessEditModal
-        isOpen={isBusinessEditModalOpen}
-        onClose={() => setIsBusinessEditModalOpen(false)}
-        sellerProfile={sellerProfile}
-        onSubmit={handleUpdateBusiness}
-      />
     </div>
-  );
+
+    <SellerModal
+      isOpen={isSellerModalOpen}
+      onClose={() => setIsSellerModalOpen(false)}
+      onSubmit={handleCreateSellerProfile}
+    />
+
+    <BusinessEditModal
+      isOpen={isBusinessEditModalOpen}
+      onClose={() => setIsBusinessEditModalOpen(false)}
+      sellerProfile={sellerProfile}
+      onSubmit={handleUpdateBusiness}
+    />
+  </div>
+);
 };
 
 export default Profile;

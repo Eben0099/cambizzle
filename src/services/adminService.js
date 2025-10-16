@@ -43,6 +43,75 @@ class AdminService {
 
   // Méthodes pour les autres endpoints admin (à ajouter plus tard)
   
+  // Gestion des annonces
+  async getAds(page = 1, limit = 20, search = '') {
+    try {
+      this.setAuthHeader();
+      const params = { page, limit };
+      if (search) params.q = search;
+      
+      const response = await axios.get(`${API_BASE_URL}/ads`, { params });
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
+
+  async getPendingAds() {
+    try {
+      this.setAuthHeader();
+      const response = await axios.get(`${API_BASE_URL}/admin/ads/pending`);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
+
+  async approveAd(adId, notes) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.put(`${API_BASE_URL}/admin/ads/${adId}/approve`, {
+        notes
+      });
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
+
+  async rejectAd(adId, reason, notes) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.put(`${API_BASE_URL}/admin/ads/${adId}/reject`, {
+        reason,
+        notes
+      });
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
+  
   // Gestion des utilisateurs
   async getUsers(page = 1, perPage = 20) {
     try {
@@ -183,6 +252,74 @@ class AdminService {
       const response = await axios.get(`${API_BASE_URL}/admin/moderation-logs`, {
         params: { page: 1, limit }
       });
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
+
+  // ============= GESTION DES CATÉGORIES =============
+  
+  // Récupérer la liste des catégories
+  async getCategories(page = 1, perPage = 20) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.get(`${API_BASE_URL}/admin/referentials/categories`, {
+        params: { page, per_page: perPage }
+      });
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
+
+  // Créer une catégorie
+  async createCategory(categoryData) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.post(`${API_BASE_URL}/admin/referentials/categories`, categoryData);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
+
+  // Mettre à jour une catégorie
+  async updateCategory(categoryId, categoryData) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.put(`${API_BASE_URL}/admin/referentials/categories/${categoryId}`, categoryData);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
+
+  // Supprimer une catégorie
+  async deleteCategory(categoryId) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.delete(`${API_BASE_URL}/admin/referentials/categories/${categoryId}`);
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
