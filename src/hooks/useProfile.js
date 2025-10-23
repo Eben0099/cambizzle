@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/authService';
+import { API_BASE_URL } from '../config/api';
 
 export const useProfile = () => {
   const { user: authUser, updateUser: updateAuthUser } = useAuth();
@@ -33,7 +34,7 @@ export const useProfile = () => {
           const userId = authUser.idUser || authUser.id;
           console.log('🔍 Chargement annonces pour userId:', userId);
 
-          const adsResponse = await fetch(`http://localhost:8080/api/ads/user/${userId}`, {
+          const adsResponse = await fetch(`${API_BASE_URL}/ads/user/${userId}`, {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`,
               'Content-Type': 'application/json'
@@ -59,7 +60,7 @@ export const useProfile = () => {
         // Charger les favoris de l'utilisateur depuis l'API
         try {
           console.log('❤️ Chargement favoris...');
-          const favoritesResponse = await fetch('http://localhost:8080/api/favorites', {
+          const favoritesResponse = await fetch(`${API_BASE_URL}/favorites`, {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`,
               'Content-Type': 'application/json'
@@ -87,7 +88,7 @@ export const useProfile = () => {
         // Charger le profil vendeur de l'utilisateur depuis l'API
         try {
           console.log('🏪 Chargement profil vendeur...');
-          const sellerResponse = await fetch('http://localhost:8080/api/seller-profiles/me', {
+          const sellerResponse = await fetch(`${API_BASE_URL}/seller-profiles/me`, {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`,
               'Content-Type': 'application/json'
@@ -283,7 +284,7 @@ export const useProfile = () => {
 
   const deleteAd = async (adId) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/ads/${adId}`, {
+  const response = await fetch(`${API_BASE_URL}/ads/${adId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -306,7 +307,7 @@ export const useProfile = () => {
 
   const removeFavorite = async (adId) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/favorites/${adId}`, {
+  const response = await fetch(`${API_BASE_URL}/favorites/${adId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

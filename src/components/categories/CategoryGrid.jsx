@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight, Grid, List } from 'lucide-react';
+import { SERVER_BASE_URL } from '../../config/api';
 
 const CategoryGrid = ({ categories, isLoading, error }) => {
   const [expandedCategories, setExpandedCategories] = useState(new Set());
@@ -78,7 +79,7 @@ const CategoryGrid = ({ categories, isLoading, error }) => {
                   <div className="w-12 h-12 bg-[#D6BA69] rounded-lg flex items-center justify-center">
                     {category.iconPath ? (
                       <img
-                        src={`http://localhost:8080/${category.iconPath}`}
+                        src={`${SERVER_BASE_URL}/${category.iconPath}`}
                         alt={category.name}
                         className="w-6 h-6 text-white"
                         onError={(e) => {
@@ -134,7 +135,7 @@ const CategoryGrid = ({ categories, isLoading, error }) => {
                         <div className="w-8 h-8 bg-[#D6BA69] bg-opacity-20 rounded-md flex items-center justify-center">
                           {subcategory.iconPath ? (
                             <img
-                              src={`http://localhost:8080/${subcategory.iconPath}`}
+                              src={`${SERVER_BASE_URL}/${subcategory.iconPath}`}
                               alt={subcategory.name}
                               className="w-4 h-4"
                               onError={(e) => {

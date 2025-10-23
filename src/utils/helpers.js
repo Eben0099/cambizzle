@@ -1,3 +1,5 @@
+import { SERVER_BASE_URL } from '../config/api';
+
 // Construction de l'URL complète pour les photos
 export const getPhotoUrl = (photoPath) => {
   if (!photoPath) return null;
@@ -12,9 +14,8 @@ export const getPhotoUrl = (photoPath) => {
   if (photoPath.startsWith('blob:')) return photoPath;
   
   // Sinon, construire l'URL complète avec l'API base URL
-  const API_BASE_URL = 'http://localhost:8080';
   const cleanPath = photoPath.startsWith('/') ? photoPath : `/${photoPath}`;
-  return `${API_BASE_URL}${cleanPath}`;
+  return `${SERVER_BASE_URL}${cleanPath}`;
 };
 
 // Formatage des prix en FCFA

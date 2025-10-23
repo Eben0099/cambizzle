@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:8080/api';
+import { API_BASE_URL } from '../config/api';
 
 class CategoriesService {
   constructor() {
@@ -8,6 +7,7 @@ class CategoriesService {
   }
 
   setAuthHeader() {
+    this.token = localStorage.getItem('token');
     if (this.token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
     }
@@ -15,24 +15,41 @@ class CategoriesService {
 
   async getCategoriesWithStats() {
     try {
-      console.log('📊 Récupération des catégories avec statistiques...');
-      this.token = localStorage.getItem('token');
       this.setAuthHeader();
-
       const response = await axios.get(`${API_BASE_URL}/categories/stats`);
-      console.log('✅ Catégories récupérées:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Erreur récupération catégories:', error);
-      console.error('📄 Status code:', error.response?.status);
-      console.error('📋 Response data:', error.response?.data);
+      throw new Error(error.response?.data?.message || error.message);
+    }
+  }
 
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          'Erreur lors de la récupération des catégories';
+  async createSubcategory(data) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.post(`${API_BASE_URL}/admin/referentials/subcategories`, data);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || error.message);
+    }
+  }
 
-      throw new Error(errorMessage);
+  async updateSubcategory(id, data) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.put(`${API_BASE_URL}/admin/referentials/subcategories/${id}`, data);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || error.message);
+    }
+  }
+
+  async deleteSubcategory(id) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.delete(`${API_BASE_URL}/admin/referentials/subcategories/${id}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || error.message);
     }
   }
 }

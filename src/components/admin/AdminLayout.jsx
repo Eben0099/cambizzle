@@ -1,53 +1,32 @@
 import { useEffect, useState } from "react";
 import { NavLink, Navigate } from "react-router-dom";
-import { LayoutDashboard, Users, FileText, FolderTree, Filter, MapPin, AlertTriangle, Settings, LogOut, Tag, Loader2, Shield } from "lucide-react";
+import { LayoutDashboard, Users, FileText, FolderTree, Filter, MapPin, AlertTriangle, Settings, LogOut, Tag, Shield, Menu, X, Home } from "lucide-react";
+import Loader from "../ui/Loader";
 import { cn } from "../../lib/utils";
-import { Separator } from "../ui/separator";
-import { useAuth } from "../../contexts/AuthContext";
+import { Button } from "../ui/Button";
 import adminService from "../../services/adminService";
+import { useAuth } from "../../contexts/AuthContext";
 
-const navigation = [{
-  name: "Tableau de Bord",
-  href: "/admin",
-  icon: LayoutDashboard
-}, {
-  name: "Utilisateurs",
-  href: "/admin/users",
-  icon: Users
-}, {
-  name: "Annonces",
-  href: "/admin/ads",
-  icon: FileText
-}, {
-  name: "Catégories",
-  href: "/admin/categories",
-  icon: FolderTree
-}, {
-  name: "Filtres Dynamiques",
-  href: "/admin/filters",
-  icon: Filter
-}, {
-  name: "Marques",
-  href: "/admin/brands",
-  icon: Tag
-}, {
-  name: "Localisations",
-  href: "/admin/locations",
-  icon: MapPin
-}, {
-  name: "Signalements",
-  href: "/admin/reports",
-  icon: AlertTriangle
-}, {
-  name: "Logs de Modération",
-  href: "/admin/moderation-logs",
-  icon: Shield
-}];
+const navigation = [
+  { name: "Home", href: "/", icon: Home },
+  { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { name: "Users", href: "/admin/users", icon: Users },
+  { name: "Ads", href: "/admin/ads", icon: FileText },
+  { name: "Categories", href: "/admin/categories", icon: FolderTree },
+  { name: "Subcategories", href: "/admin/subcategories", icon: FolderTree },
+  { name: "Dynamic Filters", href: "/admin/filters", icon: Filter },
+  { name: "Brands", href: "/admin/brands", icon: Tag },
+  { name: "Locations", href: "/admin/locations", icon: MapPin },
+  { name: "Reports", href: "/admin/reports", icon: AlertTriangle },
+  { name: "Moderation Logs", href: "/admin/moderation-logs", icon: Shield },
+  { name: "Referral Codes", href: "/admin/referralcodes", icon: Tag },
+];
 
 const AdminLayout = ({ children }) => {
   const { user, logout } = useAuth();
   const [isVerifying, setIsVerifying] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     verifyAdminAccess();
@@ -60,14 +39,11 @@ const AdminLayout = ({ children }) => {
         setIsVerifying(false);
         return;
       }
-
-      // Optionnel: Vérifier avec un endpoint admin pour confirmer les permissions
-      // await adminService.getDashboardStats(); // Si ça fonctionne, l'utilisateur est admin
       setIsAuthorized(true);
     } catch (error) {
-      console.error('Erreur vérification admin:', error);
+      console.error('Admin verification error:', error);
       setIsAuthorized(false);
-      if (error.message.includes('Session expirée')) {
+      if (error.message.includes('Session expired')) {
         logout();
       }
     } finally {
@@ -79,14 +55,13 @@ const AdminLayout = ({ children }) => {
     logout();
   };
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   if (isVerifying) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-2">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Vérification des permissions...</p>
-        </div>
-      </div>
+      <Loader text="Verifying permissions..." />
     );
   }
 
@@ -94,66 +69,122 @@ const AdminLayout = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  return <div className="flex min-h-screen bg-background">
+  return (
+    <div className="flex min-h-screen bg-white">
+      {/* Mobile Menu Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="fixed top-4 left-4 z-50 md:hidden bg-gray-950 text-[#D6BA69] hover:bg-gray-800 h-10 w-10"
+        onClick={toggleSidebar}
+        aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+      >
+        {isSidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+      </Button>
+
       {/* Sidebar */}
-      <aside className="w-64 bg-sidebar-background border-r border-sidebar-border flex flex-col shadow-lg">
-        <div className="p-6 bg-gradient-to-r from-[#D6BA69] to-[#C5A858] border-b border-[#D6BA69]/30">
-          <div className="flex items-center gap-2">
-            <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center shadow-md">
-              <span className="text-xl font-bold text-primary-foreground">C</span>
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 w-64 sm:w-72 bg-gray-950 text-gray-200 border-r border-gray-800 flex flex-col transition-transform duration-300 md:static md:translate-x-0 z-40",
+          isSidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full md:translate-x-0"
+        )}
+      >
+        {/* Header */}
+        <div className="p-2 sm:p-4 bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-700">
+          <NavLink to="/" className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-[#D6BA69] flex items-center justify-center shadow-md">
+              <span className="text-lg font-bold text-gray-900">C</span>
             </div>
             <div>
-              <h1 className="text-lg font-bold text-sidebar-foreground">Cambizzle</h1>
-              <p className="text-xs text-sidebar-foreground/60">Admin Panel</p>
+              <h1 className="text-sm sm:text-base font-bold text-white">Cambizzle</h1>
+              <p className="text-xs text-gray-400">Admin Panel</p>
             </div>
-          </div>
+          </NavLink>
         </div>
 
-        <nav className="flex-1 p-4 space-y-2 bg-slate-950">
-          {navigation.map(item => <NavLink key={item.name} to={item.href} end={item.href === "/admin"} className={({ isActive }) => {
-            const baseClasses = "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 shadow-lg hover:shadow-xl group";
-            const activeClasses = "bg-[#D6BA69] text-black shadow-lg border border-[#D6BA69]/50";
-            const inactiveClasses = "text-gray-300 hover:bg-gradient-to-r hover:from-slate-800 hover:to-slate-700 hover:text-white hover:shadow-lg hover:shadow-slate-900/50 border border-transparent hover:border-slate-600/50";
-            return cn(baseClasses, isActive ? activeClasses : inactiveClasses);
-          }}>
+        {/* Navigation */}
+        <nav className="flex-1 p-2 sm:p-3 space-y-1 sm:space-y-1.5 overflow-y-auto">
+          {navigation.map((item) => (
+            <NavLink
+              key={item.name}
+              to={item.href}
+              end={item.href === "/admin"}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200",
+                  isActive
+                    ? "bg-[#D6BA69] text-gray-900 shadow-md border border-[#D6BA69]/50"
+                    : "text-gray-300 hover:bg-gray-800 hover:text-[#D6BA69] hover:shadow-sm"
+                )
+              }
+              aria-label={`Navigate to ${item.name}`}
+            >
               {({ isActive }) => (
                 <>
-                  <item.icon className={`h-5 w-5 transition-colors duration-300 ${isActive ? 'text-black' : 'text-gray-400 group-hover:text-[#D6BA69]'}`} />
+                  <item.icon
+                    className={cn(
+                      "h-4 w-4 sm:h-5 sm:w-5",
+                      isActive ? "text-gray-900" : "text-gray-400 group-hover:text-[#D6BA69]"
+                    )}
+                  />
                   {item.name}
                 </>
               )}
-            </NavLink>)}
+            </NavLink>
+          ))}
         </nav>
 
-        <div className="p-4 space-y-2 bg-slate-950 border-t border-slate-800">
-          <NavLink to="/admin/settings" className={({ isActive }) => {
-            const baseClasses = "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 shadow-lg hover:shadow-xl";
-            const activeClasses = "bg-[#D6BA69] text-black shadow-lg border border-[#D6BA69]/50";
-            const inactiveClasses = "text-gray-300 hover:bg-gradient-to-r hover:from-slate-800 hover:to-slate-700 hover:text-white hover:shadow-lg hover:shadow-slate-900/50";
-            return cn(baseClasses, isActive ? activeClasses : inactiveClasses);
-          }}>
+        {/* Footer */}
+        <div className="p-2 sm:p-3 border-t border-gray-800">
+          <NavLink
+            to="/admin/settings"
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200",
+                isActive
+                  ? "bg-[#D6BA69] text-gray-900 shadow-md border border-[#D6BA69]/50"
+                  : "text-gray-300 hover:bg-gray-800 hover:text-[#D6BA69] hover:shadow-sm"
+              )
+            }
+            aria-label="Navigate to Settings"
+          >
             {({ isActive }) => (
               <>
-                <Settings className={`h-5 w-5 transition-colors duration-300 ${isActive ? 'text-black' : 'text-gray-400'}`} />
-                Paramètres
+                <Settings
+                  className={cn(
+                    "h-4 w-4 sm:h-5 sm:w-5",
+                    isActive ? "text-gray-900" : "text-gray-400"
+                  )}
+                />
+                Settings
               </>
             )}
           </NavLink>
-          <button 
+          <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-300 hover:bg-gradient-to-r hover:from-red-900/80 hover:to-red-800/80 hover:text-red-100 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-red-900/30 w-full border border-red-800/50 hover:border-red-700/70"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium text-gray-300 hover:bg-red-900/80 hover:text-red-100 transition-all duration-200 w-full"
+            aria-label="Log out"
           >
-            <LogOut className="h-5 w-5" />
-            Déconnexion
+            <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
+            Log Out
           </button>
         </div>
       </aside>
 
+      {/* Overlay for mobile when sidebar is open */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={toggleSidebar}
+        />
+      )}
+
       {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        <div className="container mx-auto p-8">{children}</div>
+      <main className="flex-1 overflow-auto bg-white">
+        <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-8">{children}</div>
       </main>
-    </div>;
+    </div>
+  );
 };
 
 export default AdminLayout;

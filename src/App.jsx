@@ -6,6 +6,8 @@ import { Toaster } from './components/ui/toaster';
 import { Toaster as Sonner } from './components/ui/sonner';
 import { TooltipProvider } from './components/ui/tooltip';
 import Header from './components/layout/Header';
+import CategoryAds from './pages/CategoryAds';
+import SubcategoryAds from './pages/SubcategoryAds';
 import AdminLayout from './components/admin/AdminLayout';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -18,11 +20,13 @@ import Dashboard from './pages/admin/Dashboard';
 import Users from './pages/admin/Users';
 import Ads from './pages/admin/Ads';
 import Categories from './pages/admin/Categories';
+import Subcategories from './pages/admin/Subcategories';
 import Reports from './pages/admin/Reports';
 import Filters from './pages/admin/Filters';
 import Brands from './pages/admin/Brands';
 import Locations from './pages/admin/Locations';
 import ModerationLogs from './pages/admin/ModerationLogs';
+import ReferralCodes from './pages/admin/ReferralCodes';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -70,6 +74,24 @@ function App() {
                     </main>
                   </div>
                 } />
+                <Route path="/category" element={
+                  <div className="min-h-screen bg-gray-50">
+                    <Header />
+                    <main>
+                      {/* Affiche les annonces d'une catégorie */}
+                      <CategoryAds />
+                    </main>
+                  </div>
+                } />
+                <Route path="/subcategory" element={
+                  <div className="min-h-screen bg-gray-50">
+                    <Header />
+                    <main>
+                      {/* Affiche les annonces d'une sous-catégorie */}
+                      <SubcategoryAds />
+                    </main>
+                  </div>
+                } />
                 <Route path="/create-ad" element={
                   <div className="min-h-screen bg-gray-50">
                     <Header />
@@ -100,11 +122,13 @@ function App() {
                 <Route path="/admin/users" element={<AdminLayout><Users /></AdminLayout>} />
                 <Route path="/admin/ads" element={<AdminLayout><Ads /></AdminLayout>} />
                 <Route path="/admin/categories" element={<AdminLayout><Categories /></AdminLayout>} />
+                <Route path="/admin/subcategories" element={<AdminLayout><Subcategories /></AdminLayout>} />
                 <Route path="/admin/filters" element={<AdminLayout><Filters /></AdminLayout>} />
                 <Route path="/admin/brands" element={<AdminLayout><Brands /></AdminLayout>} />
                 <Route path="/admin/locations" element={<AdminLayout><Locations /></AdminLayout>} />
                 <Route path="/admin/reports" element={<AdminLayout><Reports /></AdminLayout>} />
                 <Route path="/admin/moderation-logs" element={<AdminLayout><ModerationLogs /></AdminLayout>} />
+                <Route path="/admin/referralcodes" element={<AdminLayout><ReferralCodes /></AdminLayout>} />
                 {/* Autres routes admin seront ajoutées ici */}
               </Routes>
             </Router>

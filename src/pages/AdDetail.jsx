@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react';
+import Loader from '../components/ui/Loader';
+import { Helmet } from 'react-helmet';
+import { API_BASE_URL, SERVER_BASE_URL } from '../config/api';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -56,25 +59,22 @@ const AdDetail = () => {
         setIsLoading(false);
         return;
       }
-
       try {
         setIsLoading(true);
-        
         // Fetch ad details
-        const adResponse = await fetch(`http://localhost:8080/api/ads/${slug}`);
-        
+        const adResponse = await fetch(`${API_BASE_URL}/ads/${slug}`);
         if (!adResponse.ok) {
-          throw new Error('Annonce non trouvée');
+          throw new Error('Ad not found');
         }
         
         const adData = await adResponse.json();
         console.log('Ad response:', adData);
         
-        // L'API retourne directement les données de l'annonce avec vendeur et business
+        // The API returns ad data directly with seller and business details
         if (adData && adData.id) {
           const adDetails = {
             ...adData,
-            // Calcul du pourcentage de remise
+            // Calculate discount percentage
             discountPercentage: adData.discountPercentage || adData.discount_percentage || 
               (adData.originalPrice && adData.price && adData.originalPrice > adData.price 
                 ? Math.round(((adData.originalPrice - adData.price) / adData.originalPrice) * 100)
@@ -85,19 +85,19 @@ const AdDetail = () => {
           };
           setAd(adDetails);
           
-          // Récupérer les données vendeur depuis userDetails
+          // Retrieve seller data from userDetails
           if (adDetails.userDetails) {
             setSeller(adDetails.userDetails);
           }
           
-          // Récupérer le profil business depuis seller_profile
+          // Retrieve business profile from seller_profile
           if (adDetails.seller_profile) {
             setSellerBusiness(adDetails.seller_profile);
           }
           
           // Fetch related ads
           try {
-            const relatedResponse = await fetch(`http://localhost:8080/api/ads?category=${encodeURIComponent(adDetails.categoryName)}&limit=4&exclude=${adDetails.id}`);
+            const relatedResponse = await fetch(`${API_BASE_URL}/ads?category=${encodeURIComponent(adDetails.categoryName)}&limit=4&exclude=${adDetails.id}`);
             if (relatedResponse.ok) {
               const relatedData = await relatedResponse.json();
               if (relatedData && Array.isArray(relatedData)) {
@@ -108,7 +108,7 @@ const AdDetail = () => {
             console.error('Error fetching related ads:', error);
           }
         } else {
-          throw new Error('Données d\'annonce invalides');
+          throw new Error('Invalid ad data');
         }
       } catch (error) {
         console.error('Error fetching ad details:', error);
@@ -129,7 +129,7 @@ const AdDetail = () => {
     try {
       await navigator.share({
         title: ad.title,
-        text: `Regardez cette annonce: ${ad.title}`,
+        text: `Check out this ad: ${ad.title}`,
         url: window.location.href
       });
     } catch (error) {
@@ -163,34 +163,27 @@ const AdDetail = () => {
     console.log('Message sent:', contactMessage);
     setIsContactModalOpen(false);
     setContactMessage('');
-    alert('Message envoyé avec succès !');
+    alert('Message sent successfully!');
   };
 
   const handleReport = () => {
     console.log('Report submitted:', reportReason);
     setIsReportModalOpen(false);
     setReportReason('');
-    alert('Signalement envoyé. Merci de nous aider à maintenir la qualité de notre plateforme.');
+    alert('Report submitted. Thank you for helping us maintain our platform’s quality.');
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Chargement des détails...</p>
-        </div>
-      </div>
-    );
+    return <Loader text="Loading details..." className="min-h-screen bg-gray-50" />;
   }
 
   if (!ad) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Annonce non trouvée</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Ad Not Found</h1>
           <Button onClick={() => navigate('/')}>
-            Retour à l'accueil
+            Back to Home
           </Button>
         </div>
       </div>
@@ -208,7 +201,7 @@ const AdDetail = () => {
               className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span className="font-medium">Retour aux résultats</span>
+              <span className="font-medium">Back to Results</span>
             </button>
             <div className="flex items-center space-x-3">
               <button
@@ -246,14 +239,14 @@ const AdDetail = () => {
               onClick={() => navigate('/')}
               className="text-gray-500 hover:text-gray-700 transition-colors"
             >
-              Accueil
+              Home
             </button>
             <ChevronRight className="w-4 h-4 text-gray-400" />
             <button
               onClick={() => navigate('/ads')}
               className="text-gray-500 hover:text-gray-700 transition-colors"
             >
-              Toutes les annonces
+              All Ads
             </button>
             {ad?.categoryName && (
               <>
@@ -312,7 +305,7 @@ const AdDetail = () => {
                     </div>
                     <div className="flex items-center">
                       <Eye className="w-4 h-4 mr-1.5" />
-                      <span>{(ad.viewCount || 0).toLocaleString()} vues</span>
+                      <span>{(ad.viewCount || 0).toLocaleString()} views</span>
                     </div>
                   </div>
                 </div>
@@ -329,7 +322,7 @@ const AdDetail = () => {
                           {formatPrice(ad.originalPrice)} FCFA
                         </span>
                         <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">
-                          -{ad.discountPercentage}% de réduction
+                          -{ad.discountPercentage}% off
                         </span>
                       </>
                     )}
@@ -338,7 +331,7 @@ const AdDetail = () => {
                     <div className="mt-2">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         <Tag className="w-3 h-3 mr-1" />
-                        Prix négociable
+                        Negotiable
                       </span>
                     </div>
                   )}
@@ -348,30 +341,30 @@ const AdDetail = () => {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
                     <Package className="w-6 h-6 text-gray-400 mx-auto mb-2" />
-                    <div className="text-xs text-gray-500 mb-1">Catégorie</div>
+                    <div className="text-xs text-gray-500 mb-1">Category</div>
                     <div className="font-medium text-sm">{ad.categoryName}</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
                     <CheckCircle className="w-6 h-6 text-gray-400 mx-auto mb-2" />
-                    <div className="text-xs text-gray-500 mb-1">Sous-catégorie</div>
+                    <div className="text-xs text-gray-500 mb-1">Subcategory</div>
                     <div className="font-medium text-sm">{ad.subcategoryName}</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
                     <Truck className="w-6 h-6 text-gray-400 mx-auto mb-2" />
-                    <div className="text-xs text-gray-500 mb-1">Marque</div>
+                    <div className="text-xs text-gray-500 mb-1">Brand</div>
                     <div className="font-medium text-sm">{ad.brandName}</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
                     <AlertTriangle className="w-6 h-6 text-gray-400 mx-auto mb-2" />
-                    <div className="text-xs text-gray-500 mb-1">Négociable</div>
-                    <div className="font-medium text-sm">{ad.isNegotiable ? 'Oui' : 'Non'}</div>
+                    <div className="text-xs text-gray-500 mb-1">Negotiable</div>
+                    <div className="font-medium text-sm">{ad.isNegotiable ? 'Yes' : 'No'}</div>
                   </div>
                 </div>
 
                 {/* Characteristics */}
                 {ad.filters && ad.filters.length > 0 && (
                   <div className="mb-8">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Caractéristiques</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Specifications</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {ad.filters.map((filter, index) => (
                         <div key={index} className="flex justify-between py-3 border-b border-gray-100">
@@ -396,7 +389,7 @@ const AdDetail = () => {
                 {/* Tags */}
                 {ad.tags && ad.tags.length > 0 && (
                   <div>
-                    <h4 className="text-md font-medium text-gray-900 mb-3">Mots-clés</h4>
+                    <h4 className="text-md font-medium text-gray-900 mb-3">Tags</h4>
                     <div className="flex flex-wrap gap-2">
                       {ad.tags.map((tag, index) => (
                         <span
@@ -421,15 +414,15 @@ const AdDetail = () => {
                 id: (seller?.idUser || ad?.userId || '1'),
                 name: seller?.firstName && seller?.lastName 
                   ? `${seller.firstName} ${seller.lastName}` 
-                  : (seller?.firstName || ad?.sellerUsername || 'Vendeur'),
-                avatar: seller?.photoUrl ? (seller.photoUrl.startsWith('http') ? seller.photoUrl : `http://localhost:8080/${seller.photoUrl}`) : null,
+                  : (seller?.firstName || ad?.sellerUsername || 'Seller'),
+                avatar: seller?.photoUrl ? (seller.photoUrl.startsWith('http') ? seller.photoUrl : `${SERVER_BASE_URL}/${seller.photoUrl}`) : null,
                 memberSince: formatDate(seller?.createdAt || ad?.createdAt),
                 rating: seller?.rating || 0,
                 reviewCount: seller?.reviewCount || 0,
                 isVerified: seller?.isVerified === '1' || seller?.isVerified === true || false,
                 phoneNumber: seller?.phone,
                 responseRate: seller?.responseRate || 95,
-                responseTime: seller?.responseTime || 'Quelques heures'
+                responseTime: seller?.responseTime || 'A few hours'
               }}
               onContact={handleContact}
               onCall={handleCall}
@@ -450,7 +443,7 @@ const AdDetail = () => {
         {/* Related Ads Section - Bottom */}
         {relatedAds.length > 0 && (
           <div className="mt-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Annonces similaires</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Related Ads</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedAds.map((relatedAd) => (
                 <AdCard key={relatedAd.id} ad={relatedAd} />
@@ -464,7 +457,7 @@ const AdDetail = () => {
       <Modal
         isOpen={isContactModalOpen}
         onClose={() => setIsContactModalOpen(false)}
-        title="Contacter le vendeur"
+        title="Contact Seller"
       >
         <div className="space-y-4">
           <div>
@@ -476,7 +469,7 @@ const AdDetail = () => {
               onChange={(e) => setContactMessage(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d6ba69] focus:border-transparent resize-none transition-colors"
               rows={4}
-              placeholder="Bonjour, je suis intéressé par votre annonce..."
+              placeholder="Hello, I'm interested in your ad..."
             />
           </div>
           <div className="flex space-x-3">
@@ -484,13 +477,13 @@ const AdDetail = () => {
               onClick={() => setIsContactModalOpen(false)}
               className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              Annuler
+              Cancel
             </button>
             <button
               onClick={handleSendMessage}
               className="flex-1 px-4 py-2 bg-[#d6ba69] text-white rounded-lg hover:bg-[#c5a952] transition-colors"
             >
-              Envoyer
+              Send
             </button>
           </div>
         </div>
@@ -500,24 +493,24 @@ const AdDetail = () => {
       <Modal
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
-        title="Signaler cette annonce"
+        title="Report This Ad"
       >
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Raison du signalement
+              Reason for Reporting
             </label>
             <select
               value={reportReason}
               onChange={(e) => setReportReason(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d6ba69] focus:border-transparent transition-colors"
             >
-              <option value="">Sélectionner une raison</option>
-              <option value="spam">Spam ou contenu indésirable</option>
-              <option value="fraud">Contenu frauduleux</option>
-              <option value="inappropriate">Contenu inapproprié</option>
-              <option value="duplicate">Annonce dupliquée</option>
-              <option value="other">Autre</option>
+              <option value="">Select a reason</option>
+              <option value="spam">Spam or unwanted content</option>
+              <option value="fraud">Fraudulent content</option>
+              <option value="inappropriate">Inappropriate content</option>
+              <option value="duplicate">Duplicate ad</option>
+              <option value="other">Other</option>
             </select>
           </div>
           <div className="flex space-x-3">
@@ -525,14 +518,14 @@ const AdDetail = () => {
               onClick={() => setIsReportModalOpen(false)}
               className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              Annuler
+              Cancel
             </button>
             <button
               onClick={handleReport}
               disabled={!reportReason}
               className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              Signaler
+              Report
             </button>
           </div>
         </div>

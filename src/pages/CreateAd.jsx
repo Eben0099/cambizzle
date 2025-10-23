@@ -23,6 +23,10 @@ const CreateAd = () => {
     locationId: '',
     brandId: '',
     discountPercent: 0,
+    type: 'sell',
+    condition: '',
+    tags: '',
+    isPremium: false,
     // Champs dynamiques pour les filtres
     filters: {}
   });
@@ -155,10 +159,13 @@ const CreateAd = () => {
         newErrors.category = 'Sélectionnez une catégorie';
       }
 
+      if (!formData.type) {
+        newErrors.type = 'Sélectionnez un type d\'annonce';
+      }
+
       if (!formData.subcategory) {
         newErrors.subcategory = 'La sous-catégorie est requise';
       } else if (formData.category) {
-      setIsLoading(true);
         const selectedSubcategory = subcategories.find(sub => sub.slug === formData.subcategory);
         if (!selectedSubcategory?.id) {
           newErrors.subcategory = 'ID de sous-catégorie invalide';
@@ -287,6 +294,8 @@ const CreateAd = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (isLoading) return;
+
     console.log('🚀 Début soumission formulaire');
     console.log('📊 État actuel:', {
       currentStep,
@@ -324,6 +333,10 @@ const CreateAd = () => {
       formDataToSend.append('price', formData.price);
       formDataToSend.append('original_price', formData.originalPrice || formData.price);
       formDataToSend.append('discount_percentage', formData.discountPercent || 0);
+      formDataToSend.append('type', formData.type);
+      formDataToSend.append('condition', formData.condition);
+      formDataToSend.append('tags', formData.tags);
+      formDataToSend.append('is_premium', formData.isPremium ? 1 : 0);
       
       // Convertir subcategory slug en ID avant envoi
       if (formData.subcategory && formData.category) {
@@ -379,6 +392,10 @@ const CreateAd = () => {
         locationIdParsed: parseInt(formData.locationId),
         brandId: formData.brandId,
         brandIdParsed: formData.brandId ? parseInt(formData.brandId) : null,
+        type: formData.type,
+        condition: formData.condition,
+        tags: formData.tags,
+        isPremium: formData.isPremium,
         filters: formData.filters
       });
 
@@ -407,8 +424,8 @@ const CreateAd = () => {
       const result = await adsService.createAd(formDataToSend);
       console.log('📡 Réponse API reçue:', result);
 
-      if (result.success) {
-        window.history.back();
+      if (result.ad) {
+        navigate('/profile');
       }
     } catch (err) {
       console.error('Erreur création annonce:', err);
@@ -530,6 +547,9 @@ return (
                       </option>
                     ))}
                   </select>
+                  {errors.type && (
+                    <p className="text-sm text-red-600 mt-1">{errors.type}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -892,10 +912,30 @@ return (
                                   ...base, 
                                   backgroundColor: state.isSelected ? '#D6BA69' : '#fff', 
                                   color: state.isSelected ? 'white' : '#222',
-                                  '&:hover': { backgroundColor: state.isSelected ? '#D6BA69' : '#f9fafb' }
+                                  '&:hover': { backgroundColor: state.isSelected ? '#D6BA69' : '#f9fafb' },
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 8
                                 })
                               }}
                               placeholder={`Select ${filter.name.toLowerCase()}`}
+                              formatOptionLabel={(option, { context, isSelected }) =>
+                                context === 'menu' ? (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      tabIndex={-1}
+                                      readOnly
+                                      style={{ accentColor: '#D6BA69', marginRight: 8, pointerEvents: 'none' }}
+                                      onClick={e => e.stopPropagation()}
+                                    />
+                                    <span>{option.label}</span>
+                                  </div>
+                                ) : (
+                                  <span>{option.label}</span>
+                                )
+                              }
                             />
                           ) : (
                             <input
@@ -984,7 +1024,7 @@ return (
                 type="submit"
                 variant="primary"
                 loading={isLoading}
-                disabled={isLoading}
+                disabled={isLoading || images.length === 0}
                 className="bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] px-8 py-3 rounded-lg font-semibold transition-colors shadow-sm disabled:opacity-50"
               >
                 Publish Ad

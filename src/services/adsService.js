@@ -1,6 +1,7 @@
 import { generateId, formatPrice, calculateDiscount } from '../utils/helpers';
 import { AD_STATUS, CATEGORIES } from '../utils/constants';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
 
 // Données mockées pour les annonces
 const mockAds = [
@@ -464,8 +465,6 @@ const mockAds = [
     tags: ['chaussures', 'nike', 'jordan', 'sneakers', 'collection']
   }
 ];
-
-const API_BASE_URL = 'http://localhost:8080/api';
 
 class AdsService {
   async getSubcategoriesByCategory(categoryId) {

@@ -54,7 +54,7 @@ const AdDetail = () => {
       setIsLoading(true);
       try {
         // Charger les détails de l'annonce depuis l'API
-        const response = await fetch(`http://localhost:8080/api/ads/${slug}`, {
+  const response = await fetch(`https://cambizzle.seed-innov.com/api/ads/${slug}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
             'Content-Type': 'application/json'
@@ -77,7 +77,7 @@ const AdDetail = () => {
         
         // Charger les informations du vendeur
         try {
-          const sellerResponse = await fetch(`http://localhost:8080/api/users/${adData.userId}`, {
+          const sellerResponse = await fetch(`https://cambizzle.seed-innov.com/api/users/${adData.userId}`, {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`,
               'Content-Type': 'application/json'
@@ -95,7 +95,7 @@ const AdDetail = () => {
         
         // Charger le profil business du vendeur s'il en a un
         try {
-          const businessResponse = await fetch(`http://localhost:8080/api/seller-profiles/user/${adData.userId}`, {
+          const businessResponse = await fetch(`https://cambizzle.seed-innov.com/api/seller-profiles/user/${adData.userId}`, {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`,
               'Content-Type': 'application/json'
@@ -113,7 +113,7 @@ const AdDetail = () => {
         
         // Charger les annonces similaires
         try {
-          const relatedResponse = await fetch(`http://localhost:8080/api/ads?subcategoryId=${adData.subcategoryId}&limit=4&exclude=${adData.id}`, {
+          const relatedResponse = await fetch(`https://cambizzle.seed-innov.com/api/ads?subcategoryId=${adData.subcategoryId}&limit=4&exclude=${adData.id}`, {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`,
               'Content-Type': 'application/json'

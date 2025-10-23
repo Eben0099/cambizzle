@@ -8,8 +8,8 @@ const BusinessProfile = ({ business }) => {
           <Building2 className="w-6 h-6 text-[#d6ba69]" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Profil Entreprise</h3>
-          <p className="text-sm text-gray-600">Vendeur professionnel</p>
+          <h3 className="text-lg font-semibold text-gray-900">Business Profile</h3>
+          <p className="text-sm text-gray-600">Professional Seller</p>
         </div>
       </div>
 
@@ -24,7 +24,7 @@ const BusinessProfile = ({ business }) => {
             <div className="flex items-start space-x-3">
               <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
               <div>
-                <span className="text-xs text-gray-500 uppercase tracking-wide">Adresse</span>
+                <span className="text-xs text-gray-500 uppercase tracking-wide">Address</span>
                 <p className="text-sm text-gray-900">{business.business_address}</p>
               </div>
             </div>
@@ -34,7 +34,7 @@ const BusinessProfile = ({ business }) => {
             <div className="flex items-start space-x-3">
               <Globe className="w-4 h-4 text-gray-400 mt-0.5" />
               <div>
-                <span className="text-xs text-gray-500 uppercase tracking-wide">Site web</span>
+                <span className="text-xs text-gray-500 uppercase tracking-wide">Website</span>
                 <a
                   href={business.website_url}
                   target="_blank"
@@ -51,7 +51,7 @@ const BusinessProfile = ({ business }) => {
             <div className="flex items-start space-x-3">
               <Clock className="w-4 h-4 text-gray-400 mt-0.5" />
               <div>
-                <span className="text-xs text-gray-500 uppercase tracking-wide">Établie en</span>
+                <span className="text-xs text-gray-500 uppercase tracking-wide">Established</span>
                 <p className="text-sm text-gray-900">{business.yearEstablished}</p>
               </div>
             </div>
@@ -61,7 +61,7 @@ const BusinessProfile = ({ business }) => {
             <div className="flex items-start space-x-3">
               <Clock className="w-4 h-4 text-gray-400 mt-0.5" />
               <div>
-                <span className="text-xs text-gray-500 uppercase tracking-wide">Téléphone</span>
+                <span className="text-xs text-gray-500 uppercase tracking-wide">Phone</span>
                 <p className="text-sm text-gray-900">{business.business_phone}</p>
               </div>
             </div>
@@ -78,51 +78,51 @@ const BusinessProfile = ({ business }) => {
           )}
         </div>
 
-        {/* Options de livraison */}
+        {/* Delivery Options */}
         {business.delivery_options && (
           <div>
-            <span className="text-xs text-gray-500 uppercase tracking-wide block mb-2">Options de livraison</span>
+            <span className="text-xs text-gray-500 uppercase tracking-wide block mb-2">Delivery Options</span>
             <div className="flex flex-wrap gap-2">
               {business.delivery_options.pickup && (
                 <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">
-                  Retrait en magasin
+                  In-Store Pickup
                 </span>
               )}
               {business.delivery_options.delivery && (
                 <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">
-                  Livraison
+                  Delivery
                 </span>
               )}
               {business.delivery_options.shipping && (
                 <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs font-medium">
-                  Expédition
+                  Shipping
                 </span>
               )}
             </div>
           </div>
         )}
 
-        {/* Heures d'ouverture */}
+        {/* Opening Hours */}
         {business.opening_hours && (
           <div>
             <div className="flex items-center space-x-2 mb-2">
               <Clock className="w-4 h-4 text-gray-400" />
-              <span className="text-xs text-gray-500 uppercase tracking-wide">Heures d'ouverture</span>
+              <span className="text-xs text-gray-500 uppercase tracking-wide">Opening Hours</span>
             </div>
             <div className="space-y-1">
-              {/* Ordre des jours de lundi à dimanche */}
+              {/* Order of days from Monday to Sunday */}
               {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => {
                 const hours = business.opening_hours[day];
                 if (!hours) return null;
                 
                 const dayNames = {
-                  monday: 'Lundi',
-                  tuesday: 'Mardi',
-                  wednesday: 'Mercredi',
-                  thursday: 'Jeudi',
-                  friday: 'Vendredi',
-                  saturday: 'Samedi',
-                  sunday: 'Dimanche'
+                  monday: 'Monday',
+                  tuesday: 'Tuesday',
+                  wednesday: 'Wednesday',
+                  thursday: 'Thursday',
+                  friday: 'Friday',
+                  saturday: 'Saturday',
+                  sunday: 'Sunday'
                 };
                 
                 return (
@@ -131,7 +131,7 @@ const BusinessProfile = ({ business }) => {
                       {dayNames[day]}
                     </span>
                     <span className={`${hours.closed ? 'text-red-600' : 'text-gray-600'}`}>
-                      {hours.closed ? 'Fermé' : `${hours.open} - ${hours.close}`}
+                      {hours.closed ? 'Closed' : `${hours.open} - ${hours.close}`}
                     </span>
                   </div>
                 );
@@ -140,17 +140,17 @@ const BusinessProfile = ({ business }) => {
           </div>
         )}
 
-        {/* Statut de vérification */}
+        {/* Verification Status */}
         {business.is_verified !== undefined && (
           <div>
             <div className="flex items-center space-x-2 mb-2">
               <Award className="w-4 h-4 text-gray-400" />
-              <span className="text-xs text-gray-500 uppercase tracking-wide">Statut</span>
+              <span className="text-xs text-gray-500 uppercase tracking-wide">Status</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className={`w-2 h-2 rounded-full ${business.is_verified ? 'bg-green-400' : 'bg-yellow-400'}`}></div>
               <span className={`text-xs font-medium ${business.is_verified ? 'text-green-700' : 'text-yellow-700'}`}>
-                {business.is_verified ? 'Entreprise vérifiée' : 'Vérification en cours'}
+                {business.is_verified ? 'Verified Business' : 'Verification Pending'}
               </span>
             </div>
           </div>

@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:8080/api'; // CodeIgniter4 API URL
+import { API_BASE_URL } from '../config/api';
 
 class AdminService {
   constructor() {
@@ -320,6 +319,22 @@ class AdminService {
     try {
       this.setAuthHeader();
       const response = await axios.delete(`${API_BASE_URL}/admin/referentials/categories/${categoryId}`);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
+
+  // Fetch referral codes
+  async getReferralCodes() {
+    try {
+      this.setAuthHeader();
+      const response = await axios.get(`${API_BASE_URL}/admin/referralcodes`);
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {

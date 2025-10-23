@@ -16,7 +16,7 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
     identityDocumentType: user?.identityDocumentType || '',
     identityDocumentNumber: user?.identityDocumentNumber || '',
     identityDocumentUrl: user?.identityDocumentUrl || '',
-    photoBase64: null // Pour stocker temporairement le base64
+    photoBase64: null // To store temporary base64
   });
 
   const [identityDocument, setIdentityDocument] = useState(null);
@@ -35,7 +35,7 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
       const img = new Image();
 
       img.onload = () => {
-        // Calculer les nouvelles dimensions en gardant le ratio
+        // Calculate new dimensions while maintaining aspect ratio
         let { width, height } = img;
 
         if (width > height) {
@@ -53,10 +53,10 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
         canvas.width = width;
         canvas.height = height;
 
-        // Dessiner l'image compressée
+        // Draw compressed image
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Convertir en base64 avec compression
+        // Convert to base64 with compression
         canvas.toBlob(resolve, 'image/jpeg', quality);
       };
 
@@ -70,24 +70,24 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('Veuillez sélectionner une image');
+      alert('Please select an image');
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('L\'image ne doit pas dépasser 5MB');
+      alert('The image must not exceed 5MB');
       return;
     }
 
     setUploadingPhoto(true);
     try {
-      console.log('🖼️ Image originale - Taille:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+      console.log('🖼️ Original image - Size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
 
-      // Compresser l'image
+      // Compress the image
       const compressedBlob = await compressImage(file, 800, 800, 0.7);
-      console.log('🗜️ Image compressée - Taille:', (compressedBlob.size / 1024 / 1024).toFixed(2), 'MB');
+      console.log('🗜️ Compressed image - Size:', (compressedBlob.size / 1024 / 1024).toFixed(2), 'MB');
 
-      // Convertir en base64
+      // Convert to base64
       const base64 = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result);
@@ -95,9 +95,9 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
         reader.readAsDataURL(compressedBlob);
       });
 
-      console.log('📏 Longueur base64:', base64.length, 'caractères');
+      console.log('📏 Base64 length:', base64.length, 'characters');
 
-      // Créer une URL temporaire pour l'aperçu dans l'interface
+      // Create a temporary URL for preview in the interface
       const previewUrl = URL.createObjectURL(compressedBlob);
 
       setEditFormData(prev => ({
@@ -106,10 +106,10 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
         photoBase64: base64
       }));
 
-      console.log('✅ Image traitée avec succès');
+      console.log('✅ Image processed successfully');
     } catch (error) {
-      console.error('Erreur lors du traitement de l\'image:', error);
-      alert('Erreur lors du traitement de l\'image');
+      console.error('Error processing image:', error);
+      alert('Error processing image');
     } finally {
       setUploadingPhoto(false);
     }
@@ -121,7 +121,7 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
       await new Promise(resolve => setTimeout(resolve, 500));
       setEditFormData(prev => ({ ...prev, photoUrl: '' }));
     } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
+      console.error('Error during removal:', error);
     } finally {
       setUploadingPhoto(false);
     }
@@ -132,12 +132,12 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
     if (!file) return;
 
     if (!file.type.startsWith('application/pdf')) {
-      alert('Veuillez sélectionner un fichier PDF');
+      alert('Please select a PDF file');
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('Le fichier ne doit pas dépasser 5MB');
+      alert('The file must not exceed 5MB');
       return;
     }
 
@@ -145,27 +145,27 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
   };
 
   const handleSave = () => {
-    console.log('💾 handleSave appelé');
-    console.log('📊 editFormData actuel:', editFormData);
+    console.log('💾 handleSave called');
+    console.log('📊 Current editFormData:', editFormData);
 
-    // Créer un FormData pour envoyer les données et l'image
+    // Create a FormData to send data and image
     const formData = new FormData();
 
-    // Ajouter les champs texte
+    // Add text fields
     formData.append('first_name', editFormData.firstName);
     formData.append('last_name', editFormData.lastName);
     formData.append('email', editFormData.email);
     formData.append('slug', editFormData.slug);
 
-    // Ajouter le téléphone seulement s'il a changé
+    // Add phone only if it has changed
     if (editFormData.phone && editFormData.phone !== user?.phone) {
       formData.append('phone', editFormData.phone);
     }
 
-    // Ajouter l'image seulement si elle a été modifiée
+    // Add image only if it has been modified
     if (editFormData.photoBase64) {
-      // Convertir le base64 en Blob pour l'envoyer comme fichier
-      const base64Data = editFormData.photoBase64.split(',')[1]; // Retirer le préfixe data:image/jpeg;base64,
+      // Convert base64 to Blob for sending as a file
+      const base64Data = editFormData.photoBase64.split(',')[1]; // Remove data:image/jpeg;base64, prefix
       const mimeType = editFormData.photoBase64.split(',')[0].split(':')[1].split(';')[0];
       const binaryString = atob(base64Data);
       const bytes = new Uint8Array(binaryString.length);
@@ -175,15 +175,15 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
       const imageBlob = new Blob([bytes], { type: mimeType });
 
       formData.append('photo', imageBlob, 'profile-photo.jpg');
-      console.log('📸 Image ajoutée au FormData:', imageBlob.size, 'bytes');
+      console.log('📸 Image added to FormData:', imageBlob.size, 'bytes');
     }
 
-    console.log('📤 FormData préparé avec', [...formData.entries()].length, 'champs');
-    console.log('🔍 Champs FormData:', [...formData.entries()].map(([key, value]) => `${key}: ${value instanceof Blob ? 'Blob(' + value.size + ' bytes)' : value}`));
+    console.log('📤 FormData prepared with', [...formData.entries()].length, 'fields');
+    console.log('🔍 FormData fields:', [...formData.entries()].map(([key, value]) => `${key}: ${value instanceof Blob ? 'Blob(' + value.size + ' bytes)' : value}`));
 
-    // Vérifier que les données sont valides
+    // Validate data
     if (!editFormData.firstName || !editFormData.lastName || !editFormData.email) {
-      alert('Les champs nom, prénom et email sont requis');
+      alert('First name, last name, and email are required');
       return;
     }
 
@@ -191,22 +191,22 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Photo de profil */}
+    <div className="space-y-6 sm:space-y-8">
+      {/* Profile Photo */}
       <div className="bg-white rounded-xl shadow-sm">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <div className="p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
             <Camera className="w-5 h-5 mr-2 text-[#D6BA69]" />
-            Photo de profil
+            Profile Photo
           </h3>
           
-          <div className="flex items-center gap-6">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
             <div className="relative">
-              <div className="h-24 w-24 rounded-full overflow-hidden bg-[#D6BA69] flex items-center justify-center">
+              <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full overflow-hidden bg-[#D6BA69] flex items-center justify-center">
                 {editFormData.photoUrl ? (
-                  <img src={getPhotoUrl(editFormData.photoUrl)} alt="Photo de profil" className="w-full h-full object-cover" />
+                  <img src={getPhotoUrl(editFormData.photoUrl)} alt="Profile photo" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-xl font-bold text-white">
+                  <span className="text-lg sm:text-xl font-bold text-white">
                     {editFormData.firstName.charAt(0)}{editFormData.lastName.charAt(0)}
                   </span>
                 )}
@@ -219,16 +219,17 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
             </div>
             
             <div className="flex-1">
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <Button
                   variant="outline"
                   size="sm"
                   type="button"
                   disabled={uploadingPhoto}
                   onClick={() => document.getElementById('photo-upload').click()}
+                  aria-label="Upload profile photo"
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  Télécharger
+                  Upload
                 </Button>
                 <input
                   id="photo-upload"
@@ -245,43 +246,44 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
                     onClick={handleRemovePhoto}
                     disabled={uploadingPhoto}
                     className="text-red-600 hover:bg-red-50"
+                    aria-label="Remove profile photo"
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
-                    Supprimer
+                    Remove
                   </Button>
                 )}
               </div>
-              <p className="text-sm text-gray-500 mt-2">
-                JPG, PNG ou GIF. Taille maximale : 5MB
+              <p className="text-xs sm:text-sm text-gray-500 mt-2">
+                JPG, PNG, or GIF. Maximum size: 5MB
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Informations personnelles */}
+      {/* Personal Information */}
       <div className="bg-white rounded-xl shadow-sm">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <div className="p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
             <User className="w-5 h-5 mr-2 text-[#D6BA69]" />
-            Informations personnelles
+            Personal Information
           </h3>
           
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
-                label="Prénom"
+                label="First Name"
                 name="firstName"
                 value={editFormData.firstName}
                 onChange={handleFormInputChange}
-                placeholder="Jean"
+                placeholder="John"
               />
               <Input
-                label="Nom"
+                label="Last Name"
                 name="lastName"
                 value={editFormData.lastName}
                 onChange={handleFormInputChange}
-                placeholder="Dupont"
+                placeholder="Doe"
               />
             </div>
             
@@ -291,11 +293,11 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
               name="email"
               value={editFormData.email}
               onChange={handleFormInputChange}
-              placeholder="jean.dupont@email.com"
+              placeholder="john.doe@email.com"
             />
             
             <PhoneInput
-              label="Téléphone"
+              label="Phone"
               name="phone"
               value={editFormData.phone}
               onChange={handleFormInputChange}
@@ -303,29 +305,29 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
             />
 
             <Input
-              label="Nom d'utilisateur (slug)"
+              label="Username (slug)"
               name="slug"
               value={editFormData.slug}
               onChange={handleFormInputChange}
-              placeholder="jean-dupont"
+              placeholder="john-doe"
             />
           </div>
         </div>
       </div>
 
-      {/* Vérification d'identité */}
+      {/* Identity Verification */}
       <div className="bg-white rounded-xl shadow-sm">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <div className="p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
             <Shield className="w-5 h-5 mr-2 text-[#D6BA69]" />
-            Vérification d'identité
+            Identity Verification
           </h3>
           
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Type de document
+                <label className="block text-xs sm:text-sm font-medium text-gray-700">
+                  Document Type
                 </label>
                 <select
                   name="identityDocumentType"
@@ -333,15 +335,15 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
                   onChange={handleFormInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D6BA69] focus:border-transparent"
                 >
-                  <option value="">Sélectionner un type</option>
-                  <option value="cni">Carte Nationale d'Identité</option>
-                  <option value="passport">Passeport</option>
-                  <option value="permis">Permis de conduire</option>
+                  <option value="">Select a type</option>
+                  <option value="cni">National ID Card</option>
+                  <option value="passport">Passport</option>
+                  <option value="license">Driver's License</option>
                 </select>
               </div>
               
               <Input
-                label="Numéro du document"
+                label="Document Number"
                 name="identityDocumentNumber"
                 value={editFormData.identityDocumentNumber}
                 onChange={handleFormInputChange}
@@ -350,21 +352,21 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
             </div>
 
             <div className="space-y-3">
-              <label className="block text-sm font-medium text-gray-700">
-                Document d'identité (PDF uniquement)
+              <label className="block text-xs sm:text-sm font-medium text-gray-700">
+                Identity Document (PDF only)
               </label>
               
               {!identityDocument && !user?.identityDocumentUrl ? (
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[#D6BA69] transition-colors">
-                  <Upload className="w-8 h-8 text-gray-400 mx-auto mb-3" />
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-6 text-center hover:border-[#D6BA69] transition-colors">
+                  <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mx-auto mb-3" />
                   <label htmlFor="identity-document-upload" className="cursor-pointer">
-                    <span className="text-sm font-medium text-[#D6BA69] hover:text-[#C5A952]">
-                      Cliquez pour télécharger votre CNI
+                    <span className="text-xs sm:text-sm font-medium text-[#D6BA69] hover:text-[#C5A952]">
+                      Click to upload your ID
                     </span>
-                    <span className="text-sm text-gray-600"> ou glissez-déposez</span>
+                    <span className="text-xs sm:text-sm text-gray-600"> or drag and drop</span>
                   </label>
                   <p className="text-xs text-gray-500 mt-1">
-                    PDF uniquement (max. 5MB)
+                    PDF only (max. 5MB)
                   </p>
                   <input
                     id="identity-document-upload"
@@ -378,21 +380,27 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
                 <div className="border border-gray-300 rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-blue-100 rounded border flex items-center justify-center">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded border flex items-center justify-center">
                         <Upload className="w-5 h-5 text-blue-600" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {identityDocument ? identityDocument.name : `${editFormData.identityDocumentType?.toUpperCase() || 'Document'} - ${editFormData.identityDocumentNumber}`}
+                        <p className="text-xs sm:text-sm font-medium text-gray-900">
+                          {identityDocument ? identityDocument.name : `${editFormData.identityDocumentType?.toUpperCase() || 'ID'} - ${editFormData.identityDocumentNumber}`}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {identityDocument ? `${(identityDocument.size / 1024 / 1024).toFixed(2)} MB` : 'Document existant'}
+                          {identityDocument ? `${(identityDocument.size / 1024 / 1024).toFixed(2)} MB` : 'Existing document'}
                         </p>
                       </div>
                     </div>
                     <label htmlFor="identity-document-upload-change" className="cursor-pointer">
-                      <Button variant="outline" size="sm" type="button">
-                        Changer
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        type="button"
+                        className="py-2 sm:py-3 text-xs sm:text-sm"
+                        aria-label="Change identity document"
+                      >
+                        Change
                       </Button>
                       <input
                         id="identity-document-upload-change"
@@ -410,30 +418,35 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
         </div>
       </div>
 
-      {/* Sécurité */}
+      {/* Security */}
       <div className="bg-white rounded-xl shadow-sm">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <div className="p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
             <Lock className="w-5 h-5 mr-2 text-[#D6BA69]" />
-            Sécurité
+            Security
           </h3>
           
           <div className="space-y-4">
-            <Button variant="outline" className="w-full justify-start">
-              Changer mon mot de passe
+            <Button 
+              variant="outline" 
+              className="w-full justify-start py-2 sm:py-3 text-xs sm:text-sm"
+              aria-label="Change password"
+            >
+              Change My Password
             </Button>
             
             <div className="border-t border-gray-200 pt-4">
-              <h4 className="text-sm font-medium text-red-600 mb-2">Zone de danger</h4>
-              <p className="text-sm text-gray-600 mb-4">
-                Une fois votre compte supprimé, toutes vos données seront définitivement effacées.
+              <h4 className="text-xs sm:text-sm font-medium text-red-600 mb-2">Danger Zone</h4>
+              <p className="text-xs sm:text-sm text-gray-600 mb-4">
+                Once your account is deleted, all your data will be permanently removed.
               </p>
               <Button
                 variant="outline"
-                className="text-red-600 hover:bg-red-50"
+                className="text-red-600 hover:bg-red-50 py-2 sm:py-3 text-xs sm:text-sm"
                 onClick={() => setShowDeleteConfirm(true)}
+                aria-label="Delete account"
               >
-                Supprimer mon compte
+                Delete My Account
               </Button>
             </div>
           </div>
@@ -442,45 +455,60 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
 
       {/* Actions */}
       <div className="flex justify-end space-x-3">
-        <Button variant="outline">
-          Annuler
+        <Button 
+          variant="outline"
+          className="py-2 sm:py-3 text-xs sm:text-sm"
+          aria-label="Cancel"
+        >
+          Cancel
         </Button>
-        <Button onClick={handleSave} className="bg-[#D6BA69] hover:bg-[#C5A952] text-black">
-          Enregistrer les modifications
+        <Button 
+          onClick={handleSave} 
+          className="bg-[#D6BA69] hover:bg-[#C5A952] text-black py-2 sm:py-3 text-xs sm:text-sm"
+          aria-label="Save changes"
+        >
+          Save Changes
         </Button>
       </div>
 
-      {/* Confirmation de suppression */}
+      {/* Delete Confirmation */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
+          <div className="bg-white rounded-lg max-w-sm w-full p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-red-600">Supprimer le compte</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-red-600">Delete Account</h3>
               <button
                 onClick={() => setShowDeleteConfirm(false)}
                 className="text-gray-400 hover:text-gray-600"
+                aria-label="Close"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
             </div>
             
-            <p className="text-gray-600 mb-6">
-              Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible 
-              et toutes vos données seront définitivement effacées.
+            <p className="text-xs sm:text-sm text-gray-600 mb-6">
+              Are you sure you want to delete your account? This action is irreversible 
+              and all your data will be permanently removed.
             </p>
             
             <div className="flex justify-end space-x-3">
-              <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
-                Annuler
+              <Button 
+                variant="outline" 
+                onClick={() => setShowDeleteConfirm(false)}
+                className="py-2 sm:py-3 text-xs sm:text-sm"
+                aria-label="Cancel"
+              >
+                Cancel
               </Button>
               <Button
-                className="bg-red-600 hover:bg-red-700 text-white"
+                className="bg-red-600 hover:bg-red-700 text-white py-2 sm:py-3 text-xs sm:text-sm"
                 onClick={() => {
                   onDeleteAccount();
                   setShowDeleteConfirm(false);
                 }}
+                aria-label="Delete permanently"
               >
-                Supprimer définitivement
+                Delete Permanently
               </Button>
             </div>
           </div>

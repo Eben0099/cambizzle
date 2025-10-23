@@ -1,13 +1,25 @@
 import { useState } from 'react';
+import { isValidPhoneNumber } from 'react-phone-number-input';
 import { Mail, Eye, EyeOff, ArrowLeft, Store, Clock, Globe, Facebook, Instagram } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/authService';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
-import PhoneInput from '../ui/PhoneInput';
+import 'react-phone-number-input/style.css';
+import PhoneInput from 'react-phone-number-input';
 import Modal from '../ui/Modal';
+import Loader from '../ui/Loader';
 
 const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
+  // Validation en temps réel pour PhoneInput
+  const handlePhoneChange = (value) => {
+    setFormData(prev => ({ ...prev, phone: value }));
+    if (value && !isValidPhoneNumber(value)) {
+      setErrors(prev => ({ ...prev, phone: 'Invalid phone number for selected country' }));
+    } else {
+      setErrors(prev => ({ ...prev, phone: '' }));
+    }
+  };
   const [step, setStep] = useState('choice'); // 'choice', 'form', 'seller'
   const [mode, setMode] = useState(initialMode);
   const [showPassword, setShowPassword] = useState(false);
@@ -71,6 +83,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
       phone: '',
       password: '',
       confirmPassword: '',
+      referralCode: '',
       acceptTerms: false,
       photoUrl: '',
       wantsToBeSeller: false
@@ -125,7 +138,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
       });
 
       if (result.success) {
-        setMessage("Connexion réussie !");
+        setMessage("Login successful!");
         setTimeout(() => {
           handleClose();
         }, 1500);
@@ -133,7 +146,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         setErrors({ submit: result.error });
       }
     } catch (error) {
-      setErrors({ submit: 'Erreur lors de la connexion' });
+      setErrors({ submit: 'Error during login' });
     } finally {
       setIsLoading(false);
     }
@@ -146,14 +159,17 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
 
     // --- Validation côté frontend ---
     const newErrors = {};
-    if (!formData.firstName.trim()) newErrors.firstName = "Prénom requis";
-    if (!formData.lastName.trim()) newErrors.lastName = "Nom requis";
-    if (!formData.email.trim()) newErrors.email = "Email requis";
-    if (!formData.phone.trim()) newErrors.phone = "Téléphone requis";
-    if (!formData.password) newErrors.password = "Mot de passe requis";
-    if (formData.password.length < 6) newErrors.password = "Le mot de passe doit contenir au moins 6 caractères";
-    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Les mots de passe ne correspondent pas";
-    if (!formData.acceptTerms) newErrors.acceptTerms = "Vous devez accepter les conditions d'utilisation";
+    if (!formData.firstName.trim()) newErrors.firstName = "First name required";
+    if (!formData.lastName.trim()) newErrors.lastName = "Last name required";
+    if (!formData.email.trim()) newErrors.email = "Email required";
+  if (!formData.phone.trim()) newErrors.phone = "Phone required";
+  else if (!isValidPhoneNumber(formData.phone)) newErrors.phone = "Please enter a valid phone number for the selected country";
+    if (!formData.password) newErrors.password = "Password required";
+    if (formData.password.length < 6) newErrors.password = "Password must be at least 6 characters";
+    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Passwords do not match";
+    if (!formData.acceptTerms) newErrors.acceptTerms = "You must accept the terms of use";
+    if (!formData.referralCode) delete formData.referralCode;
+    
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -166,12 +182,12 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
       const result = await register(formData);
 
       if (result.success) {
-        console.log('🎉 Inscription réussie, données reçues:', result);
+        console.log('🎉 Registration successful, data received:', result);
         // Stocker temporairement les données utilisateur pour la création du profil vendeur
         setTempUser(result.data?.user);
-        console.log('👤 tempUser défini:', result.data?.user);
+        console.log('👤 tempUser set:', result.data?.user);
 
-        setMessage("Inscription réussie !");
+        setMessage("Registration successful!");
         // Si l'utilisateur veut être vendeur, passe à l'étape suivante
         if (formData.wantsToBeSeller) {
           setTimeout(() => {
@@ -186,7 +202,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         setErrors({ submit: result.error });
       }
     } catch (err) {
-      setErrors({ submit: "Erreur lors de l'inscription" });
+      setErrors({ submit: "Error during registration" });
     } finally {
       setIsLoading(false);
     }
@@ -199,11 +215,11 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
     setErrors({});
 
     const newErrors = {};
-    if (!sellerData.businessName.trim()) newErrors.businessName = 'Nom de l\'entreprise requis';
-    if (!sellerData.businessDescription.trim()) newErrors.businessDescription = 'Description de l\'entreprise requise';
-    if (!sellerData.businessAddress.trim()) newErrors.businessAddress = 'Adresse de l\'entreprise requise';
-    if (!sellerData.businessPhone.trim()) newErrors.businessPhone = 'Téléphone de l\'entreprise requis';
-    if (!sellerData.businessEmail.trim()) newErrors.businessEmail = 'Email de l\'entreprise requis';
+    if (!sellerData.businessName.trim()) newErrors.businessName = 'Business name required';
+    if (!sellerData.businessDescription.trim()) newErrors.businessDescription = 'Business description required';
+    if (!sellerData.businessAddress.trim()) newErrors.businessAddress = 'Business address required';
+    if (!sellerData.businessPhone.trim()) newErrors.businessPhone = 'Business phone required';
+    if (!sellerData.businessEmail.trim()) newErrors.businessEmail = 'Business email required';
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -212,25 +228,25 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
     }
 
     try {
-      console.log('🔍 Début création profil vendeur');
-      console.log('👤 user (connecté):', user);
-      console.log('👤 tempUser (nouvellement créé):', tempUser);
-      console.log('📊 État step:', step);
+      console.log('🔍 Starting seller profile creation');
+      console.log('👤 user (logged in):', user);
+      console.log('👤 tempUser (newly created):', tempUser);
+      console.log('📊 Step state:', step);
 
       // Utiliser l'utilisateur connecté ou celui qui vient d'être créé
       const currentUser = user || tempUser;
 
-      console.log('🎯 currentUser sélectionné:', currentUser);
+      console.log('🎯 Selected currentUser:', currentUser);
 
       if (!currentUser) {
-        console.error('❌ ERREUR: Aucun utilisateur disponible');
-        console.error('- user (connecté):', user);
-        console.error('- tempUser (nouveau):', tempUser);
-        throw new Error('Vous devez d\'abord créer un compte ou vous connecter pour créer un profil vendeur. Retournez à l\'étape précédente.');
+        console.error('❌ ERROR: No user available');
+        console.error('- user (logged in):', user);
+        console.error('- tempUser (new):', tempUser);
+        throw new Error('You must first create an account or log in to create a seller profile. Go back to the previous step.');
       }
 
-      console.log('👤 Utilisateur pour le profil vendeur:', currentUser);
-      console.log('📋 Données sellerData brutes:', sellerData);
+      console.log('👤 User for seller profile:', currentUser);
+      console.log('📋 Raw sellerData:', sellerData);
 
       // Préparer les données avec l'userId et formater correctement
       const sellerProfileData = {
@@ -240,7 +256,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         deliveryOptions: JSON.stringify(sellerData.deliveryOptions)
       };
 
-      console.log('📦 Données profil vendeur préparées:', sellerProfileData);
+      console.log('📦 Prepared seller profile data:', sellerProfileData);
 
       const result = await authService.createSellerProfile(sellerProfileData);
 
@@ -249,24 +265,24 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         updateUser(result.user);
       }
 
-      setMessage("Profil vendeur créé avec succès !");
+      setMessage("Seller profile created successfully!");
       setTimeout(() => {
         handleClose();
       }, 1500);
     } catch (error) {
-      console.error('❌ Erreur création profil vendeur:', error);
-      console.error('🔍 Détails de l\'erreur:', error.message);
+      console.error('❌ Error creating seller profile:', error);
+      console.error('🔍 Error details:', error.message);
 
-      let errorMessage = 'Erreur lors de la création du profil vendeur';
+      let errorMessage = 'Error creating seller profile';
 
       if (error.message.includes('Token') || error.message.includes('reconnecter')) {
-        errorMessage = 'Vous devez être connecté pour créer un profil vendeur. Veuillez vous reconnecter.';
+        errorMessage = 'You must be logged in to create a seller profile. Please log in again.';
       } else if (error.message.includes('compte') || error.message.includes('connecter')) {
-        errorMessage = 'Vous devez d\'abord créer un compte ou vous connecter pour créer un profil vendeur.';
+        errorMessage = 'You must first create an account or log in to create a seller profile.';
       } else if (error.message.includes('400') || error.message.includes('422') || error.message.includes('invalides')) {
-        errorMessage = 'Données invalides. Vérifiez que tous les champs requis sont remplis.';
+        errorMessage = 'Invalid data. Please check that all required fields are filled.';
       } else if (error.message.includes('409') || error.message.includes('existe déjà')) {
-        errorMessage = 'Un profil vendeur existe déjà pour ce compte.';
+        errorMessage = 'A seller profile already exists for this account.';
       }
 
       setErrors({ submit: errorMessage });
@@ -310,8 +326,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
     }
   };
 
-  const handleSellerPhoneChange = (e) => {
-    const { value } = e.target;
+  const handleSellerPhoneChange = (value) => {
     setSellerData(prev => ({
       ...prev,
       businessPhone: value
@@ -344,10 +359,10 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         {/* Header */}
         <div className="text-center space-y-2">
           <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
-            {mode === 'login' ? 'Se connecter' : 'S\'inscrire'}
+            {mode === 'login' ? 'Log in' : "Sign up"}
           </h2>
           <p className="text-sm sm:text-base text-gray-600">
-            Choisissez votre méthode de {mode === 'login' ? 'connexion' : 'inscription'}
+            Choose your {mode === 'login' ? 'login' : 'sign up'} method
           </p>
         </div>
 
@@ -364,7 +379,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            <span className="truncate">Continuer avec Google</span>
+            <span className="truncate">Continue with Google</span>
           </button>
 
           <button
@@ -375,7 +390,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
             <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
               <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
             </svg>
-            <span className="truncate">Continuer avec Facebook</span>
+            <span className="truncate">Continue with Facebook</span>
           </button>
 
           <button
@@ -384,7 +399,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
             className="w-full flex items-center justify-center px-4 py-3 sm:py-4 border border-gray-300 rounded-lg shadow-sm bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#D6BA69] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base"
           >
             <Mail className="w-5 h-5 mr-3 flex-shrink-0" />
-            <span className="truncate">Continuer avec Email</span>
+            <span className="truncate">Continue with Email</span>
           </button>
         </div>
 
@@ -395,8 +410,8 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
             className="text-sm sm:text-base text-[#D6BA69] hover:text-[#C5A952] font-medium transition-colors"
           >
             {mode === 'login'
-              ? 'Vous n\'avez pas de compte ? S\'inscrire'
-              : 'Vous avez déjà un compte ? Se connecter'
+              ? "Don't have an account? Sign up"
+              : 'Already have an account? Log in'
             }
           </button>
         </div>
@@ -416,9 +431,9 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1">
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Se connecter</h2>
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Log in</h2>
             <p className="text-sm sm:text-base text-gray-600 mt-1">
-              Se connecter avec votre email et téléphone
+              Log in with your email and phone
             </p>
           </div>
         </div>
@@ -433,29 +448,33 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
               value={formData.email}
               onChange={handleInputChange}
               error={errors.email}
-              placeholder="votre@email.com"
+              placeholder="your@email.com"
               required
             />
 
-            <PhoneInput
-              label="Téléphone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleInputChange}
-              error={errors.phone}
-              placeholder="+237 6 12 34 56 78"
-              required
-            />
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Phone</label>
+              <PhoneInput
+                placeholder="+237 6 12 34 56 78"
+                defaultCountry="CM"
+                value={formData.phone}
+                onChange={handlePhoneChange}
+                international
+                required
+                className="[&_.PhoneInputInput]:outline-none [&_.PhoneInputInput]:ring-0 [&_.PhoneInputInput]:border-none [&_.PhoneInputInput]:focus:outline-none [&_.PhoneInputInput]:focus:ring-0 [&_.PhoneInputInput]:focus:border-none w-full px-3 py-2 border rounded-lg transition-colors duration-200 border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69] text-gray-900 bg-white"
+              />
+              {errors.phone && <p className="text-sm text-red-600">{errors.phone}</p>}
+            </div>
 
             <div className="relative">
               <Input
-                label="Mot de passe"
+                label="Password"
                 type={showPassword ? 'text' : 'password'}
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
                 error={errors.password}
-                placeholder="Votre mot de passe"
+                placeholder="Your password"
                 required
               />
               <button
@@ -483,11 +502,11 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
           <Button
             type="submit"
             variant="primary"
-            className="w-full py-3 sm:py-4 text-sm sm:text-base"
+            className="w-full py-3 sm:py-4 bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] font-semibold py-3 rounded-lg transition-colors shadow-sm disabled:opacity-50"
             loading={isLoading}
             disabled={isLoading}
           >
-            Se connecter
+            Log in
           </Button>
         </form>
 
@@ -497,18 +516,11 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
             onClick={handleSwitchMode}
             className="text-sm sm:text-base text-[#D6BA69] hover:text-[#C5A952] font-medium transition-colors"
           >
-            Vous n\'avez pas de compte ? S\'inscrire
+            Don't have an account? Sign up
           </button>
         </div>
 
-        {/* Test Accounts */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
-          <h4 className="text-sm font-medium text-blue-900 mb-2">Comptes de test</h4>
-          <div className="text-xs sm:text-sm text-blue-800 space-y-1">
-            <div className="break-all">Admin : admin@cambizzle.com / +237612345678 / admin123</div>
-            <div className="break-all">Vendeur : vendeur@test.com / +33612345678 / vendeur123</div>
-          </div>
-        </div>
+        
       </div>
     </div>
   );
@@ -525,9 +537,9 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1">
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Inscription</h2>
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Sign up</h2>
             <p className="text-sm sm:text-base text-gray-600 mt-1">
-              Créez votre compte avec votre email
+              Create your account with your email
             </p>
           </div>
         </div>
@@ -538,21 +550,21 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
-                label="Prénom"
+                label="First Name"
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleInputChange}
                 error={errors.firstName}
-                placeholder="Jean"
+                placeholder="John"
                 required
               />
               <Input
-                label="Nom"
+                label="Last Name"
                 name="lastName"
                 value={formData.lastName}
                 onChange={handleInputChange}
                 error={errors.lastName}
-                placeholder="Dupont"
+                placeholder="Doe"
                 required
               />
             </div>
@@ -564,32 +576,36 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
               value={formData.email}
               onChange={handleInputChange}
               error={errors.email}
-              placeholder="votre@email.com"
+              placeholder="your@email.com"
               required
             />
 
-            <PhoneInput
-              label="Téléphone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleInputChange}
-              error={errors.phone}
-              placeholder="+237 6 12 34 56 78"
-              required
-            />
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Phone</label>
+              <PhoneInput
+                placeholder="+237 6 12 34 56 78"
+                defaultCountry="CM"
+                value={formData.phone}
+                onChange={handlePhoneChange}
+                international
+                required
+                className="w-full px-3 py-2 border rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69] text-gray-900 bg-white"
+              />
+              {errors.phone && <p className="text-sm text-red-600">{errors.phone}</p>}
+            </div>
           </div>
 
           {/* Password Section */}
           <div className="space-y-4">
             <div className="relative">
               <Input
-                label="Mot de passe"
+                label="Password"
                 type={showPassword ? 'text' : 'password'}
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
                 error={errors.password}
-                placeholder="Minimum 6 caractères"
+                placeholder="Minimum 6 characters"
                 required
               />
               <button
@@ -603,13 +619,13 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
 
             <div className="relative">
               <Input
-                label="Confirmer le mot de passe"
+                label="Confirm Password"
                 type={showPassword ? 'text' : 'password'}
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
                 error={errors.confirmPassword}
-                placeholder="Confirmez votre mot de passe"
+                placeholder="Confirm your password"
                 required
               />
               <button
@@ -621,6 +637,15 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
               </button>
             </div>
           </div>
+
+          <Input
+            label="Referral Code (optional)"
+            name="referralCode"
+            value={formData.referralCode}
+            onChange={handleInputChange}
+            error={errors.referralCode}
+            placeholder="Enter referral code if you have one"
+          />
 
           {/* Seller Option */}
           <div className="bg-[#D6BA69]/10 border border-[#D6BA69]/20 rounded-lg p-4">
@@ -637,11 +662,11 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 <label htmlFor="wantsToBeSeller" className="block text-sm font-medium text-gray-900">
                   <div className="flex items-center">
                     <Store className="w-4 h-4 mr-2 text-[#D6BA69] flex-shrink-0" />
-                    <span>Devenir vendeur</span>
+                    <span>Become a seller</span>
                   </div>
                 </label>
                 <p className="text-sm text-gray-600 mt-1">
-                  Créez un profil vendeur pour publier des annonces et gérer votre activité commerciale
+                  Create a seller profile to post ads and manage your business activity
                 </p>
               </div>
             </div>
@@ -659,13 +684,13 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 className="h-4 w-4 text-[#D6BA69] focus:ring-[#D6BA69] border-gray-300 rounded mt-1 flex-shrink-0"
               />
               <label htmlFor="acceptTerms" className="text-sm text-gray-700 flex-1">
-                J'accepte les{' '}
+                I accept the{' '}
                 <a href="#" className="text-[#D6BA69] hover:text-[#C5A952] font-medium transition-colors">
-                  conditions d'utilisation
+                  terms of use
                 </a>{' '}
-                et la{' '}
+                and the{' '}
                 <a href="#" className="text-[#D6BA69] hover:text-[#C5A952] font-medium transition-colors">
-                  politique de confidentialité
+                  privacy policy
                 </a>
               </label>
             </div>
@@ -689,11 +714,11 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
           <Button
             type="submit"
             variant="primary"
-            className="w-full py-3 sm:py-4 text-sm sm:text-base"
+            className="w-full sm:py-4 bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] font-semibold py-3 rounded-lg transition-colors shadow-sm disabled:opacity-50"
             loading={isLoading}
             disabled={isLoading}
           >
-            {formData.wantsToBeSeller ? 'Continuer vers le profil vendeur' : 'S\'inscrire'}
+            {formData.wantsToBeSeller ? 'Continue to seller profile' : 'Sign up'}
           </Button>
         </form>
 
@@ -703,7 +728,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
             onClick={handleSwitchMode}
             className="text-sm sm:text-base text-[#D6BA69] hover:text-[#C5A952] font-medium transition-colors"
           >
-            Déjà un compte ? Se connecter
+            Already have an account? Log in
           </button>
         </div>
       </div>
@@ -722,9 +747,9 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1">
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Profil Vendeur</h2>
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Seller Profile</h2>
             <p className="text-sm sm:text-base text-gray-600 mt-1">
-              Complétez les informations de votre entreprise
+              Complete your business information
             </p>
           </div>
         </div>
@@ -734,23 +759,23 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
           <div className="bg-gray-50 rounded-lg p-4 sm:p-6 space-y-4 sm:space-y-6">
             <div className="flex items-center space-x-2">
               <Store className="w-5 h-5 text-[#D6BA69]" />
-              <h3 className="text-lg font-medium text-gray-900">Informations de l'entreprise</h3>
+              <h3 className="text-lg font-medium text-gray-900">Business Information</h3>
             </div>
             
             <div className="space-y-4">
               <Input
-                label="Nom de l'entreprise"
+                label="Business Name"
                 name="businessName"
                 value={sellerData.businessName}
                 onChange={handleSellerInputChange}
                 error={errors.businessName}
-                placeholder="Mon Entreprise SARL"
+                placeholder="My Business LLC"
                 required
               />
 
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  Description de l'entreprise
+                  Business Description
                 </label>
                 <textarea
                   name="businessDescription"
@@ -758,7 +783,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                   onChange={handleSellerInputChange}
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D6BA69] focus:border-transparent resize-none text-sm sm:text-base"
-                  placeholder="Décrivez votre activité, vos produits et services..."
+                  placeholder="Describe your business, products and services..."
                   required
                 />
                 {errors.businessDescription && (
@@ -767,33 +792,36 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
               </div>
 
               <Input
-                label="Adresse de l'entreprise"
+                label="Business Address"
                 name="businessAddress"
                 value={sellerData.businessAddress}
                 onChange={handleSellerInputChange}
                 error={errors.businessAddress}
-                placeholder="123 Rue de la Paix, Douala"
+                placeholder="123 Peace Street, Douala"
                 required
               />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <PhoneInput
-                  label="Téléphone professionnel"
-                  name="businessPhone"
-                  value={sellerData.businessPhone}
-                  onChange={handleSellerPhoneChange}
-                  error={errors.businessPhone}
-                  placeholder="+237 6 12 34 56 78"
-                  required
-                />
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700">Business Phone</label>
+                  <PhoneInput
+                    placeholder="+237 6 12 34 56 78"
+                    value={sellerData.businessPhone}
+                    onChange={handleSellerPhoneChange}
+                    international
+                    required
+                    className="w-full px-3 py-2 border rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69] text-gray-900 bg-white"
+                  />
+                  {errors.businessPhone && <p className="text-sm text-red-600">{errors.businessPhone}</p>}
+                </div>
                 <Input
-                  label="Email professionnel"
+                  label="Business Email"
                   type="email"
                   name="businessEmail"
                   value={sellerData.businessEmail}
                   onChange={handleSellerInputChange}
                   error={errors.businessEmail}
-                  placeholder="contact@monentreprise.com"
+                  placeholder="contact@mybusiness.com"
                   required
                 />
               </div>
@@ -804,34 +832,34 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
           <div className="bg-gray-50 rounded-lg p-4 sm:p-6 space-y-4 sm:space-y-6">
             <div className="flex items-center space-x-2">
               <Globe className="w-5 h-5 text-[#D6BA69]" />
-              <h3 className="text-lg font-medium text-gray-900">Présence en ligne</h3>
+              <h3 className="text-lg font-medium text-gray-900">Online Presence</h3>
             </div>
             
             <div className="space-y-4">
               <Input
-                label="Site web"
+                label="Website"
                 name="websiteUrl"
                 value={sellerData.websiteUrl}
                 onChange={handleSellerInputChange}
-                placeholder="https://www.monentreprise.com"
+                placeholder="https://www.mybusiness.com"
                 icon={Globe}
               />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
-                  label="Page Facebook"
+                  label="Facebook Page"
                   name="facebookUrl"
                   value={sellerData.facebookUrl}
                   onChange={handleSellerInputChange}
-                  placeholder="https://facebook.com/monentreprise"
+                  placeholder="https://facebook.com/mybusiness"
                   icon={Facebook}
                 />
                 <Input
-                  label="Compte Instagram"
+                  label="Instagram Account"
                   name="instagramUrl"
                   value={sellerData.instagramUrl}
                   onChange={handleSellerInputChange}
-                  placeholder="https://instagram.com/monentreprise"
+                  placeholder="https://instagram.com/mybusiness"
                   icon={Instagram}
                 />
               </div>
@@ -840,12 +868,12 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
 
           {/* Delivery Options Section */}
           <div className="bg-gray-50 rounded-lg p-4 sm:p-6 space-y-4 sm:space-y-6">
-            <h3 className="text-lg font-medium text-gray-900">Options de livraison</h3>
+            <h3 className="text-lg font-medium text-gray-900">Delivery Options</h3>
             <div className="space-y-3">
               {[
-                { key: 'pickup', label: 'Retrait en magasin' },
-                { key: 'delivery', label: 'Livraison locale' },
-                { key: 'shipping', label: 'Expédition nationale' }
+                { key: 'pickup', label: 'Store Pickup' },
+                { key: 'delivery', label: 'Local Delivery' },
+                { key: 'shipping', label: 'National Shipping' }
               ].map(({ key, label }) => (
                 <div key={key} className="flex items-center space-x-3">
                   <input
@@ -868,7 +896,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
           <div className="bg-gray-50 rounded-lg p-4 sm:p-6 space-y-4 sm:space-y-6">
             <div className="flex items-center space-x-2">
               <Clock className="w-5 h-5 text-[#D6BA69]" />
-              <h3 className="text-lg font-medium text-gray-900">Horaires d'ouverture</h3>
+              <h3 className="text-lg font-medium text-gray-900">Opening Hours</h3>
             </div>
             
             <div className="space-y-3 sm:space-y-4">
@@ -877,12 +905,12 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 return (
                   <div key={day} className="space-y-2 sm:space-y-0 sm:flex sm:items-center sm:space-x-4">
                     <div className="w-full sm:w-24 text-sm font-medium text-gray-700 capitalize">
-                      {day === 'monday' ? 'Lundi' :
-                       day === 'tuesday' ? 'Mardi' :
-                       day === 'wednesday' ? 'Mercredi' :
-                       day === 'thursday' ? 'Jeudi' :
-                       day === 'friday' ? 'Vendredi' :
-                       day === 'saturday' ? 'Samedi' : 'Dimanche'}
+                      {day === 'monday' ? 'Monday' :
+                       day === 'tuesday' ? 'Tuesday' :
+                       day === 'wednesday' ? 'Wednesday' :
+                       day === 'thursday' ? 'Thursday' :
+                       day === 'friday' ? 'Friday' :
+                       day === 'saturday' ? 'Saturday' : 'Sunday'}
                     </div>
                   <div className="flex items-center space-x-2 sm:space-x-3 flex-1">
                     <input
@@ -908,7 +936,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                         />
                       </div>
                     ) : (
-                      <span className="text-gray-500 text-sm">Fermé</span>
+                      <span className="text-gray-500 text-sm">Closed</span>
                     )}
                   </div>
                 </div>
@@ -932,11 +960,11 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
           <Button
             type="submit"
             variant="primary"
-            className="w-full py-3 sm:py-4 text-sm sm:text-base"
+            className="w-full px-6 sm:py-4 text-sm sm:text-base bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] font-semibold py-3 rounded-lg transition-colors shadow-sm disabled:opacity-50"
             loading={isLoading}
             disabled={isLoading}
           >
-            Créer mon compte vendeur
+            Create my seller account
           </Button>
         </form>
       </div>
@@ -955,6 +983,9 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
     }
   };
 
+  if (isLoading) {
+    return <Loader text="Authenticating..." />;
+  }
   return (
     <Modal isOpen={isOpen} onClose={handleClose} size="lg">
       <div className="max-h-[90vh] overflow-y-auto">
@@ -964,3 +995,4 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
   );
 };
 
+export default AuthModal;

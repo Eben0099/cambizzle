@@ -20,7 +20,7 @@ const ImageCarousel = ({ images }) => {
   if (images.length === 0) {
     return (
       <div className="aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
-        <p className="text-gray-500">Aucune image disponible</p>
+        <p className="text-gray-500">No images available</p>
       </div>
     );
   }
@@ -41,12 +41,14 @@ const ImageCarousel = ({ images }) => {
               <button
                 onClick={prevImage}
                 className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                aria-label="Previous image"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <button
                 onClick={nextImage}
                 className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                aria-label="Next image"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -57,6 +59,7 @@ const ImageCarousel = ({ images }) => {
           <button
             onClick={() => setIsFullscreen(true)}
             className="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+            aria-label="View in fullscreen"
           >
             <Expand className="w-5 h-5" />
           </button>
@@ -81,6 +84,7 @@ const ImageCarousel = ({ images }) => {
                     ? 'border-[#d6ba69] opacity-100'
                     : 'border-gray-200 opacity-60 hover:opacity-80'
                 }`}
+                aria-label={`Select image ${index + 1}`}
               >
                 <img
                   src={image}
@@ -105,6 +109,7 @@ const ImageCarousel = ({ images }) => {
             <button
               onClick={() => setIsFullscreen(false)}
               className="absolute top-4 right-4 text-white hover:text-gray-300 text-2xl"
+              aria-label="Close fullscreen"
             >
               ×
             </button>
@@ -113,12 +118,14 @@ const ImageCarousel = ({ images }) => {
                 <button
                   onClick={prevImage}
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 p-2"
+                  aria-label="Previous image"
                 >
                   <ChevronLeft className="w-8 h-8" />
                 </button>
                 <button
                   onClick={nextImage}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 p-2"
+                  aria-label="Next image"
                 >
                   <ChevronRight className="w-8 h-8" />
                 </button>

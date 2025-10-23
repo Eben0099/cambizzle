@@ -10,6 +10,7 @@ import ProfileAds from '../components/profile/ProfileAds';
 import ProfileFavorites from '../components/profile/ProfileFavorites';
 import ProfileBusiness from '../components/profile/ProfileBusiness';
 import ProfileSettings from '../components/profile/ProfileSettings';
+import Loader from '../components/ui/Loader';
 import SellerModal from '../components/seller/SellerModal';
 import BusinessEditModal from '../components/seller/BusinessEditModal';
 
@@ -36,6 +37,9 @@ const Profile = () => {
 
 
   // Vérifier si l'utilisateur est connecté
+  if (authLoading || isLoading) {
+    return <Loader text="Loading profile..." />;
+  }
   if (!authLoading && !isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
