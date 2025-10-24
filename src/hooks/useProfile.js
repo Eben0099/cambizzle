@@ -27,7 +27,22 @@ export const useProfile = () => {
       try {
         // Utiliser les données de l'utilisateur authentifié
         console.log('👤 Chargement profil pour utilisateur:', authUser);
-        setUser(authUser);
+        // Mapping explicite pour inclure referralCode
+        const mappedUser = {
+          idUser: authUser.idUser || authUser.id,
+          roleId: authUser.roleId || authUser.role_id,
+          slug: authUser.slug,
+          firstName: authUser.firstName || authUser.first_name,
+          lastName: authUser.lastName || authUser.last_name,
+          email: authUser.email,
+          phone: authUser.phone,
+          photoUrl: authUser.photoUrl || authUser.photo_url,
+          isVerified: authUser.isVerified || authUser.is_verified,
+          createdAt: authUser.createdAt || authUser.created_at,
+          updatedAt: authUser.updatedAt || authUser.updated_at,
+          referralCode: authUser.referralCode || authUser.referral_code,
+        };
+        setUser(mappedUser);
 
         // Charger les annonces de l'utilisateur depuis l'API
         try {

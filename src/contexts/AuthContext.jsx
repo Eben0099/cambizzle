@@ -94,7 +94,8 @@ export const AuthProvider = ({ children }) => {
         photoUrl: userData.photo_url || userData.photoUrl,
         isVerified: userData.is_verified || userData.isVerified,
         createdAt: userData.created_at?.date || userData.created_at || userData.createdAt,
-        updatedAt: userData.updated_at?.date || userData.updated_at || userData.updatedAt
+        updatedAt: userData.updated_at?.date || userData.updated_at || userData.updatedAt,
+        referralCode: userData.referralCode || userData.referral_code,
       };
 
       console.log('🔄 Données après conversion:', processedUser);

@@ -26,7 +26,7 @@ const ProfileHeader = ({ user, sellerProfile, onEdit, onBecomeSeller }) => {
                 )}
               </div>
             </div>
-            
+
             <div className="flex-1 w-full">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
@@ -49,7 +49,7 @@ const ProfileHeader = ({ user, sellerProfile, onEdit, onBecomeSeller }) => {
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-wrap justify-center sm:justify-start items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-600">
                     <div className="flex items-center gap-1">
                       <Mail className="w-4 h-4" />
@@ -70,29 +70,45 @@ const ProfileHeader = ({ user, sellerProfile, onEdit, onBecomeSeller }) => {
                     </div>
                   </div>
                 </div>
-                
-                <div className="flex gap-3 justify-center sm:justify-end">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="py-2 sm:py-3 text-xs sm:text-sm"
-                    onClick={onEdit}
-                    aria-label="Edit profile"
-                  >
-                    <Edit3 className="w-4 h-4 mr-2" />
-                    Edit
-                  </Button>
-                  
-                  {!sellerProfile && (
-                    <Button 
-                      className="bg-[#D6BA69] hover:bg-[#C5A952] text-black transition-colors py-2 sm:py-3 text-xs sm:text-sm" 
-                      onClick={onBecomeSeller}
-                      aria-label="Become a seller"
-                    >
-                      <Store className="w-4 h-4 mr-2" />
-                      Become a Seller
-                    </Button>
+
+                <div className="flex flex-col gap-3 justify-center sm:justify-end items-end">
+                  {/* Referral Code Section moved here */}
+                  {user.referralCode && (
+                    <div className="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded shadow">
+                      <span className="font-semibold text-gray-700">Referral Code:</span>
+                      <span className="text-gray-900 select-all text-base font-mono tracking-wider">{user.referralCode}</span>
+                      <button
+                        type="button"
+                        className="ml-2 px-2 py-1 text-xs bg-[#D6BA69] text-white rounded hover:bg-[#C5A952]"
+                        onClick={() => navigator.clipboard.writeText(user.referralCode)}
+                      >
+                        Copy
+                      </button>
+                    </div>
                   )}
+                  <div className="flex gap-3">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="py-2 sm:py-3 text-xs sm:text-sm"
+                      onClick={onEdit}
+                      aria-label="Edit profile"
+                    >
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      Edit
+                    </Button>
+
+                    {!sellerProfile && (
+                      <Button 
+                        className="bg-[#D6BA69] hover:bg-[#C5A952] text-black transition-colors py-2 sm:py-3 text-xs sm:text-sm" 
+                        onClick={onBecomeSeller}
+                        aria-label="Become a seller"
+                      >
+                        <Store className="w-4 h-4 mr-2" />
+                        Become a Seller
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

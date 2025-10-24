@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { User, Shield, Upload, X, Camera, Trash2, Building2, Lock } from 'lucide-react';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
-import PhoneInput from '../ui/PhoneInput';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 import { getPhotoUrl } from '../../utils/helpers';
 
 const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
@@ -297,11 +298,13 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
             />
             
             <PhoneInput
-              label="Phone"
-              name="phone"
+              country={"cm"}
               value={editFormData.phone}
-              onChange={handleFormInputChange}
-              placeholder="+237 6 12 34 56 78"
+              onChange={value => handleFormInputChange({ target: { name: "phone", value } })}
+              inputStyle={{ width: "100%", height: "40px", borderRadius: "8px", borderColor: "#d1d5db" }}
+              containerClass="focus-within:ring-2 focus-within:ring-[#D6BA69]"
+              enableSearch
+              placeholder="Phone number"
             />
 
             <Input

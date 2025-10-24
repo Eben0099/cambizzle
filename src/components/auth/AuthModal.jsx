@@ -477,6 +477,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 placeholder="Your password"
                 required
               />
+              <div className="text-xs text-gray-500 mt-1">Password must be at least 8 characters.</div>
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -605,9 +606,10 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 value={formData.password}
                 onChange={handleInputChange}
                 error={errors.password}
-                placeholder="Minimum 6 characters"
+                placeholder="Minimum 8 characters"
                 required
               />
+              <div className="text-xs text-gray-500 mt-1">Password must be at least 8 characters.</div>
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
