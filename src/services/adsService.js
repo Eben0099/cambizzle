@@ -782,9 +782,25 @@ class AdsService {
 
   async getAds(params = {}) {
     try {
-      return await this.mockApiCall('/ads', { method: 'GET', params });
+      console.log('📊 Récupération des annonces avec filtres:', params);
+      this.token = localStorage.getItem('token');
+      this.setAuthHeader();
+
+      const response = await axios.get(`${API_BASE_URL}/ads`, {
+        params: params
+      });
+
+      console.log('✅ Annonces récupérées avec filtres:', response.data);
+      return response.data;
     } catch (error) {
-      throw error;
+      console.error('❌ Erreur récupération annonces avec filtres:', error);
+      
+      const errorMessage = error.response?.data?.message ||
+                          error.response?.data?.error ||
+                          error.message ||
+                          'Erreur lors de la récupération des annonces';
+
+      throw new Error(errorMessage);
     }
   }
 
@@ -815,12 +831,31 @@ class AdsService {
 
   async searchAds(query, filters = {}) {
     try {
-      return await this.mockApiCall('/ads/search', { 
-        method: 'POST', 
-        body: { query, filters } 
+      console.log('🔍 Recherche d\'annonces:', { query, filters });
+      this.token = localStorage.getItem('token');
+      this.setAuthHeader();
+
+      // Combine query et filtres dans les paramètres
+      const params = {
+        q: query,
+        ...filters
+      };
+
+      const response = await axios.get(`${API_BASE_URL}/ads`, {
+        params: params
       });
+
+      console.log('✅ Résultats de recherche récupérés:', response.data);
+      return response.data;
     } catch (error) {
-      throw error;
+      console.error('❌ Erreur recherche d\'annonces:', error);
+      
+      const errorMessage = error.response?.data?.message ||
+                          error.response?.data?.error ||
+                          error.message ||
+                          'Erreur lors de la recherche d\'annonces';
+
+      throw new Error(errorMessage);
     }
   }
 
@@ -885,6 +920,97 @@ class AdsService {
       };
     } catch (error) {
       throw error;
+    }
+  }
+
+  // Récupère les annonces d'une catégorie
+  async getAdsByCategory(categoryId, params = {}) {
+    try {
+      console.log('📊 Récupération des annonces par catégorie:', { categoryId, params });
+      this.token = localStorage.getItem('token');
+      this.setAuthHeader();
+      
+      // Construction des paramètres de requête
+      const queryParams = {
+        page: params.page || 1,
+        per_page: params.per_page || 20,
+        ...params
+      };
+      
+      console.log('🔗 URL appelée:', `${API_BASE_URL}/ads/category/${categoryId}`, queryParams);
+      
+      const response = await axios.get(`${API_BASE_URL}/ads/category/${categoryId}`, {
+        params: queryParams
+      });
+      
+      console.log('✅ Annonces de catégorie récupérées:', {
+        adsCount: response.data.ads?.length || 0,
+        category: response.data.category?.name,
+        pagination: response.data.pagination,
+        filters: response.data.filters
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error('❌ Erreur récupération annonces par catégorie:', error);
+      
+      // Log détaillé de l'erreur
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+      }
+      
+      const errorMessage = error.response?.data?.message ||
+                          error.response?.data?.error ||
+                          error.message ||
+                          'Erreur lors de la récupération des annonces par catégorie';
+      throw new Error(errorMessage);
+    }
+  }
+
+  // Récupère les annonces d'une sous-catégorie
+  async getAdsBySubcategory(subcategorySlug, params = {}) {
+    try {
+      console.log('📊 Récupération des annonces par sous-catégorie (slug):', { subcategorySlug, params });
+      this.token = localStorage.getItem('token');
+      this.setAuthHeader();
+      
+      // Construction des paramètres de requête
+      const queryParams = {
+        page: params.page || 1,
+        per_page: params.per_page || 20,
+        ...params
+      };
+      
+      console.log('🔗 URL appelée:', `${API_BASE_URL}/ads/subcategory/${subcategorySlug}`, queryParams);
+      
+      const response = await axios.get(`${API_BASE_URL}/ads/subcategory/${subcategorySlug}`, {
+        params: queryParams
+      });
+      
+      console.log('✅ Annonces de sous-catégorie récupérées:', {
+        adsCount: response.data.ads?.length || 0,
+        subcategory: response.data.subcategory?.name,
+        category: response.data.category?.name,
+        pagination: response.data.pagination,
+        filters: response.data.filters
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error('❌ Erreur récupération annonces par sous-catégorie:', error);
+      
+      // Log détaillé de l'erreur
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+      }
+      
+      const errorMessage = error.response?.data?.message ||
+                          error.response?.data?.error ||
+                          error.message ||
+                          'Erreur lors de la récupération des annonces par sous-catégorie';
+      throw new Error(errorMessage);
     }
   }
 }

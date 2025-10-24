@@ -424,6 +424,7 @@ const AdDetail = () => {
                 responseRate: seller?.responseRate || 95,
                 responseTime: seller?.responseTime || 'A few hours'
               }}
+              adTitle={ad?.title}
               onContact={handleContact}
               onCall={handleCall}
             />

@@ -345,6 +345,120 @@ class AdminService {
       throw error;
     }
   }
+
+  // ============= GESTION DES FILTRES =============
+  
+  // Récupérer tous les filtres par catégories avec leurs options
+  async getFilters() {
+    try {
+      this.setAuthHeader();
+      const response = await axios.get(`${API_BASE_URL}/admin/referentials/filters`);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
+
+  // Créer un nouveau filtre
+  async createFilter(filterData) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.post(`${API_BASE_URL}/admin/referentials/filters`, filterData);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
+
+  // Mettre à jour un filtre
+  async updateFilter(filterId, filterData) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.put(`${API_BASE_URL}/admin/referentials/filters/${filterId}`, filterData);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
+
+  // Supprimer un filtre
+  async deleteFilter(filterId) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.delete(`${API_BASE_URL}/admin/referentials/filters/${filterId}`);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
+
+  // Créer une nouvelle option pour un filtre
+  async createFilterOption(filterId, optionData) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.post(`${API_BASE_URL}/admin/referentials/filters/${filterId}/options`, optionData);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
+
+  // Mettre à jour une option de filtre
+  async updateFilterOption(filterId, optionId, optionData) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.put(`${API_BASE_URL}/admin/referentials/filters/${filterId}/options/${optionId}`, optionData);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
+
+  // Supprimer une option de filtre
+  async deleteFilterOption(filterId, optionId) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.delete(`${API_BASE_URL}/admin/referentials/filters/${filterId}/options/${optionId}`);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
 }
 
 export default new AdminService();

@@ -1,18 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Filter, Grid, List, SlidersHorizontal, MapPin, Euro } from 'lucide-react';
 import { useAds } from '../contexts/AdsContext';
-import { CATEGORIES } from '../utils/constants';
+import { adsService } from '../services/adsService';
+// import { CATEGORIES } from '../utils/constants';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
 import AdCard from '../components/ads/AdCard';
 
 const Search = () => {
+  const [creationData, setCreationData] = useState({ categories: [], locations: [] });
+  const [categoryAds, setCategoryAds] = useState(null); // Ajout pour gérer les annonces de catégorie
+  const [subcategoryAds, setSubcategoryAds] = useState(null); // Ajout pour gérer les annonces de sous-catégorie
+  const [categoryLoading, setCategoryLoading] = useState(false); // Loading spécifique pour les catégories
+  const [subcategoryLoading, setSubcategoryLoading] = useState(false); // Loading spécifique pour les sous-catégories
   const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState('recent');
+  const lastRequestRef = useRef(null); // Pour éviter les requêtes multiples
+  const categoryRequestRef = useRef(null); // Pour éviter les requêtes catégories multiples
+  const subcategoryRequestRef = useRef(null); // Pour éviter les requêtes sous-catégories multiples
   const [localFilters, setLocalFilters] = useState({
     category: searchParams.get('category') || '',
     subcategory: searchParams.get('subcategory') || '',
@@ -24,6 +33,7 @@ const Search = () => {
   });
 
   const { 
+    ads, 
     searchResults, 
     isLoading, 
     searchAds, 
@@ -35,34 +45,238 @@ const Search = () => {
   const navigate = useNavigate();
   const query = searchParams.get('q') || '';
 
+  // Récupère les données de création pour les filtres
   useEffect(() => {
-    const filters = {
-      category: searchParams.get('category'),
-      subcategory: searchParams.get('subcategory'),
+    async function fetchCreationData() {
+      try {
+        const data = await adsService.getAdCreationData();
+        setCreationData(data);
+      } catch (e) {
+        console.error('Erreur lors du chargement des données de création:', e);
+        // fallback: pas de données
+      }
+    }
+    fetchCreationData();
+  }, []);
+
+  // Fonction pour récupérer les annonces d'une catégorie spécifique
+  const fetchCategoryAds = async (categoryId, filters = {}) => {
+    const requestKey = `category-${categoryId}-${JSON.stringify(filters)}`;
+    
+    // Éviter les appels multiples pour la même catégorie
+    if (categoryRequestRef.current === requestKey) {
+      console.log('⏭️ Appel catégorie identique ignoré');
+      return;
+    }
+    
+    categoryRequestRef.current = requestKey;
+    
+    try {
+      console.log('📊 DÉBUT - Récupération des annonces de la catégorie:', categoryId, filters);
+      setCategoryLoading(true);
+      
+      const response = await adsService.getAdsByCategory(categoryId, { page: 1, ...filters });
+      
+      console.log('✅ SUCCÈS - Annonces de catégorie chargées:', response.ads?.length || 0, response);
+      setCategoryAds(response);
+    } catch (error) {
+      console.error('❌ ERREUR - Lors du chargement des annonces de catégorie:', error);
+      setCategoryAds(null);
+    } finally {
+      setCategoryLoading(false);
+      console.log('🏁 FIN - fetchCategoryAds');
+    }
+  };
+
+  // Fonction pour récupérer les annonces d'une sous-catégorie spécifique
+  const fetchSubcategoryAds = async (subcategorySlug, filters = {}) => {
+    const requestKey = `subcategory-${subcategorySlug}-${JSON.stringify(filters)}`;
+    
+    // Éviter les appels multiples pour la même sous-catégorie
+    if (subcategoryRequestRef.current === requestKey) {
+      console.log('⏭️ Appel sous-catégorie identique ignoré');
+      return;
+    }
+    
+    subcategoryRequestRef.current = requestKey;
+    
+    try {
+      console.log('📊 DÉBUT - Récupération des annonces de la sous-catégorie (slug):', subcategorySlug, filters);
+      setSubcategoryLoading(true);
+      
+      const response = await adsService.getAdsBySubcategory(subcategorySlug, { page: 1, ...filters });
+      
+      console.log('✅ SUCCÈS - Annonces de sous-catégorie chargées:', response.ads?.length || 0, response);
+      setSubcategoryAds(response);
+    } catch (error) {
+      console.error('❌ ERREUR - Lors du chargement des annonces de sous-catégorie:', error);
+      setSubcategoryAds(null);
+    } finally {
+      setSubcategoryLoading(false);
+      console.log('🏁 FIN - fetchSubcategoryAds');
+    }
+  };
+
+  useEffect(() => {
+    console.log('🔄 useEffect Search déclenché');
+    
+    const categoryParam = searchParams.get('category');
+    const subcategoryParam = searchParams.get('subcategory');
+    const sortParam = searchParams.get('sort') || 'recent';
+    
+    // Créer une clé unique pour éviter les doublons
+    const requestKey = `${categoryParam}|${subcategoryParam}|${query}|${sortParam}|${creationData.categories?.length || 0}`;
+    
+    console.log('🔑 Clé de requête:', requestKey);
+    console.log('🔑 Dernière clé:', lastRequestRef.current);
+    
+    if (lastRequestRef.current === requestKey) {
+      console.log('⏭️ Requête identique ignorée');
+      return;
+    }
+    
+    lastRequestRef.current = requestKey;
+    setSortBy(sortParam);
+
+    // Attendre que les données de création soient chargées
+    if (!creationData.categories || creationData.categories.length === 0) {
+      console.log('⏳ Attente des données de création...');
+      return;
+    }
+
+    // PRIORITÉ 1: SOUS-CATÉGORIE (plus spécifique)
+    if (subcategoryParam) {
+      console.log('🎯 Mode Sous-catégorie détecté:', subcategoryParam);
+      
+      // Reset les autres états
+      setCategoryAds(null);
+      
+      // Construire les filtres pour la sous-catégorie
+      const subcategoryFilters = {
+        priceMin: searchParams.get('priceMin'),
+        priceMax: searchParams.get('priceMax'),
+        location: searchParams.get('location'),
+        sort: sortParam
+      };
+      
+      const cleanSubcategoryFilters = Object.fromEntries(
+        Object.entries(subcategoryFilters).filter(([_, value]) => value !== null)
+      );
+
+      // APPEL DIRECT AVEC LE SLUG - Plus besoin de chercher l'ID
+      console.log('🚀 Appel direct avec slug:', subcategoryParam);
+      fetchSubcategoryAds(subcategoryParam, cleanSubcategoryFilters);
+      return; // Arrêter ici
+    } else {
+      // Reset subcategoryAds si on n'est pas en mode sous-catégorie
+      setSubcategoryAds(null);
+    }
+
+    // PRIORITÉ 2: CATÉGORIE
+    if (categoryParam) {
+      console.log('🎯 Mode Catégorie détecté:', categoryParam);
+      
+      // Attendre que les données de création soient chargées pour trouver l'ID
+      if (!creationData.categories || creationData.categories.length === 0) {
+        console.log('⏳ Attente des données de création pour les catégories...');
+        return;
+      }
+
+      // Trouver l'ID de la catégorie par slug ou nom
+      const foundCategory = creationData.categories.find(cat => 
+        cat.slug === categoryParam || 
+        cat.name.toLowerCase() === categoryParam.toLowerCase() ||
+        cat.id.toString() === categoryParam
+      );
+
+      if (foundCategory) {
+        console.log('✅ Catégorie trouvée, appel direct à l\'API:', foundCategory);
+        
+        // Reset les autres états
+        setSubcategoryAds(null);
+        
+        // Construire les filtres pour la catégorie (sans category car on utilise l'ID)
+        const categoryFilters = {
+          priceMin: searchParams.get('priceMin'),
+          priceMax: searchParams.get('priceMax'),
+          location: searchParams.get('location'),
+          sort: sortParam
+        };
+        
+        const cleanCategoryFilters = Object.fromEntries(
+          Object.entries(categoryFilters).filter(([_, value]) => value !== null)
+        );
+
+        // APPEL DIRECT À L'API CATÉGORIE
+        fetchCategoryAds(foundCategory.id, cleanCategoryFilters);
+        return; // Arrêter ici, ne pas utiliser le contexte Search
+      } else {
+        console.log('❌ Catégorie non trouvée:', categoryParam);
+        console.log('Catégories disponibles:', creationData.categories.map(c => ({ id: c.id, name: c.name, slug: c.slug })));
+        setCategoryAds(null);
+        return;
+      }
+    }
+
+    // LOGIC NORMALE POUR SEARCH ET ANNONCES GÉNÉRALES (sans catégorie ni sous-catégorie)
+    console.log('🔍 Mode Search normal');
+    setCategoryAds(null); // Reset categoryAds si on n'est pas en mode catégorie
+    setSubcategoryAds(null); // Reset subcategoryAds si on n'est pas en mode sous-catégorie
+    
+    const generalFilters = {
+      subcategory: subcategoryParam,
       priceMin: searchParams.get('priceMin'),
       priceMax: searchParams.get('priceMax'),
       location: searchParams.get('location'),
       type: searchParams.get('type'),
-      condition: searchParams.get('condition')
+      condition: searchParams.get('condition'),
+      sort: sortParam
     };
 
-    // Remove null values
-    const cleanFilters = Object.fromEntries(
-      Object.entries(filters).filter(([_, value]) => value !== null)
+    const cleanGeneralFilters = Object.fromEntries(
+      Object.entries(generalFilters).filter(([_, value]) => value !== null)
     );
 
-    if (query) {
-      searchAds(query, cleanFilters);
-    } else {
-      fetchAds(1, cleanFilters);
-    }
-  }, [searchParams]);
+    console.log('🔍 Mode Search normal avec filtres:', cleanGeneralFilters);
 
+    if (query) {
+      console.log('📝 Recherche avec query:', query);
+      searchAds(query, cleanGeneralFilters);
+    } else {
+      console.log('📋 Récupération de toutes les annonces');
+      fetchAds(1, cleanGeneralFilters);
+    }
+  }, [searchParams, query, creationData.categories]); // RETIRÉ fetchAds et searchAds des dépendances // Simplifié les dépendances
+
+  // Rend les filtres interactifs : chaque changement déclenche la recherche
   const handleFilterChange = (name, value) => {
-    setLocalFilters(prev => ({
-      ...prev,
+    const updatedFilters = {
+      ...localFilters,
       [name]: value
-    }));
+    };
+    setLocalFilters(updatedFilters);
+    // Met à jour les paramètres de recherche dans l'URL
+    const newSearchParams = new URLSearchParams(searchParams);
+    Object.entries(updatedFilters).forEach(([key, val]) => {
+      if (val) {
+        newSearchParams.set(key, val);
+      } else {
+        newSearchParams.delete(key);
+      }
+    });
+    setSearchParams(newSearchParams);
+  };
+
+  // Gère le changement de tri
+  const handleSortChange = (sortValue) => {
+    setSortBy(sortValue);
+    const newSearchParams = new URLSearchParams(searchParams);
+    if (sortValue) {
+      newSearchParams.set('sort', sortValue);
+    } else {
+      newSearchParams.delete('sort');
+    }
+    setSearchParams(newSearchParams);
   };
 
   const applyFilters = () => {
@@ -90,6 +304,7 @@ const Search = () => {
       type: '',
       condition: ''
     });
+    setSortBy('recent'); // Reset du tri aussi
 
     const newSearchParams = new URLSearchParams();
     if (query) {
@@ -119,7 +334,93 @@ const Search = () => {
     { value: 'service', label: 'Service' }
   ];
 
-  const ads = query ? searchResults : searchResults;
+  // Fonction de tri côté frontend (nouveau format API)
+  const sortAds = (adsArray, sortBy) => {
+    if (!adsArray || adsArray.length === 0) return adsArray;
+    
+    const sortedAds = [...adsArray];
+    
+    switch (sortBy) {
+      case 'price-asc':
+        return sortedAds.sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
+      case 'price-desc':
+        return sortedAds.sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0));
+      case 'popular':
+        return sortedAds.sort((a, b) => (parseInt(b.viewCount) || 0) - (parseInt(a.viewCount) || 0));
+      case 'recent':
+      default:
+        return sortedAds.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+  };
+
+  // GESTION DES DONNÉES INDÉPENDANTE
+  const categoryParam = searchParams.get('category');
+  const subcategoryParam = searchParams.get('subcategory');
+  
+  let rawAds, displayInfo, currentLoading;
+
+  // PRIORITÉ 1: SOUS-CATÉGORIE (plus spécifique)
+  if (subcategoryParam && subcategoryAds) {
+    // MODE SOUS-CATÉGORIE INDÉPENDANT - DONNÉES CHARGÉES
+    rawAds = subcategoryAds.ads || [];
+    currentLoading = subcategoryLoading;
+    displayInfo = {
+      title: subcategoryAds.subcategory?.name || `Ads in "${subcategoryParam}"`,
+      count: subcategoryAds.pagination?.total || rawAds.length,
+      type: 'subcategory',
+      subcategoryInfo: subcategoryAds.subcategory,
+      categoryInfo: subcategoryAds.category
+    };
+    console.log('📊 Mode Sous-catégorie - Affichage:', displayInfo);
+  } else if (subcategoryParam) {
+    // MODE SOUS-CATÉGORIE - CHARGEMENT OU PAS ENCORE DE DONNÉES
+    rawAds = [];
+    currentLoading = subcategoryLoading || !creationData.categories.length;
+    displayInfo = {
+      title: subcategoryLoading ? `Loading ads in "${subcategoryParam}"...` : `Looking for "${subcategoryParam}"...`,
+      count: 0,
+      type: 'subcategory-loading'
+    };
+    console.log('⏳ Mode Sous-catégorie - Chargement');
+  } 
+  // PRIORITÉ 2: CATÉGORIE
+  else if (categoryParam && categoryAds) {
+    // MODE CATÉGORIE INDÉPENDANT - DONNÉES CHARGÉES
+    rawAds = categoryAds.ads || [];
+    currentLoading = categoryLoading; // Utiliser notre loading spécifique
+    displayInfo = {
+      title: categoryAds.category?.name || `Ads in "${categoryParam}"`,
+      count: categoryAds.pagination?.total || rawAds.length,
+      type: 'category',
+      categoryInfo: categoryAds.category
+    };
+    console.log('📊 Mode Catégorie - Affichage:', displayInfo);
+  } else if (categoryParam) {
+    // MODE CATÉGORIE - CHARGEMENT OU PAS ENCORE DE DONNÉES
+    rawAds = [];
+    currentLoading = categoryLoading || !creationData.categories.length; // Loading si on charge les catégories ou les données
+    displayInfo = {
+      title: categoryLoading ? `Loading ads in "${categoryParam}"...` : `Looking for "${categoryParam}"...`,
+      count: 0,
+      type: 'category-loading'
+    };
+    console.log('⏳ Mode Catégorie - Chargement');
+  } else {
+    // MODE SEARCH/GÉNÉRAL NORMAL
+    rawAds = query ? searchResults : ads;
+    currentLoading = isLoading;
+    displayInfo = {
+      title: subcategoryParam
+        ? `Ads in "${subcategoryParam}"`
+        : query
+          ? `Results for "${query}"`
+          : 'All Ads',
+      count: rawAds?.length || 0,
+      type: subcategoryParam ? 'subcategory' : (query ? 'search' : 'all')
+    };
+  }
+
+  const displayedAds = sortAds(rawAds, sortBy);
   const hasActiveFilters = Object.values(localFilters).some(value => value !== '');
 
   return (
@@ -128,16 +429,40 @@ const Search = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {searchParams.get('subcategory')
-              ? `Ads in "${searchParams.get('subcategory')}"`
-              : query
-                ? `Results for "${query}"`
-                : 'All ads'
-            }
+            {displayInfo.title}
           </h1>
           <p className="text-gray-600">
-            {pagination.totalItems} ad{pagination.totalItems > 1 ? 's' : ''} found
+            {displayInfo.count} ad{displayInfo.count > 1 ? 's' : ''} found
           </p>
+          
+          {/* Debug info pour mode catégorie */}
+          {displayInfo.type === 'category' && displayInfo.categoryInfo && (
+            <div className="mt-2 text-sm text-gray-500 bg-blue-50 p-2 rounded">
+              📊 Category Mode: {displayInfo.categoryInfo.name} (ID: {displayInfo.categoryInfo.id}, Slug: {displayInfo.categoryInfo.slug})
+            </div>
+          )}
+          
+          {/* Debug info pour mode sous-catégorie */}
+          {displayInfo.type === 'subcategory' && displayInfo.subcategoryInfo && (
+            <div className="mt-2 text-sm text-gray-500 bg-green-50 p-2 rounded">
+              📊 Subcategory Mode: {displayInfo.subcategoryInfo.name} (ID: {displayInfo.subcategoryInfo.id}, Slug: {displayInfo.subcategoryInfo.slug})
+              {displayInfo.categoryInfo && (
+                <span className="block text-gray-400">in Category: {displayInfo.categoryInfo.name}</span>
+              )}
+            </div>
+          )}
+          
+          {displayInfo.type === 'subcategory-loading' && (
+            <div className="mt-2 text-sm text-gray-500 bg-yellow-50 p-2 rounded">
+              ⏳ Loading subcategory data...
+            </div>
+          )}
+          
+          {displayInfo.type === 'category-loading' && (
+            <div className="mt-2 text-sm text-gray-500 bg-yellow-50 p-2 rounded">
+              ⏳ Loading category data...
+            </div>
+          )}
         </div>
 
         {/* Controls */}
@@ -157,17 +482,24 @@ const Search = () => {
               )}
             </Button>
 
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
-            >
-              {sortOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={sortBy}
+                onChange={(e) => handleSortChange(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
+              >
+                {sortOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {sortBy !== 'recent' && (
+                <span className="absolute -top-1 -right-1 bg-[#D6BA69] text-black rounded-full w-4 h-4 text-xs flex items-center justify-center font-bold">
+                  ↕
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center space-x-2">
@@ -202,7 +534,7 @@ const Search = () => {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
                 >
                   <option value="">All categories</option>
-                  {CATEGORIES.map(category => (
+                  {creationData.categories.map(category => (
                     <option key={category.id} value={category.id}>
                       {category.name}
                     </option>
@@ -274,12 +606,18 @@ const Search = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Location
                 </label>
-                <Input
-                  type="text"
-                  placeholder="City, zip code..."
+                <select
                   value={localFilters.location}
                   onChange={(e) => handleFilterChange('location', e.target.value)}
-                />
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
+                >
+                  <option value="">All locations</option>
+                  {creationData.locations.map(loc => (
+                    <option key={loc.id} value={loc.city}>
+                      {loc.city} ({loc.region})
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
@@ -295,7 +633,7 @@ const Search = () => {
         )}
 
         {/* Results */}
-        {isLoading ? (
+        {currentLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="animate-pulse">
@@ -305,14 +643,14 @@ const Search = () => {
               </div>
             ))}
           </div>
-        ) : ads.length > 0 ? (
+        ) : displayedAds.length > 0 ? (
           <>
             <div className={`grid gap-6 ${
               viewMode === 'grid' 
                 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' 
                 : 'grid-cols-1'
             }`}>
-              {ads.map((ad) => (
+              {displayedAds.map((ad) => (
                 <AdCard key={ad.id} ad={ad} />
               ))}
             </div>

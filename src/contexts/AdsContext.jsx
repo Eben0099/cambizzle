@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer } from 'react';
+import { createContext, useContext, useReducer, useCallback } from 'react';
 import { adsService } from '../services/adsService';
 
 const AdsContext = createContext();
@@ -81,27 +81,29 @@ export const AdsProvider = ({ children }) => {
     dispatch({ type: 'CLEAR_ERROR' });
   };
 
-  const fetchAds = async (page = 1, filters = {}) => {
+  const fetchAds = useCallback(async (page = 1, filters = {}) => {
     try {
       setLoading(true);
       const response = await adsService.getAds({ page, ...filters });
-      dispatch({ type: 'SET_ADS', payload: response.data });
+      // Nouveau format API : les annonces sont dans response.ads
+      dispatch({ type: 'SET_ADS', payload: response.ads || response.data || [] });
       dispatch({ type: 'SET_PAGINATION', payload: response.pagination });
     } catch (error) {
       setError(error.message);
     }
-  };
+  }, []);
 
-  const searchAds = async (query, filters = {}) => {
+  const searchAds = useCallback(async (query, filters = {}) => {
     try {
       setLoading(true);
       const response = await adsService.searchAds(query, filters);
-      dispatch({ type: 'SET_SEARCH_RESULTS', payload: response.data });
+      // Nouveau format API : les annonces sont dans response.ads
+      dispatch({ type: 'SET_SEARCH_RESULTS', payload: response.ads || response.data || [] });
       dispatch({ type: 'SET_PAGINATION', payload: response.pagination });
     } catch (error) {
       setError(error.message);
     }
-  };
+  }, []);
 
   const getAdById = async (id) => {
     try {

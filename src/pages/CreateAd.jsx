@@ -26,7 +26,8 @@ const CreateAd = () => {
     type: 'sell',
     condition: '',
     tags: '',
-    isPremium: false,
+  isPremium: false,
+  isNegotiable: false,
     // Champs dynamiques pour les filtres
     filters: {}
   });
@@ -83,6 +84,27 @@ const CreateAd = () => {
   const handleChange = async (e) => {
     const { name, value, type, checked } = e.target;
 
+    if (name === 'price' || name === 'originalPrice') {
+      // Format francophone à la saisie (affichage)
+      let raw = value.replace(/\s/g, '');
+      if (/^\d+$/.test(raw)) {
+        const formatted = Number(raw).toLocaleString('fr-FR');
+        setFormData(prev => ({
+          ...prev,
+          [name]: formatted
+        }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value
+        }));
+      }
+      if (errors[name]) {
+        setErrors(prev => ({ ...prev, [name]: '' }));
+      }
+      return;
+    }
+
     if (name === 'category') {
       setFormData(prev => ({ ...prev, category: value, subcategory: '' }));
       setSubcategories([]);
@@ -130,7 +152,7 @@ const CreateAd = () => {
   };
 
   const validateStep = (step) => {
-    const newErrors = {};
+  const newErrors = {};
     
     console.log(`🔍 Validation step ${step}:`, {
       subcategory: formData.subcategory,
@@ -189,12 +211,19 @@ const CreateAd = () => {
     if (step === 2) {
       if (!formData.price) {
         newErrors.price = 'Le prix est requis';
-      } else if (parseFloat(formData.price) <= 0) {
-        newErrors.price = 'Le prix doit être supérieur à 0';
+      } else {
+        const priceRaw = formData.price.replace(/\s/g, '');
+        if (parseFloat(priceRaw) <= 0) {
+          newErrors.price = 'Le prix doit être supérieur à 0';
+        }
       }
       
-      if (formData.originalPrice && parseFloat(formData.originalPrice) <= parseFloat(formData.price)) {
-        newErrors.originalPrice = 'Le prix original doit être supérieur au prix de vente';
+      if (formData.originalPrice) {
+        const originalPriceRaw = formData.originalPrice.replace(/\s/g, '');
+        const priceRaw = formData.price.replace(/\s/g, '');
+        if (parseFloat(originalPriceRaw) <= parseFloat(priceRaw)) {
+          newErrors.originalPrice = 'Le prix original doit être supérieur au prix de vente';
+        }
       }
 
       if (!formData.locationId) {
@@ -205,9 +234,12 @@ const CreateAd = () => {
     }
     
     if (step === 3) {
-      console.log('🔍 Validation étape 3 - Filtres dynamiques');
-      console.log('📋 subcategoryFields:', subcategoryFields);
-      console.log('📋 formData.filters:', formData.filters);
+      // Validation du champ brandId si la sous-catégorie a des marques
+      if (subcategoryFields.brands && subcategoryFields.brands.length > 0) {
+        if (!formData.brandId) {
+          newErrors.brandId = 'La marque est requise';
+        }
+      }
 
       // Validation des champs dynamiques requis
       if (subcategoryFields.filters) {
@@ -219,40 +251,35 @@ const CreateAd = () => {
           } else {
             hasValue = !!(value && typeof value === 'string' && value.trim() !== '');
           }
-          console.log(`🔍 Vérification filtre ${filter.id} (${filter.name}):`, {
-            isRequired: filter.isRequired,
-            currentValue: value,
-            hasValue
-          });
-
           if (filter.isRequired && !hasValue) {
             newErrors[`filters.${filter.id}`] = `${filter.name} est requis`;
-            console.log(`❌ Erreur ajoutée pour ${filter.name}`);
           }
         });
-      } else {
-        console.log('⚠️ Pas de filtres définis pour cette sous-catégorie');
       }
     }
 
     if (step === 4) {
-      console.log('✅ CreateAd: Validation étape 4 - Photos', {
-        imagesCount: images.length,
-        images: images.map((img, idx) => ({
-          index: idx,
-          hasFile: !!img.file,
-          fileName: img.file?.name
-        }))
-      });
-      
+      // Types et taille autorisés
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      const maxSize = 5 * 1024 * 1024; // 5 Mo
       if (images.length === 0) {
-        newErrors.images = 'Au moins une photo est requise';
-        console.log('❌ CreateAd: Erreur - Aucune photo sélectionnée');
+        newErrors.images = 'At least one photo is required';
       } else if (images.length > 10) {
-        newErrors.images = 'Maximum 10 photos autorisées';
-        console.log('❌ CreateAd: Erreur - Trop de photos:', images.length);
+        newErrors.images = 'Maximum 10 photos allowed';
       } else {
-        console.log('✅ CreateAd: Validation photos OK -', images.length, 'photo(s)');
+        for (let i = 0; i < images.length; i++) {
+          const img = images[i];
+          if (img.file) {
+            if (!allowedTypes.includes(img.file.type)) {
+              newErrors.images = `Photo format not allowed (photo ${i + 1}). Accepted formats: JPG, PNG, WEBP.`;
+              break;
+            }
+            if (img.file.size > maxSize) {
+              newErrors.images = `Photo too large (photo ${i + 1}). Max size: 5MB.`;
+              break;
+            }
+          }
+        }
       }
     }
     
@@ -276,8 +303,10 @@ const CreateAd = () => {
 
   const calculateDiscount = () => {
     if (formData.originalPrice && formData.price) {
-      const original = parseFloat(formData.originalPrice);
-      const current = parseFloat(formData.price);
+      const originalRaw = formData.originalPrice.replace(/\s/g, '');
+      const currentRaw = formData.price.replace(/\s/g, '');
+      const original = parseFloat(originalRaw);
+      const current = parseFloat(currentRaw);
       const discount = Math.round(((original - current) / original) * 100);
       setFormData(prev => ({
         ...prev,
@@ -330,13 +359,19 @@ const CreateAd = () => {
       // Champs statiques
       formDataToSend.append('title', formData.title);
       formDataToSend.append('description', formData.description);
-      formDataToSend.append('price', formData.price);
-      formDataToSend.append('original_price', formData.originalPrice || formData.price);
+      
+      // Convertir les prix formatés en nombres pour l'API
+      const priceRaw = formData.price.replace(/\s/g, '');
+      const originalPriceRaw = formData.originalPrice ? formData.originalPrice.replace(/\s/g, '') : '';
+      
+      formDataToSend.append('price', priceRaw);
+      formDataToSend.append('original_price', originalPriceRaw || priceRaw);
       formDataToSend.append('discount_percentage', formData.discountPercent || 0);
       formDataToSend.append('type', formData.type);
       formDataToSend.append('condition', formData.condition);
       formDataToSend.append('tags', formData.tags);
-      formDataToSend.append('is_premium', formData.isPremium ? 1 : 0);
+  formDataToSend.append('is_premium', formData.isPremium ? 1 : 0);
+  formDataToSend.append('isnegotiable', formData.isNegotiable ? 1 : 0);
       
       // Convertir subcategory slug en ID avant envoi
       if (formData.subcategory && formData.category) {
@@ -362,6 +397,9 @@ const CreateAd = () => {
       if (formData.brandId) {
         formDataToSend.append('brand_id', parseInt(formData.brandId));
       }
+
+      // Champ négociable
+  formDataToSend.append('is_negotiable', formData.isNegotiable ? 1 : 0);
 
       // Ajouter les filtres dynamiques
       Object.entries(formData.filters).forEach(([filterId, value]) => {
@@ -450,13 +488,13 @@ const CreateAd = () => {
   ];
 
   const steps = [
-    { number: 1, title: 'Informations générales', icon: Tag },
-    { number: 2, title: 'Prix et localisation', icon: Euro },
-    { number: 3, title: 'Caractéristiques spécifiques', icon: MapPin },
+    { number: 1, title: 'General Information', icon: Tag },
+    { number: 2, title: 'Price and Location', icon: Euro },
+    { number: 3, title: 'Specific Characteristics', icon: MapPin },
     { number: 4, title: 'Photos', icon: MapPin }
   ];
 
-return (
+  return (
   <div className="min-h-screen bg-gray-50">
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       {/* Header */}
@@ -692,26 +730,57 @@ return (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Input
                   label="Selling Price *"
-                  type="number"
+                  type="text"
                   name="price"
                   value={formData.price}
                   onChange={handleChange}
+                  onBlur={e => {
+                    let raw = e.target.value.replace(/\s/g, '');
+                    if (/^\d+$/.test(raw)) {
+                      setFormData(prev => ({
+                        ...prev,
+                        price: Number(raw).toLocaleString('fr-FR')
+                      }));
+                    }
+                  }}
                   error={errors.price}
                   placeholder="0"
-                  min="0"
-                  step="0.01"
                 />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Negotiable price</label>
+                  <select
+                    name="isNegotiable"
+                    value={formData.isNegotiable ? '1' : '0'}
+                    onChange={e => {
+                      setFormData(prev => ({
+                        ...prev,
+                        isNegotiable: e.target.value === '1'
+                      }));
+                    }}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
+                  >
+                    <option value="0">No</option>
+                    <option value="1">Yes</option>
+                  </select>
+                </div>
                 <Input
                   label="Original Price (optional)"
-                  type="number"
+                  type="text"
                   name="originalPrice"
                   value={formData.originalPrice}
                   onChange={handleChange}
-                  onBlur={calculateDiscount}
+                  onBlur={e => {
+                    let raw = e.target.value.replace(/\s/g, '');
+                    if (/^\d+$/.test(raw)) {
+                      setFormData(prev => ({
+                        ...prev,
+                        originalPrice: Number(raw).toLocaleString('fr-FR')
+                      }));
+                    }
+                    calculateDiscount();
+                  }}
                   error={errors.originalPrice}
                   placeholder="0"
-                  min="0"
-                  step="0.01"
                   helperText="To display a discount"
                 />
               </div>
@@ -783,7 +852,7 @@ return (
               {subcategoryFields.brands && subcategoryFields.brands.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Brand
+                    Brand *
                   </label>
                   {fieldsLoading ? (
                     <div className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 flex items-center">
@@ -797,13 +866,18 @@ return (
                       onChange={handleChange}
                       className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                     >
-                      <option value="">Select a brand (optional)</option>
-                      {subcategoryFields.brands.map(brand => (
-                        <option key={brand.id} value={brand.id}>
-                          {brand.name}
-                        </option>
-                      ))}
+                      <option value="">Select a brand</option>
+                      {[...subcategoryFields.brands]
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .map(brand => (
+                          <option key={brand.id} value={brand.id}>
+                            {brand.name}
+                          </option>
+                        ))}
                     </select>
+                  )}
+                  {errors.brandId && (
+                    <p className="text-sm text-red-600 mt-1">{errors.brandId}</p>
                   )}
                 </div>
               )}
@@ -841,11 +915,19 @@ return (
                               className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                             >
                               <option value="">Select {filter.name.toLowerCase()}</option>
-                              {filter.options.map(option => (
-                                <option key={option} value={option}>
-                                  {option}
-                                </option>
-                              ))}
+                              {[...filter.options]
+                                .sort((a, b) => {
+                                  const aNum = Number(a), bNum = Number(b);
+                                  if (!isNaN(aNum) && !isNaN(bNum)) {
+                                    return aNum - bNum;
+                                  }
+                                  return a.localeCompare(b);
+                                })
+                                .map(option => (
+                                  <option key={option} value={option}>
+                                    {option}
+                                  </option>
+                                ))}
                             </select>
                           ) : filter.type === 'number' ? (
                             <input
@@ -886,7 +968,15 @@ return (
                             <Select
                               isMulti
                               name={`filters.${filter.id}`}
-                              options={filter.options.map(option => ({ value: option, label: option }))}
+                              options={[...filter.options]
+                                .sort((a, b) => {
+                                  const aNum = Number(a), bNum = Number(b);
+                                  if (!isNaN(aNum) && !isNaN(bNum)) {
+                                    return aNum - bNum;
+                                  }
+                                  return a.localeCompare(b);
+                                })
+                                .map(option => ({ value: option, label: option }))}
                               value={(formData.filters[filter.id] || []).map(val => ({ value: val, label: val }))}
                               onChange={selected => {
                                 setFormData(prev => ({
@@ -1041,7 +1131,7 @@ return (
       </form>
     </div>
   </div>
-);
+  );
 };
 
 export default CreateAd;

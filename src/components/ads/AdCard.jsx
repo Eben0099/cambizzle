@@ -16,16 +16,16 @@ const AdCard = ({ ad, onFavorite, isFavorited = false }) => {
     }
   };
 
-  // Calcul de la remise basé sur les prix
+  // Calcul de la remise basé sur les prix (nouveau format API)
   const calculateDiscount = () => {
     if (ad.originalPrice && ad.price && ad.originalPrice > ad.price) {
       return Math.round(((ad.originalPrice - ad.price) / ad.originalPrice) * 100);
     }
-    return ad.discountPercentage || ad.discount_percentage || 0;
+    return ad.discountPercentage || 0;
   };
 
   const discountPercentage = calculateDiscount();
-  const hasDiscount = discountPercentage > 0;
+  const hasDiscount = discountPercentage > 0 || (ad.originalPrice && ad.originalPrice > ad.price);
 
   // Debug temporaire pour vérifier les données
   if (ad.originalPrice && ad.originalPrice !== ad.price) {
@@ -132,7 +132,9 @@ const AdCard = ({ ad, onFavorite, isFavorited = false }) => {
           <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
             <div className="flex items-center space-x-1">
               <MapPin className="w-3 h-3" />
-              <span className="truncate">{ad.locationName}</span>
+              <span className="truncate">
+                {ad.locationName} ({ad.locationType})
+              </span>
             </div>
             <span className="text-xs">{formatRelativeDate(ad.createdAt)}</span>
           </div>

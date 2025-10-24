@@ -74,7 +74,7 @@ function App() {
                     </main>
                   </div>
                 } />
-                <Route path="/category" element={
+                <Route path="/category/:categoryId" element={
                   <div className="min-h-screen bg-gray-50">
                     <Header />
                     <main>

@@ -38,56 +38,21 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import adminService from "@/services/adminService";
 
 /**
  * Filters management screen
- * - Front-end search and sorting
- * - useState-driven filters (mock data ready to be wired to API)
+ * - Integrated with backend API for filters management
  * - Toast notifications via useToast()
  * - Responsive, no transparency, pro design
  *
  * Theme: primary accent #D6BA69
  */
 
-const initialFiltersMock = [
-  {
-    id: 1,
-    position: 1,
-    name: "Brand",
-    subcategory: "Phones",
-    type: "dropdown", // dropdown | multi-select | text | number
-    values: ["Samsung", "Apple", "Huawei", "Xiaomi"],
-  },
-  {
-    id: 2,
-    position: 2,
-    name: "Condition",
-    subcategory: "Phones",
-    type: "dropdown",
-    values: ["New", "Like new", "Good", "Used"],
-  },
-  {
-    id: 3,
-    position: 3,
-    name: "Storage",
-    subcategory: "Phones",
-    type: "multi-select",
-    values: ["64 GB", "128 GB", "256 GB", "512 GB"],
-  },
-  {
-    id: 4,
-    position: 4,
-    name: "Color",
-    subcategory: "Phones",
-    type: "multi-select",
-    values: ["Black", "White", "Blue", "Red", "Gold"],
-  },
-];
-
 const typeLabel = (type) => {
   const map = {
-    "dropdown": "Dropdown",
-    "multi-select": "Multi-select",
+    "select": "Select",
+    "multi-select": "Multi-select", 
     "text": "Text",
     "number": "Number",
   };
@@ -103,15 +68,15 @@ const getTypeBadge = (type) => {
 };
 
 const SORT_OPTIONS = [
-  { id: "position_asc", label: "Position ▲" },
-  { id: "position_desc", label: "Position ▼" },
   { id: "name_asc", label: "Name ▲" },
   { id: "name_desc", label: "Name ▼" },
+  { id: "subcategory_asc", label: "Subcategory ▲" },
+  { id: "subcategory_desc", label: "Subcategory ▼" },
 ];
 
 const Filters = () => {
-  const [filters, setFilters] = useState(initialFiltersMock);
-  const [loading, setLoading] = useState(false); // keep for future API hooks
+  const [filtersData, setFiltersData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState(SORT_OPTIONS[0].id);
   const [selectedSubcategoryFilter, setSelectedSubcategoryFilter] = useState("all");
@@ -119,28 +84,69 @@ const Filters = () => {
   // Dialog states
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [valuesOpenFor, setValuesOpenFor] = useState(null); // filter object or null
+  const [valuesOpenFor, setValuesOpenFor] = useState(null);
   const [deleteCandidate, setDeleteCandidate] = useState(null);
 
   // Forms
   const emptyForm = {
     id: null,
     name: "",
-    subcategory: "Phones",
-    type: "dropdown",
-    position: 1,
-    valuesText: "", // comma-separated in UI for create/edit
+    subcategory_id: "",
+    type: "select",
+    optionsText: "",
   };
   const [form, setForm] = useState(emptyForm);
   const [submitting, setSubmitting] = useState(false);
 
   const { toast } = useToast();
 
+  // Charger les filtres depuis l'API
+  useEffect(() => {
+    loadFilters();
+  }, []);
+
+  const loadFilters = async () => {
+    try {
+      setLoading(true);
+      const response = await adminService.getFilters();
+      console.log('🔄 Filtres chargés:', response);
+      setFiltersData(response.data || []);
+    } catch (error) {
+      console.error('❌ Erreur lors du chargement des filtres:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les filtres",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Transformer les données API en format utilisable
+  const filters = useMemo(() => {
+    return filtersData.flatMap(item => 
+      item.filters.map(filter => ({
+        id: filter.id,
+        name: filter.name,
+        type: filter.type,
+        subcategory: item.subcategory.name,
+        subcategory_id: item.subcategory.id,
+        subcategory_slug: item.subcategory.slug,
+        category_name: item.subcategory.category_name,
+        options: filter.options || []
+      }))
+    );
+  }, [filtersData]);
+
   // Derived lists
   const subcategoryOptions = useMemo(() => {
-    const setNames = new Set(filters.map((f) => f.subcategory));
-    return Array.from(setNames).sort();
-  }, [filters]);
+    const subcategories = filtersData.map(item => item.subcategory);
+    const uniqueSubcategories = subcategories.filter((sub, index, self) => 
+      index === self.findIndex(s => s.id === sub.id)
+    );
+    return uniqueSubcategories.sort((a, b) => a.name.localeCompare(b.name));
+  }, [filtersData]);
 
   // Search + sort + filter
   const displayed = useMemo(() => {
@@ -151,30 +157,31 @@ const Filters = () => {
       list = list.filter((f) => f.subcategory === selectedSubcategoryFilter);
     }
 
-    // search by name / subcategory / values
+    // filter by search
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       list = list.filter((f) => {
         if ((f.name || "").toLowerCase().includes(q)) return true;
         if ((f.subcategory || "").toLowerCase().includes(q)) return true;
-        if ((f.values || []).some((v) => v.toLowerCase().includes(q))) return true;
+        if ((f.category_name || "").toLowerCase().includes(q)) return true;
+        if ((f.options || []).some((opt) => opt.value.toLowerCase().includes(q))) return true;
         return false;
       });
     }
 
     // sort
     switch (sortBy) {
-      case "position_asc":
-        list.sort((a, b) => (a.position || 0) - (b.position || 0));
-        break;
-      case "position_desc":
-        list.sort((a, b) => (b.position || 0) - (a.position || 0));
-        break;
       case "name_asc":
         list.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
         break;
       case "name_desc":
         list.sort((a, b) => (b.name || "").localeCompare(a.name || ""));
+        break;
+      case "subcategory_asc":
+        list.sort((a, b) => (a.subcategory || "").localeCompare(b.subcategory || ""));
+        break;
+      case "subcategory_desc":
+        list.sort((a, b) => (b.subcategory || "").localeCompare(a.subcategory || ""));
         break;
       default:
         break;
@@ -185,10 +192,7 @@ const Filters = () => {
 
   // Handlers: Create / Edit / Delete / Manage Values
   const openCreate = () => {
-    setForm({
-      ...emptyForm,
-      position: filters.length ? Math.max(...filters.map((f) => f.position || 0)) + 1 : 1,
-    });
+    setForm({ ...emptyForm });
     setCreateOpen(true);
   };
 
@@ -196,29 +200,38 @@ const Filters = () => {
     e?.preventDefault();
     setSubmitting(true);
     try {
-      // parse values
-      const values = (form.valuesText || "")
-        .split(",")
-        .map((v) => v.trim())
-        .filter(Boolean);
-
-      // simple id generator (front-end)
-      const newId = (filters.reduce((mx, f) => Math.max(mx, f.id || 0), 0) || 0) + 1;
-
-      const newFilter = {
-        id: newId,
+      const filterData = {
         name: form.name.trim(),
-        subcategory: form.subcategory,
+        subcategory_id: form.subcategory_id,
         type: form.type,
-        position: Number(form.position) || 1,
-        values,
       };
 
-      setFilters((prev) => [...prev, newFilter]);
+      const response = await adminService.createFilter(filterData);
+      console.log('✅ Filtre créé:', response);
+
+      // Si on a des options à ajouter
+      if (form.optionsText.trim()) {
+        const options = form.optionsText
+          .split(',')
+          .map(opt => opt.trim())
+          .filter(Boolean)
+          .map((value, index) => ({
+            value,
+            display_order: index + 1
+          }));
+
+        // Créer chaque option
+        for (const option of options) {
+          await adminService.createFilterOption(response.data.id, option);
+        }
+      }
+
+      // Recharger les données
+      await loadFilters();
       setCreateOpen(false);
-      toast({ description: "Filter created successfully." });
+      toast({ description: "Filtre créé avec succès." });
     } catch (err) {
-      toast({ description: "Failed to create filter.", variant: "destructive" });
+      toast({ description: "Erreur lors de la création du filtre.", variant: "destructive" });
       console.error(err);
     } finally {
       setSubmitting(false);
@@ -226,13 +239,13 @@ const Filters = () => {
   };
 
   const openEdit = (filter) => {
+    const subcategory = subcategoryOptions.find(sub => sub.name === filter.subcategory);
     setForm({
       id: filter.id,
       name: filter.name,
-      subcategory: filter.subcategory,
+      subcategory_id: subcategory?.id || "",
       type: filter.type,
-      position: filter.position || 1,
-      valuesText: (filter.values || []).join(", "),
+      optionsText: (filter.options || []).map(opt => opt.value).join(", "),
     });
     setEditOpen(true);
   };
@@ -242,29 +255,20 @@ const Filters = () => {
     if (form.id == null) return;
     setSubmitting(true);
     try {
-      const values = (form.valuesText || "")
-        .split(",")
-        .map((v) => v.trim())
-        .filter(Boolean);
+      const filterData = {
+        name: form.name.trim(),
+        subcategory_id: form.subcategory_id,
+        type: form.type,
+      };
 
-      setFilters((prev) =>
-        prev.map((f) =>
-          f.id === form.id
-            ? {
-                ...f,
-                name: form.name.trim(),
-                subcategory: form.subcategory,
-                type: form.type,
-                position: Number(form.position) || 1,
-                values,
-              }
-            : f
-        )
-      );
+      await adminService.updateFilter(form.id, filterData);
+      console.log('✅ Filtre mis à jour');
+
+      await loadFilters();
       setEditOpen(false);
-      toast({ description: "Filter updated successfully." });
+      toast({ description: "Filtre mis à jour avec succès." });
     } catch (err) {
-      toast({ description: "Failed to update filter.", variant: "destructive" });
+      toast({ description: "Erreur lors de la mise à jour du filtre.", variant: "destructive" });
       console.error(err);
     } finally {
       setSubmitting(false);
@@ -279,11 +283,14 @@ const Filters = () => {
     if (!deleteCandidate) return;
     setSubmitting(true);
     try {
-      setFilters((prev) => prev.filter((f) => f.id !== deleteCandidate.id));
+      await adminService.deleteFilter(deleteCandidate.id);
+      console.log('✅ Filtre supprimé');
+      
+      await loadFilters();
       setDeleteCandidate(null);
-      toast({ description: "Filter deleted successfully." });
+      toast({ description: "Filtre supprimé avec succès." });
     } catch (err) {
-      toast({ description: "Failed to delete filter.", variant: "destructive" });
+      toast({ description: "Erreur lors de la suppression du filtre.", variant: "destructive" });
       console.error(err);
     } finally {
       setSubmitting(false);
@@ -294,33 +301,70 @@ const Filters = () => {
     setValuesOpenFor(filter);
   };
 
-  const handleAddValue = (newVal) => {
+  const handleAddValue = async (newVal) => {
     if (!valuesOpenFor) return;
     const v = (newVal || "").trim();
     if (!v) {
-      toast({ description: "Value cannot be empty.", variant: "destructive" });
+      toast({ description: "La valeur ne peut pas être vide.", variant: "destructive" });
       return;
     }
-    // avoid duplicates
-    setFilters((prev) =>
-      prev.map((f) =>
-        f.id === valuesOpenFor.id ? { ...f, values: Array.from(new Set([...(f.values || []), v])) } : f
-      )
-    );
-    // keep valuesOpenFor reference updated
-    setValuesOpenFor((prev) => prev && { ...prev, values: Array.from(new Set([...(prev.values || []), v])) });
-    toast({ description: "Value added." });
+    
+    try {
+      const optionData = {
+        value: v,
+        display_order: (valuesOpenFor.options || []).length + 1
+      };
+      
+      await adminService.createFilterOption(valuesOpenFor.id, optionData);
+      console.log('✅ Option ajoutée');
+      
+      await loadFilters();
+      
+      const updatedFilter = filters.find(f => f.id === valuesOpenFor.id);
+      if (updatedFilter) {
+        setValuesOpenFor(updatedFilter);
+      }
+      
+      toast({ description: "Option ajoutée avec succès." });
+    } catch (err) {
+      toast({ description: "Erreur lors de l'ajout de l'option.", variant: "destructive" });
+      console.error(err);
+    }
   };
 
-  const handleRemoveValue = (val) => {
+  const handleRemoveValue = async (option) => {
     if (!valuesOpenFor) return;
-    setFilters((prev) => prev.map((f) => (f.id === valuesOpenFor.id ? { ...f, values: (f.values || []).filter((x) => x !== val) } : f)));
-    setValuesOpenFor((prev) => prev && { ...prev, values: (prev.values || []).filter((x) => x !== val) });
-    toast({ description: "Value removed." });
+    
+    try {
+      await adminService.deleteFilterOption(valuesOpenFor.id, option.id);
+      console.log('✅ Option supprimée');
+      
+      await loadFilters();
+      
+      const updatedFilter = filters.find(f => f.id === valuesOpenFor.id);
+      if (updatedFilter) {
+        setValuesOpenFor(updatedFilter);
+      }
+      
+      toast({ description: "Option supprimée avec succès." });
+    } catch (err) {
+      toast({ description: "Erreur lors de la suppression de l'option.", variant: "destructive" });
+      console.error(err);
+    }
   };
 
-  // small responsive helpers for table columns on narrow screens
-  const isCompact = typeof window !== "undefined" && window.innerWidth < 640;
+  if (loading) {
+    return (
+      <div className="min-h-[calc(100vh-120px)] bg-white px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-[#D6BA69]" />
+            <p className="text-gray-600">Chargement des filtres...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100vh-120px)] bg-white px-4 sm:px-6 lg:px-8 py-6">
@@ -328,18 +372,18 @@ const Filters = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Filters Management</h1>
-            <p className="text-sm text-gray-600 mt-1">Manage dynamic fields per subcategory</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestion des Filtres</h1>
+            <p className="text-sm text-gray-600 mt-1">Gérer les champs dynamiques par sous-catégorie</p>
           </div>
 
           <div className="flex items-center gap-3">
             {/* Search */}
             <div className="relative">
               <Input
-                placeholder="Search by name, subcategory or value..."
+                placeholder="Rechercher..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 h-9 w-full sm:w-72 text-sm rounded-lg border-gray-200 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
+                className="pl-10 h-9 w-64 text-sm rounded-lg border-gray-200 focus:ring-[#D6BA69]"
               />
               <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             </div>
@@ -351,10 +395,10 @@ const Filters = () => {
                   <SelectValue placeholder="Subcategory" />
                 </SelectTrigger>
                 <SelectContent className="bg-white">
-                  <SelectItem value="all" className="hover:bg-gray-100">All</SelectItem>
-                  {subcategoryOptions.map((s) => (
-                    <SelectItem key={s} value={s} className="hover:bg-gray-100">
-                      {s}
+                  <SelectItem value="all" className="hover:bg-gray-100">Toutes</SelectItem>
+                  {subcategoryOptions.map((sub) => (
+                    <SelectItem key={sub.id} value={sub.name} className="hover:bg-gray-100">
+                      {sub.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -365,7 +409,7 @@ const Filters = () => {
             <div className="hidden sm:block">
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="h-9 w-40 text-sm rounded-lg border-gray-200 focus:ring-[#D6BA69]">
-                  <SelectValue placeholder="Sort" />
+                  <SelectValue placeholder="Trier" />
                 </SelectTrigger>
                 <SelectContent className="bg-white">
                   {SORT_OPTIONS.map((opt) => (
@@ -378,291 +422,197 @@ const Filters = () => {
             </div>
 
             {/* Create */}
-            <div className="flex-shrink-0">
-              <Button
-                onClick={openCreate}
-                className="h-9 bg-[#D6BA69] hover:bg-[#C5A952] text-white text-sm rounded-lg flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                New Filter
-              </Button>
-            </div>
+            <Button
+              onClick={openCreate}
+              className="h-9 px-4 bg-[#D6BA69] hover:bg-[#C5A952] text-white rounded-lg transition-colors duration-200"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Créer
+            </Button>
           </div>
         </div>
 
-        {/* Card/Table */}
-        <Card className="bg-white border border-gray-200 shadow-sm">
-          <CardHeader className="px-4 py-3 border-b border-gray-100">
-            <CardTitle className="text-sm font-semibold">Filters by Subcategory</CardTitle>
-          </CardHeader>
+        {/* Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Card className="border-gray-200">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-gray-900">{filters.length}</div>
+              <div className="text-sm text-gray-600">Filtres totaux</div>
+            </CardContent>
+          </Card>
+          <Card className="border-gray-200">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-gray-900">{subcategoryOptions.length}</div>
+              <div className="text-sm text-gray-600">Sous-catégories</div>
+            </CardContent>
+          </Card>
+          <Card className="border-gray-200">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-gray-900">{displayed.length}</div>
+              <div className="text-sm text-gray-600">Affichés</div>
+            </CardContent>
+          </Card>
+        </div>
 
+        {/* Table */}
+        <Card className="border-gray-200">
           <CardContent className="p-0">
-            <div className="w-full overflow-x-auto">
-              <Table className="min-w-[720px]">
-                <TableHeader>
-                  <TableRow className="bg-gray-50">
-                    <TableHead className="px-4 py-3 text-xs text-gray-500 uppercase">Position</TableHead>
-                    <TableHead className="px-4 py-3 text-xs text-gray-500 uppercase">Filter Name</TableHead>
-                    <TableHead className="px-4 py-3 text-xs text-gray-500 uppercase">Subcategory</TableHead>
-                    <TableHead className="px-4 py-3 text-xs text-gray-500 uppercase">Type</TableHead>
-                    <TableHead className="px-4 py-3 text-xs text-gray-500 uppercase">Values</TableHead>
-                    <TableHead className="px-4 py-3 text-xs text-gray-500 uppercase text-right">Actions</TableHead>
+            <Table>
+              <TableHeader>
+                <TableRow className="border-gray-200">
+                  <TableHead className="font-semibold text-gray-900">Nom</TableHead>
+                  <TableHead className="font-semibold text-gray-900">Sous-catégorie</TableHead>
+                  <TableHead className="font-semibold text-gray-900">Catégorie</TableHead>
+                  <TableHead className="font-semibold text-gray-900">Type</TableHead>
+                  <TableHead className="font-semibold text-gray-900">Options</TableHead>
+                  <TableHead className="font-semibold text-gray-900 text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {displayed.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                      Aucun filtre trouvé
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-
-                <TableBody>
-                  {displayed.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="py-12 text-center text-gray-500">
-                        <div className="flex flex-col items-center gap-2">
-                          <List className="h-8 w-8 text-gray-300" />
-                          <div className="text-sm font-medium">No filters found</div>
-                          <div className="text-xs text-gray-400">Try another search or create a new filter</div>
+                ) : (
+                  displayed.map((filter) => (
+                    <TableRow key={filter.id} className="border-gray-200 hover:bg-gray-50">
+                      <TableCell className="font-medium">{filter.name}</TableCell>
+                      <TableCell>{filter.subcategory}</TableCell>
+                      <TableCell className="text-gray-600">{filter.category_name}</TableCell>
+                      <TableCell>{getTypeBadge(filter.type)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-600">
+                            {filter.options.length} option(s)
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openValuesManager(filter)}
+                            className="h-7 px-2 text-xs border-gray-200 hover:bg-gray-50"
+                          >
+                            <List className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openEdit(filter)}
+                            className="h-7 px-2 border-gray-200 hover:bg-gray-50"
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => confirmDelete(filter)}
+                            className="h-7 px-2 border-gray-200 hover:bg-red-50 hover:border-red-200 hover:text-red-600"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
-                  ) : (
-                    displayed.map((f) => (
-                      <TableRow key={f.id} className="hover:bg-gray-50">
-                        <TableCell className="px-4 py-3">
-                          <Badge className="bg-gray-100 text-gray-800 text-xs">{f.position}</Badge>
-                        </TableCell>
-
-                        <TableCell className="px-4 py-3 font-medium text-gray-900 max-w-xs truncate">{f.name}</TableCell>
-
-                        <TableCell className="px-4 py-3 text-sm text-gray-600">{f.subcategory}</TableCell>
-
-                        <TableCell className="px-4 py-3">{getTypeBadge(f.type)}</TableCell>
-
-                        <TableCell className="px-4 py-3">
-                          <div className="flex flex-wrap gap-2 max-w-[360px]">
-                            {(f.values || []).slice(0, 4).map((v, idx) => (
-                              <Badge key={idx} className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
-                                {v}
-                              </Badge>
-                            ))}
-                            {(f.values || []).length > 4 && (
-                              <Badge className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
-                                +{(f.values || []).length - 4}
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-
-                        <TableCell className="px-4 py-3 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            {/* Manage Values */}
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-8 text-xs"
-                              onClick={() => openValuesManager(f)}
-                            >
-                              <List className="h-4 w-4 mr-1" />
-                              Values
-                            </Button>
-
-                            {/* Edit */}
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-8 text-xs"
-                              onClick={() => openEdit(f)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-
-                            {/* Delete */}
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              className="h-8 text-xs"
-                              onClick={() => confirmDelete(f)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
 
-        {/* Footer / Pagination (simple client-side) */}
-        {/* For now skip large pagination; can be added later if needed */}
-
-        {/* CREATE DIALOG */}
+        {/* Create Dialog */}
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogContent className="max-w-2xl bg-white">
+          <DialogContent className="bg-white">
             <DialogHeader>
-              <DialogTitle>Create Dynamic Filter</DialogTitle>
+              <DialogTitle>Créer un Filtre</DialogTitle>
             </DialogHeader>
-
-            <form onSubmit={handleCreate} className="space-y-4 pt-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Filter name</Label>
-                  <Input
-                    id="name"
-                    value={form.name}
-                    onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                    required
-                    placeholder="e.g. Brand, Color..."
-                    className="h-10"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="subcategory">Subcategory</Label>
-                  <Select value={form.subcategory} onValueChange={(v) => setForm((p) => ({ ...p, subcategory: v }))}>
-                    <SelectTrigger className="h-10">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      {/* populate with existing subcategories (mock) */}
-                      {["Phones", "Computers", "Cars"].map((s) => (
-                        <SelectItem key={s} value={s} className="hover:bg-gray-100">
-                          {s}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="type">Field type</Label>
-                  <Select value={form.type} onValueChange={(v) => setForm((p) => ({ ...p, type: v }))}>
-                    <SelectTrigger className="h-10">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      <SelectItem value="dropdown" className="hover:bg-gray-100">Dropdown</SelectItem>
-                      <SelectItem value="multi-select" className="hover:bg-gray-100">Multi-select</SelectItem>
-                      <SelectItem value="text">Text</SelectItem>
-                      <SelectItem value="number">Number</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="position">Display position</Label>
-                  <Input
-                    id="position"
-                    type="number"
-                    value={form.position}
-                    onChange={(e) => setForm((p) => ({ ...p, position: Number(e.target.value || 1) }))}
-                    className="h-10"
-                  />
-                </div>
-              </div>
-
+            <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <Label>Values (comma separated)</Label>
-                <Textarea
-                  placeholder="e.g. New, Like new, Good, Used"
-                  value={form.valuesText}
-                  onChange={(e) => setForm((p) => ({ ...p, valuesText: e.target.value }))}
-                  className="h-24"
+                <Label htmlFor="name">Nom du filtre</Label>
+                <Input
+                  id="name"
+                  value={form.name}
+                  onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Ex: Brand, Condition..."
+                  className="mt-1"
+                  required
                 />
-                <p className="text-xs text-gray-500 mt-1">Only used for dropdown and multi-select types</p>
               </div>
-
-              <div className="flex gap-2 pt-2 justify-end">
-                <Button type="button" variant="outline" onClick={() => setCreateOpen(false)} disabled={submitting}>
-                  Cancel
-                </Button>
-                <Button type="submit" className="bg-[#D6BA69] hover:bg-[#C5A952] text-white" disabled={submitting}>
-                  {submitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Creating...
-                    </>
-                  ) : (
-                    "Create"
-                  )}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-
-        {/* EDIT DIALOG */}
-        <Dialog open={editOpen} onOpenChange={setEditOpen}>
-          <DialogContent className="max-w-2xl bg-white">
-            <DialogHeader>
-              <DialogTitle>Edit Filter</DialogTitle>
-            </DialogHeader>
-
-            <form onSubmit={handleUpdate} className="space-y-4 pt-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <Label>Filter name</Label>
-                  <Input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} required className="h-10" />
-                </div>
-
-                <div>
-                  <Label>Subcategory</Label>
-                  <Select value={form.subcategory} onValueChange={(v) => setForm((p) => ({ ...p, subcategory: v }))}>
-                    <SelectTrigger className="h-10">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {["Phones", "Computers", "Cars"].map((s) => (
-                        <SelectItem key={s} value={s}>
-                          {s}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <Label>Field type</Label>
-                  <Select value={form.type} onValueChange={(v) => setForm((p) => ({ ...p, type: v }))}>
-                    <SelectTrigger className="h-10">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="dropdown">Dropdown</SelectItem>
-                      <SelectItem value="multi-select">Multi-select</SelectItem>
-                      <SelectItem value="text">Text</SelectItem>
-                      <SelectItem value="number">Number</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label>Display position</Label>
-                  <Input type="number" value={form.position} onChange={(e) => setForm((p) => ({ ...p, position: Number(e.target.value || 1) }))} className="h-10" />
-                </div>
+              
+              <div>
+                <Label htmlFor="subcategory">Sous-catégorie</Label>
+                <Select
+                  value={form.subcategory_id}
+                  onValueChange={(value) => setForm(prev => ({ ...prev, subcategory_id: value }))}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Sélectionner une sous-catégorie" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subcategoryOptions.map((sub) => (
+                      <SelectItem key={sub.id} value={sub.id.toString()}>
+                        {sub.name} ({sub.category_name})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
-                <Label>Values (comma separated)</Label>
-                <Textarea value={form.valuesText} onChange={(e) => setForm((p) => ({ ...p, valuesText: e.target.value }))} className="h-24" />
-                <p className="text-xs text-gray-500 mt-1">Only used for dropdown and multi-select types</p>
+                <Label htmlFor="type">Type</Label>
+                <Select
+                  value={form.type}
+                  onValueChange={(value) => setForm(prev => ({ ...prev, type: value }))}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="select">Select</SelectItem>
+                    <SelectItem value="multi-select">Multi-select</SelectItem>
+                    <SelectItem value="text">Text</SelectItem>
+                    <SelectItem value="number">Number</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div className="flex gap-2 pt-2 justify-end">
-                <Button type="button" variant="outline" onClick={() => setEditOpen(false)} disabled={submitting}>
-                  Cancel
+              <div>
+                <Label htmlFor="options">Options (séparées par des virgules)</Label>
+                <Textarea
+                  id="options"
+                  value={form.optionsText}
+                  onChange={(e) => setForm(prev => ({ ...prev, optionsText: e.target.value }))}
+                  placeholder="Option 1, Option 2, Option 3..."
+                  className="mt-1"
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCreateOpen(false)}
+                >
+                  Annuler
                 </Button>
-                <Button type="submit" className="bg-[#D6BA69] hover:bg-[#C5A952] text-white" disabled={submitting}>
+                <Button
+                  type="submit"
+                  disabled={submitting}
+                  className="bg-[#D6BA69] hover:bg-[#C5A952]"
+                >
                   {submitting ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Updating...
+                      Création...
                     </>
                   ) : (
-                    "Update"
+                    "Créer"
                   )}
                 </Button>
               </div>
@@ -670,100 +620,178 @@ const Filters = () => {
           </DialogContent>
         </Dialog>
 
-        {/* VALUES MANAGER (custom dialog, not using Dialog component so we can keep a simple panel) */}
+        {/* Edit Dialog */}
+        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+          <DialogContent className="bg-white">
+            <DialogHeader>
+              <DialogTitle>Modifier le Filtre</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleUpdate} className="space-y-4">
+              <div>
+                <Label htmlFor="edit-name">Nom du filtre</Label>
+                <Input
+                  id="edit-name"
+                  value={form.name}
+                  onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}
+                  className="mt-1"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-subcategory">Sous-catégorie</Label>
+                <Select
+                  value={form.subcategory_id}
+                  onValueChange={(value) => setForm(prev => ({ ...prev, subcategory_id: value }))}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subcategoryOptions.map((sub) => (
+                      <SelectItem key={sub.id} value={sub.id.toString()}>
+                        {sub.name} ({sub.category_name})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="edit-type">Type</Label>
+                <Select
+                  value={form.type}
+                  onValueChange={(value) => setForm(prev => ({ ...prev, type: value }))}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="select">Select</SelectItem>
+                    <SelectItem value="multi-select">Multi-select</SelectItem>
+                    <SelectItem value="text">Text</SelectItem>
+                    <SelectItem value="number">Number</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditOpen(false)}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={submitting}
+                  className="bg-[#D6BA69] hover:bg-[#C5A952]"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Mise à jour...
+                    </>
+                  ) : (
+                    "Mettre à jour"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Values Manager Dialog */}
         {valuesOpenFor && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-            <div className="w-full max-w-2xl bg-white border border-gray-200 rounded-lg shadow-xl">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900">Manage Values - {valuesOpenFor.name}</h3>
-                  <p className="text-xs text-gray-500">Add or remove values for this filter</p>
+          <Dialog open={!!valuesOpenFor} onOpenChange={() => setValuesOpenFor(null)}>
+            <DialogContent className="bg-white max-w-md">
+              <DialogHeader>
+                <DialogTitle>Options - {valuesOpenFor.name}</DialogTitle>
+              </DialogHeader>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  {valuesOpenFor.options.map((option) => (
+                    <div key={option.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                      <span className="text-sm">{option.value}</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRemoveValue(option)}
+                        className="h-6 w-6 p-0 hover:bg-red-50 hover:border-red-200"
+                      >
+                        <Trash2 className="h-3 w-3 text-red-600" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" onClick={() => setValuesOpenFor(null)}>
-                    Close
+                
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Nouvelle option..."
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleAddValue(e.target.value);
+                        e.target.value = '';
+                      }
+                    }}
+                    className="text-sm"
+                  />
+                  <Button
+                    onClick={(e) => {
+                      const input = e.target.parentElement.querySelector('input');
+                      handleAddValue(input.value);
+                      input.value = '';
+                    }}
+                    size="sm"
+                    className="bg-[#D6BA69] hover:bg-[#C5A952]"
+                  >
+                    <Plus className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
-
-              <div className="p-4 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="sm:col-span-2">
-                    <Label>New value</Label>
-                    <Input id="newValue" placeholder="e.g. Mint" className="h-10" />
-                  </div>
-                  <div className="flex items-end">
-                    <Button
-                      onClick={() => {
-                        const el = document.getElementById("newValue");
-                        if (!el) return;
-                        const v = el.value.trim();
-                        if (!v) {
-                          toast({ description: "Value cannot be empty.", variant: "destructive" });
-                          return;
-                        }
-                        handleAddValue(v);
-                        el.value = "";
-                      }}
-                      className="h-10 bg-[#D6BA69] hover:bg-[#C5A952] text-white"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add
-                    </Button>
-                  </div>
-                </div>
-
-                <div>
-                  <Label className="mb-2">Existing values</Label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {(valuesOpenFor.values || []).length === 0 ? (
-                      <div className="text-xs text-gray-500">No values defined</div>
-                    ) : (
-                      (valuesOpenFor.values || []).map((v) => (
-                        <div key={v} className="flex items-center justify-between gap-2 p-2 border rounded">
-                          <div className="text-sm text-gray-800">{v}</div>
-                          <Button size="sm" variant="destructive" onClick={() => handleRemoveValue(v)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+            </DialogContent>
+          </Dialog>
         )}
 
-        {/* DELETE CONFIRM (simple centered modal) */}
+        {/* Delete Confirmation Dialog */}
         {deleteCandidate && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-            <div className="w-full max-w-md bg-white border border-gray-200 rounded-lg shadow-xl">
-              <div className="p-4">
-                <h3 className="text-lg font-semibold text-gray-900">Confirm deletion</h3>
-                <p className="text-sm text-gray-600 mt-2">
-                  This action cannot be undone. Are you sure you want to delete the filter{" "}
-                  <strong>{deleteCandidate.name}</strong>?
+          <Dialog open={!!deleteCandidate} onOpenChange={() => setDeleteCandidate(null)}>
+            <DialogContent className="bg-white">
+              <DialogHeader>
+                <DialogTitle>Confirmer la suppression</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  Êtes-vous sûr de vouloir supprimer le filtre "{deleteCandidate.name}" ?
+                  Cette action est irréversible.
                 </p>
-
-                <div className="mt-4 flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setDeleteCandidate(null)} disabled={submitting}>
-                    Cancel
+                <div className="flex justify-end gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => setDeleteCandidate(null)}
+                  >
+                    Annuler
                   </Button>
-                  <Button onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white" disabled={submitting}>
+                  <Button
+                    onClick={handleDelete}
+                    disabled={submitting}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
                     {submitting ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Deleting...
+                        Suppression...
                       </>
                     ) : (
-                      "Delete"
+                      "Supprimer"
                     )}
                   </Button>
                 </div>
               </div>
-            </div>
-          </div>
+            </DialogContent>
+          </Dialog>
         )}
       </div>
     </div>
