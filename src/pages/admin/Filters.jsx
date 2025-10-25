@@ -1,6 +1,6 @@
 // Filters.jsx
 import { useEffect, useMemo, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -11,6 +11,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
   Plus,
   Edit,
@@ -24,7 +30,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import Input from "@/components/ui/Input";
 import { Label } from "@/components/ui/label";
@@ -41,7 +46,7 @@ import Loader from "@/components/ui/Loader";
 import adminService from "@/services/adminService";
 
 /**
- * Filters management screen (ENGLISH)
+ * Filters management screen
  * - Integrated with backend API for filters management
  * - Toast notifications via useToast()
  * - Fully responsive, professional design
@@ -126,22 +131,6 @@ const Filters = () => {
     }
   };
 
-  // Flattened filters list for table
-  const filters = useMemo(() => {
-    return filtersData.flatMap((item) =>
-      (item.filters || []).map((filter) => ({
-        id: filter.id,
-        name: filter.name,
-        type: filter.type,
-        subcategory: item.subcategory.name,
-        subcategory_id: item.subcategory.id,
-        subcategory_slug: item.subcategory.slug,
-        category_name: item.subcategory.category_name,
-        options: filter.options || [],
-      }))
-    );
-  }, [filtersData]);
-
   // Unique subcategory options for select
   const subcategoryOptions = useMemo(() => {
     const subcategories = filtersData.map((item) => item.subcategory);
@@ -152,46 +141,54 @@ const Filters = () => {
   }, [filtersData]);
 
   // Filter, search and sort pipeline
-  const displayed = useMemo(() => {
-    let list = filters.slice();
+  const filteredData = useMemo(() => {
+    let data = filtersData.slice();
 
     // subcategory filter
-    if (selectedSubcategoryFilter !== "all") {
-      list = list.filter((f) => f.subcategory === selectedSubcategoryFilter);
+    const selectedId = selectedSubcategoryFilter === "all" ? null : Number(selectedSubcategoryFilter);
+    if (selectedId) {
+      data = data.filter((g) => g.subcategory.id === selectedId);
     }
 
     // search
     if (search.trim()) {
       const q = search.trim().toLowerCase();
-      list = list.filter((f) => {
-        if ((f.name || "").toLowerCase().includes(q)) return true;
-        if ((f.subcategory || "").toLowerCase().includes(q)) return true;
-        if ((f.category_name || "").toLowerCase().includes(q)) return true;
-        if ((f.options || []).some((opt) => (opt.value || "").toLowerCase().includes(q))) return true;
-        return false;
+      data = data.filter((g) =>
+        g.subcategory.name.toLowerCase().includes(q) ||
+        g.subcategory.category_name.toLowerCase().includes(q) ||
+        g.filters.some((f) =>
+          f.name.toLowerCase().includes(q) ||
+          (f.options || []).some((opt) => opt.value.toLowerCase().includes(q))
+        )
+      );
+    }
+
+    // sort groups
+    if (sortBy === "subcategory_asc") {
+      data.sort((a, b) => a.subcategory.name.localeCompare(b.subcategory.name));
+    } else if (sortBy === "subcategory_desc") {
+      data.sort((a, b) => b.subcategory.name.localeCompare(a.subcategory.name));
+    }
+
+    // sort filters inside groups
+    const isNameSort = sortBy.includes("name");
+    if (isNameSort) {
+      const dir = sortBy === "name_asc" ? 1 : -1;
+      data.forEach((g) => {
+        g.filters.sort((a, b) => dir * a.name.localeCompare(b.name));
       });
     }
 
-    // sort
-    switch (sortBy) {
-      case "name_asc":
-        list.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-        break;
-      case "name_desc":
-        list.sort((a, b) => (b.name || "").localeCompare(a.name || ""));
-        break;
-      case "subcategory_asc":
-        list.sort((a, b) => (a.subcategory || "").localeCompare(b.subcategory || ""));
-        break;
-      case "subcategory_desc":
-        list.sort((a, b) => (b.subcategory || "").localeCompare(a.subcategory || ""));
-        break;
-      default:
-        break;
-    }
+    return data;
+  }, [filtersData, search, sortBy, selectedSubcategoryFilter]);
 
-    return list;
-  }, [filters, search, sortBy, selectedSubcategoryFilter]);
+  const totalFilters = useMemo(() => {
+    return filtersData.reduce((sum, g) => sum + g.filters.length, 0);
+  }, [filtersData]);
+
+  const displayedCount = useMemo(() => {
+    return filteredData.reduce((sum, g) => sum + g.filters.length, 0);
+  }, [filteredData]);
 
   // Open create dialog
   const openCreate = () => {
@@ -219,8 +216,8 @@ const Filters = () => {
         subcategory_id: Number(form.subcategory_id),
         name: form.name.trim(),
         type: form.type,
-        is_required: false, // Ajoutez la logique si besoin
-        display_order: 1, // Peut être modifié selon le besoin
+        is_required: false, // Add logic if needed
+        display_order: 1, // Can be modified as needed
         options,
       };
 
@@ -239,14 +236,13 @@ const Filters = () => {
 
   // Open edit dialog and populate form
   const openEdit = (filter) => {
-    const subcategory = subcategoryOptions.find((sub) => sub.name === filter.subcategory);
-    // Harmonise le type pour l'édition (multi-select -> multiselect)
+    // Harmonize type for editing (multi-select -> multiselect)
     let type = filter.type;
     if (type === "multi-select") type = "multiselect";
     setForm({
       id: filter.id,
       name: filter.name,
-      subcategory_id: subcategory?.id || "",
+      subcategory_id: filter.subcategory_id.toString(),
       type,
       optionsText: (filter.options || []).map((opt) => opt.value).join(", "),
     });
@@ -261,7 +257,7 @@ const Filters = () => {
     try {
       const filterData = {
         name: form.name.trim(),
-        subcategory_id: form.subcategory_id,
+        subcategory_id: Number(form.subcategory_id),
         type: form.type,
       };
 
@@ -324,8 +320,11 @@ const Filters = () => {
       await loadFilters();
 
       // Update local valuesOpenFor with new data from server
-      const updated = filters.find((f) => f.id === valuesOpenFor.id);
-      if (updated) setValuesOpenFor(updated);
+      const updatedGroup = filtersData.find((g) => g.filters.some((f) => f.id === valuesOpenFor.id));
+      if (updatedGroup) {
+        const updatedFilter = updatedGroup.filters.find((f) => f.id === valuesOpenFor.id);
+        if (updatedFilter) setValuesOpenFor(updatedFilter);
+      }
 
       toast({ description: "Option added successfully." });
     } catch (err) {
@@ -343,8 +342,12 @@ const Filters = () => {
       console.log("✅ Option removed");
       await loadFilters();
 
-      const updated = filters.find((f) => f.id === valuesOpenFor.id);
-      if (updated) setValuesOpenFor(updated);
+      // Update local valuesOpenFor
+      const updatedGroup = filtersData.find((g) => g.filters.some((f) => f.id === valuesOpenFor.id));
+      if (updatedGroup) {
+        const updatedFilter = updatedGroup.filters.find((f) => f.id === valuesOpenFor.id);
+        if (updatedFilter) setValuesOpenFor(updatedFilter);
+      }
 
       toast({ description: "Option removed successfully." });
     } catch (err) {
@@ -369,55 +372,51 @@ const Filters = () => {
             <p className="text-sm text-gray-600 mt-1">Manage dynamic fields by subcategory</p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             {/* Search */}
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <Input
                 placeholder="Search..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 h-9 w-64 text-sm rounded-lg border-gray-200 focus:ring-[#D6BA69]"
+                className="pl-10 h-9 w-full sm:w-64 text-sm rounded-lg border-gray-200 focus:ring-[#D6BA69]"
               />
               <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             </div>
 
             {/* Subcategory filter */}
-            <div className="hidden sm:block">
-              <Select value={selectedSubcategoryFilter} onValueChange={setSelectedSubcategoryFilter}>
-                <SelectTrigger className="h-9 w-44 text-sm rounded-lg border-gray-200 focus:ring-[#D6BA69] bg-white">
-                  <SelectValue placeholder="Subcategory" />
-                </SelectTrigger>
-                <SelectContent className="bg-white">
-                  <SelectItem value="all" className="hover:bg-gray-100">All</SelectItem>
-                  {subcategoryOptions.map((sub) => (
-                    <SelectItem key={sub.id} value={sub.name} className="hover:bg-gray-100">
-                      {sub.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Select value={selectedSubcategoryFilter} onValueChange={setSelectedSubcategoryFilter}>
+              <SelectTrigger className="h-9 w-full sm:w-44 text-sm rounded-lg border-gray-200 focus:ring-[#D6BA69] bg-white">
+                <SelectValue placeholder="Subcategory" />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                <SelectItem value="all" className="hover:bg-gray-100">All</SelectItem>
+                {subcategoryOptions.map((sub) => (
+                  <SelectItem key={sub.id} value={sub.id.toString()} className="hover:bg-gray-100">
+                    {sub.name} ({sub.category_name})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
             {/* Sort */}
-            <div className="hidden sm:block">
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="h-9 w-40 text-sm rounded-lg border-gray-200 focus:ring-[#D6BA69] bg-white">
-                  <SelectValue placeholder="Sort" />
-                </SelectTrigger>
-                <SelectContent className="bg-white">
-                  {SORT_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.id} value={opt.id} className="hover:bg-gray-100">
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="h-9 w-full sm:w-40 text-sm rounded-lg border-gray-200 focus:ring-[#D6BA69] bg-white">
+                <SelectValue placeholder="Sort" />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                {SORT_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.id} value={opt.id} className="hover:bg-gray-100">
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
             {/* Create button */}
             <Button
               onClick={openCreate}
-              className="h-9 px-4 bg-[#D6BA69] hover:bg-[#C5A952] text-white rounded-lg transition-colors duration-200"
+              className="h-9 px-4 bg-[#D6BA69] hover:bg-[#C5A952] text-white rounded-lg transition-colors duration-200 w-full sm:w-auto"
             >
               <Plus className="h-4 w-4 mr-2" />
               Create
@@ -429,7 +428,7 @@ const Filters = () => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card className="border-gray-200">
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-gray-900">{filters.length}</div>
+              <div className="text-2xl font-bold text-gray-900">{totalFilters}</div>
               <div className="text-sm text-gray-600">Total Filters</div>
             </CardContent>
           </Card>
@@ -443,87 +442,106 @@ const Filters = () => {
 
           <Card className="border-gray-200">
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-gray-900">{displayed.length}</div>
+              <div className="text-2xl font-bold text-gray-900">{displayedCount}</div>
               <div className="text-sm text-gray-600">Displayed</div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Table */}
-        <Card className="border-gray-200">
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-gray-200">
-                  <TableHead className="font-semibold text-gray-900">Name</TableHead>
-                  <TableHead className="font-semibold text-gray-900">Subcategory</TableHead>
-                  <TableHead className="font-semibold text-gray-900">Category</TableHead>
-                  <TableHead className="font-semibold text-gray-900">Type</TableHead>
-                  <TableHead className="font-semibold text-gray-900">Options</TableHead>
-                  <TableHead className="font-semibold text-gray-900 text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-
-              <TableBody>
-                {displayed.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                      No filters found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  displayed.map((filter) => (
-                    <TableRow key={filter.id} className="border-gray-200 hover:bg-gray-50">
-                      <TableCell className="font-medium">{filter.name}</TableCell>
-                      <TableCell>{filter.subcategory}</TableCell>
-                      <TableCell className="text-gray-600">{filter.category_name}</TableCell>
-                      <TableCell>{getTypeBadge(filter.type)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-600">
-                            {filter.options.length} option(s)
-                          </span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openValuesManager(filter)}
-                            className="h-7 px-2 text-xs border-gray-200 hover:bg-gray-50"
-                          >
-                            <List className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openEdit(filter)}
-                            className="h-7 px-2 border-gray-200 hover:bg-gray-50"
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => confirmDelete(filter)}
-                            className="h-7 px-2 border-gray-200 hover:bg-red-50 hover:border-red-200 hover:text-red-600"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        {/* Groups */}
+        {filteredData.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">No filters found</div>
+        ) : (
+          <Accordion type="single" collapsible className="w-full border border-gray-200 rounded-lg">
+            {filteredData.map((group, index) => (
+              <AccordionItem value={`item-${index}`} key={group.subcategory.id} className="border-b border-gray-200 last:border-0">
+                <AccordionTrigger className="px-4 py-3 hover:bg-gray-50">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-gray-900">{group.subcategory.name}</span>
+                    <span className="text-sm text-gray-600">{group.subcategory.category_name}</span>
+                    <span className="text-sm text-gray-600">- {group.filters.length} filters</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-gray-200">
+                        <TableHead className="font-semibold text-gray-900">Name</TableHead>
+                        <TableHead className="font-semibold text-gray-900">Type</TableHead>
+                        <TableHead className="font-semibold text-gray-900">Options</TableHead>
+                        <TableHead className="font-semibold text-gray-900 text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {group.filters.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-4 text-gray-500">
+                            No filters in this subcategory
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        group.filters.map((filter) => {
+                          const augFilter = {
+                            ...filter,
+                            subcategory: group.subcategory.name,
+                            subcategory_id: group.subcategory.id,
+                            category_name: group.subcategory.category_name,
+                            options: filter.options || [],
+                          };
+                          return (
+                            <TableRow key={filter.id} className="border-gray-200 hover:bg-gray-50">
+                              <TableCell className="font-medium">{filter.name}</TableCell>
+                              <TableCell>{getTypeBadge(filter.type)}</TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm text-gray-600">
+                                    {augFilter.options.length} option(s)
+                                  </span>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => openValuesManager(augFilter)}
+                                    className="h-7 px-2 text-xs border-gray-200 hover:bg-gray-50"
+                                  >
+                                    <List className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => openEdit(augFilter)}
+                                    className="h-7 px-2 border-gray-200 hover:bg-gray-50"
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => confirmDelete(augFilter)}
+                                    className="h-7 px-2 border-gray-200 hover:bg-red-50 hover:border-red-200 hover:text-red-600"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      )}
+                    </TableBody>
+                  </Table>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        )}
 
         {/* Create Dialog */}
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogContent className="bg-white max-w-2xl">
+          <DialogContent className="bg-white max-w-md sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>Create a Filter</DialogTitle>
             </DialogHeader>
@@ -553,7 +571,7 @@ const Filters = () => {
                   <SelectContent className="bg-white">
                     {subcategoryOptions.map((sub) => (
                       <SelectItem key={sub.id} value={sub.id.toString()}>
-                        {sub.name} ({sub.category_name})
+                        {sub.name} {sub.category_name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -622,7 +640,7 @@ const Filters = () => {
 
         {/* Edit Dialog */}
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
-          <DialogContent className="bg-white max-w-2xl">
+          <DialogContent className="bg-white max-w-md sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>Edit Filter</DialogTitle>
             </DialogHeader>

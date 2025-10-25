@@ -1,10 +1,8 @@
 // Brands.jsx
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect, useMemo } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import Input from "@/components/ui/Input";
-import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -13,14 +11,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Plus, Edit, Trash2, Search as IconSearch, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
+import Input from "@/components/ui/Input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -29,380 +34,519 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import Loader from "@/components/ui/Loader";
+import adminService from '@/services/adminService';
 
 /**
- * Brands.jsx
- * - Fully translated to English
- * - Theme: no transparency, accent #D6BA69, subtle shadows
- * - Responsive and mobile-friendly
- * - useState-driven CRUD (mocked, ready for backend)
- * - useToast() for notifications (no icons in toasts)
+ * Brands management screen
+ * - Integrated with backend API for brands management
+ * - Toast notifications via useToast()
+ * - Fully responsive, professional design
+ * - Theme: primary accent #D6BA69
+ *
+ * Assume adminService endpoints: getBrands, createBrand, updateBrand, deleteBrand
  */
-
-const initialBrandsMock = [
-  { id: 1, name: "Samsung", subcategory: "Phones", adsCount: 145 },
-  { id: 2, name: "Apple", subcategory: "Phones", adsCount: 189 },
-  { id: 3, name: "Huawei", subcategory: "Phones", adsCount: 67 },
-  { id: 4, name: "Toyota", subcategory: "Cars", adsCount: 234 },
-  { id: 5, name: "Honda", subcategory: "Cars", adsCount: 156 },
-  { id: 6, name: "HP", subcategory: "Computers", adsCount: 89 },
-  { id: 7, name: "Dell", subcategory: "Computers", adsCount: 103 },
-];
-
-const SUBCATEGORY_OPTIONS = ["Phones", "Computers", "Cars", "Motorcycles"];
 
 const Brands = () => {
   const { toast } = useToast();
 
   // Data state
-  const [brands, setBrands] = useState(initialBrandsMock);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [brandsData, setBrandsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
-  // Create form state
+  // Dialog states
   const [createOpen, setCreateOpen] = useState(false);
-  const [newBrand, setNewBrand] = useState({ name: "", subcategory: "" });
-  const [creating, setCreating] = useState(false);
-
-  // Edit state
   const [editOpen, setEditOpen] = useState(false);
-  const [editingBrand, setEditingBrand] = useState(null);
-  const [updating, setUpdating] = useState(false);
-
-  // Delete confirmation state
   const [deleteCandidate, setDeleteCandidate] = useState(null);
-  const [deleting, setDeleting] = useState(false);
 
-  // Derived filtered list
-  const filteredBrands = brands.filter((b) => {
-    const q = (searchTerm || "").toLowerCase().trim();
-    if (!q) return true;
-    return (
-      (b.name || "").toLowerCase().includes(q) ||
-      (b.subcategory || "").toLowerCase().includes(q)
-    );
-  });
+  // Form state
+  const emptyForm = {
+    id: null,
+    name: "",
+    subcategory_id: "",
+    description: "",
+    is_active: true,
+  };
+  const [form, setForm] = useState(emptyForm);
+  const [submitting, setSubmitting] = useState(false);
 
-  // Create
-  const handleCreateBrand = async (e) => {
-    e?.preventDefault();
-    if (!newBrand.name.trim() || !newBrand.subcategory) {
-      toast({ description: "Please fill in all required fields.", variant: "destructive" });
-      return;
-    }
+  // Load brands on mount
+  useEffect(() => {
+    loadBrands();
+  }, []);
+
+  const loadBrands = async () => {
     try {
-      setCreating(true);
-      // front-end id generation
-      const nextId = (brands.reduce((m, x) => Math.max(m, x.id || 0), 0) || 0) + 1;
-      const brandToAdd = {
-        id: nextId,
-        name: newBrand.name.trim(),
-        subcategory: newBrand.subcategory,
-        adsCount: 0,
-      };
-      setBrands((prev) => [...prev, brandToAdd]);
-      setNewBrand({ name: "", subcategory: "" });
-      setCreateOpen(false);
-      toast({ description: "Brand added successfully." });
+      setLoading(true);
+      // Fetch brands with pagination, but since admin, fetch all
+      const res = await adminService.getBrands(1, 1000);
+      // Assuming res.data.brands is array of {id, name, subcategoryName, subcategoryId?}
+      // But to group, need to group by subcategory
+      // If backend doesn't group, group here
+      const apiBrands = res?.data?.brands || [];
+      const grouped = apiBrands.reduce((acc, b) => {
+        const sub = b.subcategoryName || 'Unknown';
+        const subId = b.subcategoryId || ''; // Assume available or fetch subcategories separately
+        if (!acc[sub]) acc[sub] = { subcategory: { id: subId, name: sub, category_name: '' }, brands: [] }; // category_name unknown
+        acc[sub].brands.push({
+          id: Number(b.id),
+          name: b.name,
+          adsCount: b.adsCount || 0,
+        });
+        return acc;
+      }, {});
+      setBrandsData(Object.values(grouped));
     } catch (err) {
-      console.error("Create brand error:", err);
-      toast({ description: "Failed to add brand.", variant: "destructive" });
+      toast({ description: 'Failed to load brands.', variant: 'destructive' });
     } finally {
-      setCreating(false);
+      setLoading(false);
     }
   };
 
-  // Open edit dialog
-  const openEditDialog = (brand) => {
-    setEditingBrand({ ...brand });
+  // Unique subcategory options for select (for create/edit)
+  const subcategoryOptions = useMemo(() => {
+    const subs = brandsData.map((g) => g.subcategory);
+    return subs.sort((a, b) => a.name.localeCompare(b.name));
+  }, [brandsData]);
+
+  // Filter and search pipeline
+  const filteredData = useMemo(() => {
+    let data = brandsData.slice();
+
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      data = data.filter((g) =>
+        g.subcategory.name.toLowerCase().includes(q) ||
+        g.subcategory.category_name.toLowerCase().includes(q) ||
+        g.brands.some((b) => b.name.toLowerCase().includes(q))
+      );
+    }
+
+    // Sort groups by subcategory name
+    data.sort((a, b) => a.subcategory.name.localeCompare(b.subcategory.name));
+
+    return data;
+  }, [brandsData, search]);
+
+  const totalBrands = useMemo(() => {
+    return brandsData.reduce((sum, g) => sum + g.brands.length, 0);
+  }, [brandsData]);
+
+  const displayedCount = useMemo(() => {
+    return filteredData.reduce((sum, g) => sum + g.brands.length, 0);
+  }, [filteredData]);
+
+  // Open create dialog
+  const openCreate = () => {
+    setForm({ ...emptyForm });
+    setCreateOpen(true);
+  };
+
+  // Create brand
+  const handleCreate = async (e) => {
+    e?.preventDefault();
+    setSubmitting(true);
+    try {
+      const brandData = {
+        name: form.name.trim(),
+        subcategory_id: Number(form.subcategory_id),
+        description: form.description,
+        is_active: form.is_active ? 1 : 0,
+      };
+      const response = await adminService.createBrand(brandData);
+      console.log("✅ Brand created:", response);
+      await loadBrands();
+      setCreateOpen(false);
+      toast({ description: "Brand created successfully." });
+    } catch (err) {
+      console.error("❌ Error creating brand:", err);
+      toast({ description: "Error creating brand.", variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Open edit dialog and populate form
+  const openEdit = (brand, subcategoryId) => {
+    setForm({
+      id: brand.id,
+      name: brand.name,
+      subcategory_id: subcategoryId.toString(),
+      description: brand.description || "",
+      is_active: brand.isActive !== undefined ? brand.isActive : true,
+    });
     setEditOpen(true);
   };
 
-  // Update
-  const handleUpdateBrand = async (e) => {
+  // Update brand
+  const handleUpdate = async (e) => {
     e?.preventDefault();
-    if (!editingBrand) return;
-    if (!editingBrand.name?.trim() || !editingBrand.subcategory) {
-      toast({ description: "Please fill in all required fields.", variant: "destructive" });
-      return;
-    }
+    if (form.id == null) return;
+    setSubmitting(true);
     try {
-      setUpdating(true);
-      setBrands((prev) => prev.map((b) => (b.id === editingBrand.id ? { ...editingBrand, name: editingBrand.name.trim() } : b)));
-      setEditingBrand(null);
+      const brandData = {
+        name: form.name.trim(),
+        subcategory_id: Number(form.subcategory_id),
+        description: form.description,
+        is_active: form.is_active ? 1 : 0,
+      };
+      await adminService.updateBrand(form.id, brandData);
+      console.log("✅ Brand updated");
+      await loadBrands();
       setEditOpen(false);
       toast({ description: "Brand updated successfully." });
     } catch (err) {
-      console.error("Update brand error:", err);
-      toast({ description: "Failed to update brand.", variant: "destructive" });
+      console.error("❌ Error updating brand:", err);
+      toast({ description: "Error updating brand.", variant: "destructive" });
     } finally {
-      setUpdating(false);
+      setSubmitting(false);
     }
   };
 
-  // Confirm delete
+  // Delete flow
   const confirmDelete = (brand) => {
     setDeleteCandidate(brand);
   };
 
-  // Delete
-  const handleDeleteBrand = async () => {
+  const handleDelete = async () => {
     if (!deleteCandidate) return;
+    setSubmitting(true);
     try {
-      setDeleting(true);
-      setBrands((prev) => prev.filter((b) => b.id !== deleteCandidate.id));
+      await adminService.deleteBrand(deleteCandidate.id);
+      console.log("✅ Brand deleted");
+      await loadBrands();
       setDeleteCandidate(null);
       toast({ description: "Brand deleted successfully." });
     } catch (err) {
-      console.error("Delete brand error:", err);
-      toast({ description: "Failed to delete brand.", variant: "destructive" });
+      console.error("❌ Error deleting brand:", err);
+      toast({ description: "Error deleting brand.", variant: "destructive" });
     } finally {
-      setDeleting(false);
+      setSubmitting(false);
     }
   };
+
+  if (loading) {
+    return <Loader text="Loading brands..." />;
+  }
 
   return (
     <div className="min-h-[calc(100vh-120px)] bg-white px-4 sm:px-6 lg:px-8 py-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Brands Management</h1>
-            <p className="text-sm text-gray-600 mt-1">Manage brands per subcategory</p>
+            <p className="text-sm text-gray-600 mt-1">Manage brands by subcategory</p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             {/* Search */}
-            <div className="relative w-full sm:w-72">
+            <div className="relative w-full sm:w-auto">
               <Input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search by name or subcategory..."
-                className="pl-10 h-9 rounded-lg border-gray-200 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
+                placeholder="Search..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10 h-9 w-full sm:w-64 text-sm rounded-lg border-gray-200 focus:ring-[#D6BA69]"
               />
               <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             </div>
 
-            {/* New Brand Button */}
-            <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-              <DialogTrigger asChild>
-                <Button className="h-9 bg-[#D6BA69] hover:bg-[#C5A952] text-white text-sm rounded-lg flex items-center gap-2 shadow-sm">
-                  <Plus className="h-4 w-4" />
-                  New Brand
-                </Button>
-              </DialogTrigger>
-
-              <DialogContent className="max-w-md bg-white border border-gray-200 rounded-2xl shadow-xl">
-                <DialogHeader>
-                  <DialogTitle className="text-lg font-bold">Add Brand</DialogTitle>
-                </DialogHeader>
-
-                <form onSubmit={handleCreateBrand} className="space-y-4 p-4">
-                  <div>
-                    <Label htmlFor="brandName">Brand name</Label>
-                    <Input
-                      id="brandName"
-                      value={newBrand.name}
-                      onChange={(e) => setNewBrand((p) => ({ ...p, name: e.target.value }))}
-                      placeholder="e.g. Samsung, Toyota..."
-                      className="h-10"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="brandSubcat">Subcategory</Label>
-                    <Select value={newBrand.subcategory} onValueChange={(v) => setNewBrand((p) => ({ ...p, subcategory: v }))}>
-                      <SelectTrigger className="h-10">
-                        <SelectValue placeholder="Select subcategory" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white">
-                        {SUBCATEGORY_OPTIONS.map((s) => (
-                          <SelectItem key={s} value={s} className="hover:bg-gray-100">
-                            {s}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex gap-2 justify-end pt-2">
-                    <Button type="button" variant="outline" onClick={() => setCreateOpen(false)} disabled={creating}>
-                      Cancel
-                    </Button>
-                    <Button type="submit" className="bg-[#D6BA69] hover:bg-[#C5A952] text-white" disabled={creating}>
-                      {creating ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Creating...
-                        </>
-                      ) : (
-                        "Create"
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
+            {/* Create button */}
+            <Button
+              onClick={openCreate}
+              className="h-9 px-4 bg-[#D6BA69] hover:bg-[#C5A952] text-white rounded-lg transition-colors duration-200 w-full sm:w-auto"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create
+            </Button>
           </div>
         </div>
 
-        {/* Brands Search Card */}
-        <Card className="bg-white border border-gray-200 rounded-lg shadow-sm">
-          <CardHeader className="px-4 py-3 border-b border-gray-100">
-            <CardTitle className="text-sm font-semibold">Search Brands</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4">
-            <div className="relative">
-              <Input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search by name or subcategory..."
-                className="pl-10 h-10 rounded-lg border-gray-200 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
-              />
-              <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            </div>
-          </CardContent>
-        </Card>
+        {/* Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Card className="border-gray-200">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-gray-900">{totalBrands}</div>
+              <div className="text-sm text-gray-600">Total Brands</div>
+            </CardContent>
+          </Card>
 
-        {/* Brands Table */}
-        <Card className="bg-white border border-gray-200 rounded-lg shadow-sm">
-          <CardHeader className="px-4 py-3 border-b border-gray-100">
-            <CardTitle className="text-sm font-semibold">Brand List</CardTitle>
-          </CardHeader>
+          <Card className="border-gray-200">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-gray-900">{subcategoryOptions.length}</div>
+              <div className="text-sm text-gray-600">Subcategories</div>
+            </CardContent>
+          </Card>
 
-          <CardContent className="p-0">
-            <div className="w-full overflow-x-auto">
-              <Table className="min-w-[720px]">
-                <TableHeader>
-                  <TableRow className="bg-gray-50">
-                    <TableHead className="px-4 py-3 text-xs text-gray-500 uppercase">Brand</TableHead>
-                    <TableHead className="px-4 py-3 text-xs text-gray-500 uppercase">Subcategory</TableHead>
-                    <TableHead className="px-4 py-3 text-xs text-gray-500 uppercase">Ads</TableHead>
-                    <TableHead className="px-4 py-3 text-xs text-gray-500 uppercase text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
+          <Card className="border-gray-200">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-gray-900">{displayedCount}</div>
+              <div className="text-sm text-gray-600">Displayed</div>
+            </CardContent>
+          </Card>
+        </div>
 
-                <TableBody>
-                  {filteredBrands.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="py-12 text-center text-gray-500">
-                        <div className="flex flex-col items-center gap-2">
-                          <div className="text-sm font-medium">No brands found</div>
-                          <div className="text-xs text-gray-400">Try another search or add a new brand</div>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredBrands.map((brand) => (
-                      <TableRow key={brand.id} className="hover:bg-gray-50 transition-colors">
-                        <TableCell className="px-4 py-3 font-medium text-gray-900">{brand.name}</TableCell>
-                        <TableCell className="px-4 py-3">
-                          <Badge className="bg-gray-100 text-gray-800 text-xs">{brand.subcategory}</Badge>
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-sm text-gray-600">{brand.adsCount} ads</TableCell>
-                        <TableCell className="px-4 py-3 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            {/* Edit */}
-                            <Dialog open={editOpen} onOpenChange={setEditOpen}>
-                              <DialogTrigger asChild>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-8"
-                                  onClick={() => openEditDialog(brand)}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              </DialogTrigger>
-
-                              <DialogContent className="max-w-md bg-white border border-gray-200 rounded-2xl shadow-xl">
-                                <DialogHeader>
-                                  <DialogTitle className="text-lg font-bold">Edit Brand</DialogTitle>
-                                </DialogHeader>
-
-                                <form onSubmit={handleUpdateBrand} className="space-y-4 p-4">
-                                  <div>
-                                    <Label>Brand name</Label>
-                                    <Input
-                                      value={editingBrand?.name || ""}
-                                      onChange={(e) => setEditingBrand((p) => ({ ...p, name: e.target.value }))}
-                                      className="h-10"
-                                      required
-                                    />
-                                  </div>
-
-                                  <div>
-                                    <Label>Subcategory</Label>
-                                    <Select value={editingBrand?.subcategory || ""} onValueChange={(v) => setEditingBrand((p) => ({ ...p, subcategory: v }))}>
-                                      <SelectTrigger className="h-10">
-                                        <SelectValue placeholder="Select subcategory" />
-                                      </SelectTrigger>
-                                      <SelectContent className="bg-white">
-                                        {SUBCATEGORY_OPTIONS.map((s) => (
-                                          <SelectItem key={s} value={s} className="hover:bg-gray-100">
-                                            {s}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-
-                                  <div className="flex gap-2 justify-end pt-2">
-                                    <Button type="button" variant="outline" onClick={() => { setEditOpen(false); setEditingBrand(null); }} disabled={updating}>
-                                      Cancel
-                                    </Button>
-                                    <Button type="submit" className="bg-[#D6BA69] hover:bg-[#C5A952] text-white" disabled={updating}>
-                                      {updating ? (
-                                        <>
-                                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                          Saving...
-                                        </>
-                                      ) : (
-                                        "Save"
-                                      )}
-                                    </Button>
-                                  </div>
-                                </form>
-                              </DialogContent>
-                            </Dialog>
-
-                            {/* Delete */}
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-8"
-                              onClick={() => confirmDelete(brand)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+        {/* Groups */}
+        {filteredData.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">No brands found</div>
+        ) : (
+          <Accordion type="single" collapsible className="w-full border border-gray-200 rounded-lg">
+            {filteredData.map((group, index) => (
+              <AccordionItem value={`item-${index}`} key={group.subcategory.id} className="border-b border-gray-200 last:border-0">
+                <AccordionTrigger className="px-4 py-3 hover:bg-gray-50">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-gray-900">{group.subcategory.name}</span>
+                    <span className="text-sm text-gray-600">{group.subcategory.category_name}</span>
+                    <span className="text-sm text-gray-600">- {group.brands.length} brands</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-gray-200">
+                        <TableHead className="font-semibold text-gray-900">Name</TableHead>
+                        <TableHead className="font-semibold text-gray-900">Ads</TableHead>
+                        <TableHead className="font-semibold text-gray-900 text-right">Actions</TableHead>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+                    </TableHeader>
+                    <TableBody>
+                      {group.brands.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={3} className="text-center py-4 text-gray-500">
+                            No brands in this subcategory
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        group.brands.map((brand) => (
+                          <TableRow key={brand.id} className="border-gray-200 hover:bg-gray-50">
+                            <TableCell className="font-medium">{brand.name}</TableCell>
+                            <TableCell>
+                              <Badge className="bg-gray-100 text-gray-800 text-xs">{brand.adsCount} ads</Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openEdit(brand, group.subcategory.id)}
+                                  className="h-7 px-2 border-gray-200 hover:bg-gray-50"
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => confirmDelete(brand)}
+                                  className="h-7 px-2 border-gray-200 hover:bg-red-50 hover:border-red-200 hover:text-red-600"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        )}
 
-        {/* Delete confirmation modal (simple centered dialog) */}
+        {/* Create Dialog */}
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <DialogContent className="bg-white max-w-md sm:max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Create a Brand</DialogTitle>
+            </DialogHeader>
+
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div>
+                <Label htmlFor="brandDescription">Description</Label>
+                <Input
+                  id="brandDescription"
+                  value={form.description}
+                  onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
+                  placeholder="Brand description"
+                  className="mt-1"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  id="brandActive"
+                  type="checkbox"
+                  checked={form.is_active}
+                  onChange={e => setForm((prev) => ({ ...prev, is_active: e.target.checked }))}
+                />
+                <Label htmlFor="brandActive">Active</Label>
+              </div>
+              <div>
+                <Label htmlFor="name">Brand name</Label>
+                <Input
+                  id="name"
+                  value={form.name}
+                  onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+                  placeholder="Ex: Samsung, Toyota..."
+                  className="mt-1"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="subcategory">Subcategory</Label>
+                <Select
+                  value={form.subcategory_id}
+                  onValueChange={(value) => setForm((prev) => ({ ...prev, subcategory_id: value }))}
+                >
+                  <SelectTrigger className="mt-1 h-9 w-full bg-white">
+                    <SelectValue placeholder="Select a subcategory" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    {subcategoryOptions.map((sub) => (
+                      <SelectItem key={sub.id} value={sub.id.toString()}>
+                        {sub.name} {sub.category_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCreateOpen(false)}
+                >
+                  Cancel
+                </Button>
+
+                <Button
+                  type="submit"
+                  disabled={submitting}
+                  className="bg-[#D6BA69] hover:bg-[#C5A952]"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    "Create"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Dialog */}
+        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+          <DialogContent className="bg-white max-w-md sm:max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Edit Brand</DialogTitle>
+            </DialogHeader>
+
+            <form onSubmit={handleUpdate} className="space-y-4">
+              <div>
+                <Label htmlFor="editBrandDescription">Description</Label>
+                <Input
+                  id="editBrandDescription"
+                  value={form.description}
+                  onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
+                  className="mt-1"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  id="editBrandActive"
+                  type="checkbox"
+                  checked={form.is_active}
+                  onChange={e => setForm((prev) => ({ ...prev, is_active: e.target.checked }))}
+                />
+                <Label htmlFor="editBrandActive">Active</Label>
+              </div>
+              <div>
+                <Label htmlFor="edit-name">Brand name</Label>
+                <Input
+                  id="edit-name"
+                  value={form.name}
+                  onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+                  className="mt-1"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-subcategory">Subcategory</Label>
+                <Select
+                  value={form.subcategory_id}
+                  onValueChange={(value) => setForm((prev) => ({ ...prev, subcategory_id: value }))}
+                >
+                  <SelectTrigger className="mt-1 h-9 w-full bg-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    {subcategoryOptions.map((sub) => (
+                      <SelectItem key={sub.id} value={sub.id.toString()}>
+                        {sub.name} {sub.category_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditOpen(false)}
+                >
+                  Cancel
+                </Button>
+
+                <Button
+                  type="submit"
+                  disabled={submitting}
+                  className="bg-[#D6BA69] hover:bg-[#C5A952]"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    "Update"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
         {deleteCandidate && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-            <div className="w-full max-w-md bg-white border border-gray-200 rounded-2xl shadow-xl">
-              <div className="p-4">
-                <h3 className="text-lg font-semibold text-gray-900">Confirm deletion</h3>
-                <p className="text-sm text-gray-600 mt-2">
-                  This action cannot be undone. Do you want to delete the brand{" "}
-                  <strong>{deleteCandidate.name}</strong>?
+          <Dialog open={!!deleteCandidate} onOpenChange={() => setDeleteCandidate(null)}>
+            <DialogContent className="bg-white max-w-md">
+              <DialogHeader>
+                <DialogTitle>Confirm Delete</DialogTitle>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  Are you sure you want to delete the brand "<strong>{deleteCandidate.name}</strong>"?
+                  This action cannot be undone.
                 </p>
 
-                <div className="mt-4 flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setDeleteCandidate(null)} disabled={deleting}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleDeleteBrand} className="bg-red-600 hover:bg-red-700 text-white" disabled={deleting}>
-                    {deleting ? (
+                <div className="flex justify-end gap-3">
+                  <Button variant="outline" onClick={() => setDeleteCandidate(null)}>Cancel</Button>
+                  <Button
+                    onClick={handleDelete}
+                    disabled={submitting}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    {submitting ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         Deleting...
@@ -413,8 +557,8 @@ const Brands = () => {
                   </Button>
                 </div>
               </div>
-            </div>
-          </div>
+            </DialogContent>
+          </Dialog>
         )}
       </div>
     </div>

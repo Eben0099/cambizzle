@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import Loader from '../components/ui/Loader';
-import { Helmet } from 'react-helmet';
+import { Helmet } from 'react-helmet-async';
+import SEO from '../components/SEO';
+import { ProductSchema, BreadcrumbSchema } from '../components/StructuredData';
 import { API_BASE_URL, SERVER_BASE_URL } from '../config/api';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
@@ -192,6 +194,23 @@ const AdDetail = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEO
+        title={`${ad.title} | Cambizzle`}
+        description={ad.description?.slice(0, 155) || `${ad.title} - Buy or sell on Cambizzle`}
+        image={ad.photos?.[0]?.url || ad.photos?.[0]?.originalUrl || 'https://images.unsplash.com/photo-1556740758-90de374c12ad?w=1200&h=630&fit=crop'}
+        url={`/ad/${ad.slug}`}
+        type="product"
+        keywords={`${ad.title}, ${ad.category?.name || ''}, ${ad.subcategory?.name || ''}, ${ad.location || ''}, buy, sell, Cameroon`}
+      />
+      <ProductSchema ad={ad} />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: '/' },
+          { name: ad.category?.name || 'Category', url: `/search?category=${ad.category?.id}` },
+          { name: ad.subcategory?.name || 'Subcategory', url: `/search?subcategory=${ad.subcategory?.slug}` },
+          { name: ad.title, url: `/ad/${ad.slug}` }
+        ]}
+      />
       {/* Navigation */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

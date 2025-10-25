@@ -2,6 +2,70 @@ import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
 
 class AdminService {
+  // Récupérer les codes de parrainage
+  async getReferralCodes() {
+    try {
+      this.setAuthHeader();
+      const response = await axios.get(`${API_BASE_URL}/admin/referral-codes`);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
+  // Créer une marque
+  async createBrand(brandData) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.post(`${API_BASE_URL}/admin/referentials/brands`, brandData);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
+
+  // Mettre à jour une marque
+  async updateBrand(brandId, brandData) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.put(`${API_BASE_URL}/admin/referentials/brands/${brandId}`, brandData);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
+  // ============= GESTION DES MARQUES =============
+  // Récupérer la liste des marques avec pagination
+  async getBrands(page = 1, perPage = 1000) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.get(`${API_BASE_URL}/admin/referentials/brands`, {
+        params: { page, per_page: perPage }
+      });
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
   constructor() {
     // S'assurer que le token est toujours dans les headers
     this.setAuthHeader();
@@ -199,7 +263,7 @@ class AdminService {
   async getAds() {
     try {
       this.setAuthHeader();
-      const response = await axios.get(`${API_BASE_URL}/admin/ads`);
+      const response = await axios.get(`${API_BASE_URL}/ads`);
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {

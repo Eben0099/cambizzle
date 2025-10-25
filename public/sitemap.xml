@@ -1,8 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+  
+  <!-- Homepage -->
   <url>
     <loc>https://cambizzle.com/</loc>
+    <changefreq>daily</changefreq>
     <priority>1.0</priority>
+    <lastmod>2025-01-20</lastmod>
   </url>
-  <!-- Add more URLs dynamically or via backend for all ads and pages -->
+  
+  <!-- Search Page -->
+  <url>
+    <loc>https://cambizzle.com/search</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Login Page -->
+  <url>
+    <loc>https://cambizzle.com/login</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <!-- Register Page -->
+  <url>
+    <loc>https://cambizzle.com/register</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <!-- Profile Page -->
+  <url>
+    <loc>https://cambizzle.com/profile</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- Create Ad Page -->
+  <url>
+    <loc>https://cambizzle.com/create-ad</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- 
+    NOTE: For dynamic content (ads, categories, etc.), 
+    you should generate this sitemap dynamically from your backend.
+    This can be done by creating an API endpoint that generates the sitemap
+    based on your database content.
+    
+    Example backend endpoint: GET /api/sitemap.xml
+    This would include:
+    - All active ads: /ad/{slug}
+    - All categories: /search?category={id}
+    - All subcategories: /search?subcategory={slug}
+  -->
+  
 </urlset>

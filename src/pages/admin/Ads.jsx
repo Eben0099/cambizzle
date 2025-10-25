@@ -384,7 +384,7 @@ const Ads = () => {
                   <div className="flex-shrink-0">
                     {ad.photos && ad.photos.length > 0 ? (
                       <img
-                        src={ad.photos[0].originalUrl}
+                        src={ad.photos[0].originalUrl || ad.photos[0].url || ad.photos[0]}
                         alt={ad.photos[0].altText || ad.title || 'Ad image'}
                         className="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-lg"
                       />
@@ -662,10 +662,10 @@ const Ads = () => {
                 <div>
                   <h3 className="text-sm font-semibold text-gray-900 mb-2">Photos</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    {selectedAd.photos.map((photo) => (
+                    {selectedAd.photos.map((photo, index) => (
                       <img
-                        key={photo.id}
-                        src={photo.originalUrl}
+                        key={photo.id || index}
+                        src={photo.originalUrl || photo.url || photo}
                         alt={photo.altText || 'Photo'}
                         className="w-full h-40 object-cover rounded-lg"
                       />

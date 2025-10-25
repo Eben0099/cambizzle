@@ -5,6 +5,7 @@ import { AdsProvider } from './contexts/AdsContext';
 import { Toaster } from './components/ui/toaster';
 import { Toaster as Sonner } from './components/ui/sonner';
 import { TooltipProvider } from './components/ui/tooltip';
+import WeglotProvider from './components/WeglotProvider';
 import Header from './components/layout/Header';
 import CategoryAds from './pages/CategoryAds';
 import SubcategoryAds from './pages/SubcategoryAds';
@@ -34,12 +35,13 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <AuthProvider>
-          <AdsProvider>
-            <Router>
+      <WeglotProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <AuthProvider>
+            <AdsProvider>
+              <Router>
               <Routes>
                 {/* Routes publiques avec header */}
                 <Route path="/" element={
@@ -135,6 +137,7 @@ function App() {
           </AdsProvider>
         </AuthProvider>
       </TooltipProvider>
+      </WeglotProvider>
     </QueryClientProvider>
   );
 }

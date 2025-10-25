@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Helmet } from 'react-helmet';
+import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, ArrowRight, TrendingUp, Shield, Users, Star, Plus, Car, Home as HomeIcon, Briefcase, Shirt, Smartphone, Sofa, Baby, Book, Dumbbell, Wrench, Truck, HeadphonesIcon } from 'lucide-react';
 import { useAds } from '../contexts/AdsContext';
@@ -11,12 +11,15 @@ import AdCard from '../components/ads/AdCard';
 import CategorySidebar from '../components/layout/CategorySidebar';
 import Loader from '../components/ui/Loader';
 import CategoryGrid from '../components/categories/CategoryGrid';
+import SEO from '../components/SEO';
+import { OrganizationSchema, WebsiteSchema } from '../components/StructuredData';
 import useCategories from '../hooks/useCategories';
 import useHomeAds from '../hooks/useHomeAds';
 import Pagination from '../components/ui/Pagination';
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [keywordFilter, setKeywordFilter] = useState('');
   const { ads: contextAds, fetchAds, isLoading: contextLoading } = useAds();
   const { categories, isLoading: categoriesLoading, error: categoriesError } = useCategories();
   const { ads, pagination, isLoading: adsLoading, error: adsError, goToPage } = useHomeAds(1, 8);
@@ -37,6 +40,28 @@ const Home = () => {
     navigate(`/search?category=${categoryId}`);
   };
 
+  // Fonction de filtrage par mots-clés (frontend)
+  const filterByKeywords = (adsArray) => {
+    if (!keywordFilter.trim()) return adsArray;
+    
+    const keywords = keywordFilter.toLowerCase().trim().split(/\s+/);
+    
+    return adsArray.filter(ad => {
+      const searchableText = [
+        ad.title,
+        ad.description,
+        ad.subcategory?.name,
+        ad.category?.name,
+        ad.location,
+        ad.brand?.name
+      ].filter(Boolean).join(' ').toLowerCase();
+      
+      return keywords.every(keyword => searchableText.includes(keyword));
+    });
+  };
+
+  const filteredAds = filterByKeywords(ads || []);
+
   // Icon mapping for categories
   const categoryIcons = {
     'car': Car,
@@ -53,15 +78,14 @@ const Home = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Cambizzle | Buy and Sell in Cameroon</title>
-        <meta name="description" content="Discover the best deals for buying and selling in Cameroon. Browse ads, post your own, and connect with buyers and sellers effortlessly." />
-        <meta property="og:title" content="Cambizzle | Buy and Sell in Cameroon" />
-        <meta property="og:description" content="Discover the best deals for buying and selling in Cameroon. Browse ads, post your own, and connect with buyers and sellers effortlessly." />
-        <meta property="og:image" content="/assets/cambizzle-og-image.jpg" />
-        <meta property="og:url" content="https://cambizzle.com/" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </Helmet>
+      <SEO
+        title="Cambizzle | Buy and Sell in Cameroon"
+        description="Discover the best deals for buying and selling in Cameroon. Browse ads, post your own, and connect with buyers and sellers effortlessly."
+        url="/"
+        keywords="buy, sell, classifieds, ads, Cameroon, marketplace, Cambizzle, second hand, electronics, cars, real estate"
+      />
+      <OrganizationSchema />
+      <WebsiteSchema />
       <div className="min-h-screen bg-gray-50">
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-black via-gray-900 to-black text-white py-16 sm:py-20 lg:py-24">
@@ -77,22 +101,27 @@ const Home = () => {
               
               {/* Search Bar */}
               <div className="max-w-2xl mx-auto">
-                <form onSubmit={handleSearch} className="relative group">
+                <div className="relative group">
                   <Input
                     type="text"
-                    placeholder="Search for anything..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="text-base sm:text-lg py-3 sm:py-4 pr-12 bg-white rounded-xl shadow-sm group-hover:shadow-md transition-shadow duration-300"
+                    placeholder="Filter ads by keywords (title, description, brand, location...)..."
+                    value={keywordFilter}
+                    onChange={(e) => setKeywordFilter(e.target.value)}
+                    className="text-base sm:text-lg py-3 sm:py-4 pr-12 bg-white text-black rounded-xl shadow-sm group-hover:shadow-md transition-shadow duration-300"
                   />
-                  <Button
-                    type="submit"
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-[#D6BA69] hover:bg-[#C5A952] rounded-lg p-2 transition-colors duration-200"
-                    size="sm"
-                  >
+                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-[#D6BA69] hover:bg-[#C5A952] rounded-lg p-2 transition-colors duration-200">
                     <Search className="w-5 h-5 text-black" />
-                  </Button>
-                </form>
+                  </div>
+                  {keywordFilter && (
+                    <button
+                      onClick={() => setKeywordFilter('')}
+                      className="absolute right-14 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-white rounded-full w-6 h-6 flex items-center justify-center"
+                      title="Clear filter"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -154,24 +183,44 @@ const Home = () => {
                   <Loader text="Loading ads..." />
                 ) : (
                   <>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-                      {ads.map((ad) => (
-                        <AdCard key={ad.id} ad={ad} className="hover:shadow-lg hover:-translate-y-1 transition-all duration-300" />
-                      ))}
-                    </div>
-
-                    {/* Pagination */}
-                    {pagination && pagination.totalPages > 1 && (
-                      <div className="mt-12 flex justify-center">
-                        <Pagination
-                          currentPage={pagination.currentPage}
-                          totalPages={pagination.totalPages}
-                          hasNext={pagination.hasNext}
-                          hasPrevious={pagination.hasPrevious}
-                          onPageChange={goToPage}
-                          className="bg-white shadow-sm rounded-lg"
-                        />
+                    {filteredAds.length === 0 && keywordFilter ? (
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-8 text-center">
+                        <Search className="w-12 h-12 mx-auto mb-4 text-yellow-600" />
+                        <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+                          No ads found
+                        </h3>
+                        <p className="text-yellow-600 mb-4">
+                          No ads match your search "{keywordFilter}"
+                        </p>
+                        <Button
+                          onClick={() => setKeywordFilter('')}
+                          className="bg-[#D6BA69] hover:bg-[#C5A952] text-black"
+                        >
+                          Clear filter
+                        </Button>
                       </div>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                          {filteredAds.map((ad) => (
+                            <AdCard key={ad.id} ad={ad} className="hover:shadow-lg hover:-translate-y-1 transition-all duration-300" />
+                          ))}
+                        </div>
+
+                        {/* Pagination - masquée si filtre actif */}
+                        {!keywordFilter && pagination && pagination.totalPages > 1 && (
+                          <div className="mt-12 flex justify-center">
+                            <Pagination
+                              currentPage={pagination.currentPage}
+                              totalPages={pagination.totalPages}
+                              hasNext={pagination.hasNext}
+                              hasPrevious={pagination.hasPrevious}
+                              onPageChange={goToPage}
+                              className="bg-white shadow-sm rounded-lg"
+                            />
+                          </div>
+                        )}
+                      </>
                     )}
                   </>
                 )}

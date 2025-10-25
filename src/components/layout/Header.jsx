@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import AuthModal from '../auth/AuthModal';
+import LanguageSwitcher from '../LanguageSwitcher';
 import { getPhotoUrl } from '../../utils/helpers';
 
 const Header = () => {
@@ -99,6 +100,8 @@ return (
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
               </Link>
 
+              {/* Language Switcher */}
+
               {/* Admin Link - Visible only for admin */}
               {user?.role === 'admin' && (
                 <Link 
@@ -170,6 +173,8 @@ return (
             </>
           ) : (
             <div className="flex items-center space-x-3">
+              {/* Language Switcher */}
+              
               <div onClick={() => openAuthModal('login')}>
                 <Button 
                   variant="ghost" 
