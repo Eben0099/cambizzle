@@ -262,20 +262,18 @@ const CreateAd = () => {
       // Types et taille autorisés
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
       const maxSize = 5 * 1024 * 1024; // 5 Mo
-      if (images.length === 0) {
-        newErrors.images = 'At least one photo is required';
-      } else if (images.length > 10) {
-        newErrors.images = 'Maximum 10 photos allowed';
+      if (images.length > 10) {
+        newErrors.images = 'Maximum 10 photos autorisées';
       } else {
         for (let i = 0; i < images.length; i++) {
           const img = images[i];
           if (img.file) {
             if (!allowedTypes.includes(img.file.type)) {
-              newErrors.images = `Photo format not allowed (photo ${i + 1}). Accepted formats: JPG, PNG, WEBP.`;
+              newErrors.images = `Format de photo non autorisé (photo ${i + 1}). Formats acceptés : JPG, PNG, WEBP.`;
               break;
             }
             if (img.file.size > maxSize) {
-              newErrors.images = `Photo too large (photo ${i + 1}). Max size: 5MB.`;
+              newErrors.images = `Photo trop volumineuse (photo ${i + 1}). Taille max : 5MB.`;
               break;
             }
           }
@@ -307,15 +305,22 @@ const CreateAd = () => {
       const currentRaw = formData.price.replace(/\s/g, '');
       const original = parseFloat(originalRaw);
       const current = parseFloat(currentRaw);
-      const discount = Math.round(((original - current) / original) * 100);
-      setFormData(prev => ({
-        ...prev,
-        discountPercent: discount > 0 ? discount : 0
-      }));
+      if (!isNaN(original) && !isNaN(current) && original > 0 && current > 0) {
+        const discount = Math.round(((original - current) / original) * 100);
+        setFormData(prev => ({
+          ...prev,
+          discountPercent: discount > 0 ? discount : ''
+        }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          discountPercent: ''
+        }));
+      }
     } else {
       setFormData(prev => ({
         ...prev,
-        discountPercent: 0
+        discountPercent: ''
       }));
     }
   };
@@ -613,7 +618,7 @@ const CreateAd = () => {
                       }}
                       className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                     >
-                      <option value="">Select a category</option>
+                      <option value=""></option>
                       {creationData.categories.map(category => (
                         <option key={category.id} value={category.id}>
                           {category.name}
@@ -644,9 +649,7 @@ const CreateAd = () => {
                     disabled={!formData.category}
                     className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] disabled:bg-gray-100 disabled:cursor-not-allowed transition-all bg-white"
                   >
-                    <option value="">
-                      {formData.category ? 'Select a subcategory' : 'Select a category first'}
-                    </option>
+                    <option value=""></option>
                     {formData.category && subcategories.length > 0 && [...subcategories]
                       .sort((a, b) => a.name.localeCompare(b.name))
                       .map(subcategory => (
@@ -784,7 +787,7 @@ const CreateAd = () => {
                   helperText="To display a discount"
                 />
               </div>
-              {formData.discountPercent && (
+              {formData.discountPercent > 0 && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <p className="text-green-800 font-medium">
                     {formData.discountPercent}% discount displayed!
@@ -807,7 +810,7 @@ const CreateAd = () => {
                     onChange={handleChange}
                     className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                   >
-                    <option value="">Select a location</option>
+                    <option value=""></option>
                     {creationData.locations.map(location => (
                       <option key={location.id} value={location.id}>
                         {location.city} - {location.region}
@@ -819,19 +822,7 @@ const CreateAd = () => {
                   <p className="text-sm text-red-600 mt-1">{errors.locationId}</p>
                 )}
               </div>
-              <div className="flex items-start">
-                <input
-                  id="isPremium"
-                  name="isPremium"
-                  type="checkbox"
-                  checked={formData.isPremium}
-                  onChange={handleChange}
-                  className="h-5 w-5 text-[#D6BA69] focus:ring-[#D6BA69] border-gray-300 rounded mt-1"
-                />
-                <label htmlFor="isPremium" className="ml-3 block text-sm text-gray-900 leading-relaxed">
-                  Premium ad (+€5) - Featured listing and premium badge
-                </label>
-              </div>
+
             </div>
           </div>
         )}
@@ -866,7 +857,7 @@ const CreateAd = () => {
                       onChange={handleChange}
                       className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                     >
-                      <option value="">Select a brand</option>
+                      <option value=""></option>
                       {[...subcategoryFields.brands]
                         .sort((a, b) => a.name.localeCompare(b.name))
                         .map(brand => (
@@ -914,7 +905,7 @@ const CreateAd = () => {
                               }}
                               className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                             >
-                              <option value="">Select {filter.name.toLowerCase()}</option>
+                              <option value=""></option>
                               {[...filter.options]
                                 .sort((a, b) => {
                                   const aNum = Number(a), bNum = Number(b);
