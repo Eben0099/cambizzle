@@ -3,9 +3,20 @@ import { authService } from '../services/authService';
 
 const AuthContext = createContext();
 
+// Récupérer l'utilisateur du localStorage au démarrage
+const getInitialUser = () => {
+  try {
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  } catch (error) {
+    console.error('Erreur lors de la lecture de l\'utilisateur depuis localStorage:', error);
+    return null;
+  }
+};
+
 const initialState = {
-  user: null,
-  isAuthenticated: false,
+  user: getInitialUser(),
+  isAuthenticated: !!getInitialUser() && !!localStorage.getItem('token'),
   isLoading: true,
   error: null
 };
@@ -15,6 +26,10 @@ const authReducer = (state, action) => {
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
     case 'LOGIN_SUCCESS':
+      // Sauvegarder l'utilisateur dans localStorage
+      if (action.payload) {
+        localStorage.setItem('user', JSON.stringify(action.payload));
+      }
       return {
         ...state,
         user: action.payload,
@@ -23,6 +38,9 @@ const authReducer = (state, action) => {
         error: null
       };
     case 'LOGIN_ERROR':
+      // Nettoyer localStorage en cas d'erreur
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
       return {
         ...state,
         user: null,
@@ -31,6 +49,9 @@ const authReducer = (state, action) => {
         error: action.payload
       };
     case 'LOGOUT':
+      // Nettoyer localStorage lors de la déconnexion
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
       return {
         ...state,
         user: null,
@@ -39,9 +60,14 @@ const authReducer = (state, action) => {
         error: null
       };
     case 'UPDATE_USER':
+      // Mettre à jour l'utilisateur dans localStorage
+      const updatedUser = { ...state.user, ...action.payload };
+      if (updatedUser) {
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      }
       return {
         ...state,
-        user: { ...state.user, ...action.payload },
+        user: updatedUser,
         isAuthenticated: action.payload ? true : state.isAuthenticated
       };
     case 'CLEAR_ERROR':
@@ -66,6 +92,9 @@ export const AuthProvider = ({ children }) => {
     // Si pas de token, pas besoin de vérifier
     if (!token) {
       console.log('❌ Aucun token, arrêt de la vérification');
+      // Nettoyer l'utilisateur si pas de token
+      localStorage.removeItem('user');
+      dispatch({ type: 'LOGOUT' });
       dispatch({ type: 'SET_LOADING', payload: false });
       return;
     }
@@ -102,11 +131,13 @@ export const AuthProvider = ({ children }) => {
       console.log('🔍 Vérifications individuelles:');
       console.log('- idUser:', processedUser.idUser, '(', typeof processedUser.idUser, ')');
       console.log('- email:', processedUser.email, '(', typeof processedUser.email, ')');
+      console.log('- phone:', processedUser.phone, '(', typeof processedUser.phone, ')');
 
       // Vérifier que les données essentielles sont présentes
-      if (!processedUser.idUser || !processedUser.email) {
+      // L'email peut être null, mais le téléphone est obligatoire
+      if (!processedUser.idUser || !processedUser.phone) {
         console.error('❌ Données utilisateur incomplètes:', processedUser);
-        throw new Error('Données utilisateur invalides reçues de l\'API');
+        throw new Error('Données utilisateur invalides reçues de l\'API (idUser ou phone manquant)');
       }
 
       console.log('🔄 Utilisateur traité pour le contexte:', processedUser);
@@ -114,8 +145,9 @@ export const AuthProvider = ({ children }) => {
       console.log('✅ Contexte d\'authentification mis à jour');
     } catch (error) {
       console.error('❌ Erreur lors de la récupération de l\'utilisateur:', error);
-      // Token invalide ou expiré - nettoyer silencieusement
+      // Token invalide ou expiré - nettoyer complètement
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
       dispatch({ type: 'LOGOUT' });
       dispatch({ type: 'SET_LOADING', payload: false });
     }

@@ -5,7 +5,27 @@ export const getPhotoUrl = (photoPath) => {
   if (!photoPath) return null;
   
   // Si l'URL est déjà complète (commence par http), la retourner telle quelle
-  if (photoPath.startsWith('http')) return photoPath;
+  if (photoPath.startsWith('http')) {
+    // Nettoyer les URLs malformées du backend
+    let cleanUrl = photoPath;
+    
+    // Corriger le protocole
+    cleanUrl = cleanUrl.replace(/^http:\/\//, 'https://');
+    
+    // Supprimer www.
+    cleanUrl = cleanUrl.replace('www.cambizzle.seed-innov.com', 'cambizzle.seed-innov.com');
+    
+    // Nettoyer les chemins redondants/exposés
+    cleanUrl = cleanUrl.replace(/\/api\/home\/[^\/]+\/public_html\/cambizzle\/api\//, '/');
+    
+    // S'assurer que l'URL commence bien par le bon domaine
+    if (cleanUrl.includes('cambizzle.seed-innov.com') && !cleanUrl.startsWith('https://cambizzle.seed-innov.com/')) {
+      const pathPart = cleanUrl.split('cambizzle.seed-innov.com')[1] || '';
+      cleanUrl = `https://cambizzle.seed-innov.com${pathPart}`;
+    }
+    
+    return cleanUrl;
+  }
   
   // Si c'est une URL data (base64), la retourner telle quelle
   if (photoPath.startsWith('data:')) return photoPath;

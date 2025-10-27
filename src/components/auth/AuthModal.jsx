@@ -161,7 +161,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
     const newErrors = {};
     if (!formData.firstName.trim()) newErrors.firstName = "First name required";
     if (!formData.lastName.trim()) newErrors.lastName = "Last name required";
-    if (!formData.email.trim()) newErrors.email = "Email required";
+    // Email is optional on registration — do not require it here
   if (!formData.phone.trim()) newErrors.phone = "Phone required";
   else if (!isValidPhoneNumber(formData.phone)) newErrors.phone = "Please enter a valid phone number for the selected country";
     if (!formData.password) newErrors.password = "Password required";
@@ -442,14 +442,13 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         <form onSubmit={handleLoginSubmit} className="space-y-4 sm:space-y-6">
           <div className="space-y-4">
             <Input
-              label="Email"
+              label="Email (optional)"
               type="email"
               name="email"
               value={formData.email}
               onChange={handleInputChange}
               error={errors.email}
               placeholder="your@email.com"
-              required
             />
 
             <div className="space-y-1">

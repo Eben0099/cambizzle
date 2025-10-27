@@ -25,6 +25,12 @@ class AuthService {
 
       this.token = response.data.data.token;
       localStorage.setItem('token', this.token);
+      
+      // Sauvegarder aussi l'utilisateur pour la persistance
+      if (response.data.data.user) {
+        localStorage.setItem('user', JSON.stringify(response.data.data.user));
+      }
+      
       this.setAuthHeader();
       return response.data;
     } catch (error) {
@@ -39,6 +45,12 @@ class AuthService {
       });
       this.token = response.data.token;
       localStorage.setItem('token', this.token);
+      
+      // Sauvegarder aussi l'utilisateur pour la persistance
+      if (response.data.user) {
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+      
       this.setAuthHeader();
       return response.data;
     } catch (error) {
