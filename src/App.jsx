@@ -15,8 +15,10 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Search from './pages/Search';
 import CreateAd from './pages/CreateAd';
+import UpdateAd from './pages/UpdateAd';
 import Profile from './pages/Profile';
 import AdDetail from './pages/AdDetail';
+import TestPromotionPacks from './pages/TestPromotionPacks';
 import Dashboard from './pages/admin/Dashboard';
 import Users from './pages/admin/Users';
 import Ads from './pages/admin/Ads';
@@ -110,11 +112,31 @@ function App() {
                     </main>
                   </div>
                 } />
+
+                {/* Test page for promotion packs */}
+                <Route path="/test/promotion-packs" element={
+                  <div className="min-h-screen bg-gray-50">
+                    <Header />
+                    <main>
+                      <TestPromotionPacks />
+                    </main>
+                  </div>
+                } />
+
                 <Route path="/ads/:slug" element={
                   <div className="min-h-screen bg-gray-50">
                     <Header />
                     <main>
                       <AdDetail />
+                    </main>
+                  </div>
+                } />
+
+                <Route path="/edit-ad/:slug" element={
+                  <div className="min-h-screen bg-gray-50">
+                    <Header />
+                    <main>
+                      <UpdateAd />
                     </main>
                   </div>
                 } />

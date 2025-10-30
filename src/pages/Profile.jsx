@@ -270,6 +270,7 @@ return (
             <div className="space-y-6">
               <ProfileAds
                 userAds={userAds}
+                user={user}
                 onCreateAd={handleCreateAd}
                 onEditAd={handleEditAd}
                 onDeleteAd={handleDeleteAd}

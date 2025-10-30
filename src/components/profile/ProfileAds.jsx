@@ -1,10 +1,24 @@
-import { Package, Plus, Eye, Calendar, Edit, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { Package, Plus, Eye, Calendar, Edit, Trash2, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../ui/Button';
 import { formatPrice } from '../../utils/helpers';
+import BoostAdModal from '../ads/BoostAdModal';
 
-const ProfileAds = ({ userAds, onCreateAd, onEditAd, onDeleteAd }) => {
+const ProfileAds = ({ userAds, onCreateAd, onEditAd, onDeleteAd, user }) => {
   const navigate = useNavigate();
+  const [boostModalOpen, setBoostModalOpen] = useState(false);
+  const [selectedAdForBoost, setSelectedAdForBoost] = useState(null);
+
+  const handleBoostAd = (ad) => {
+    setSelectedAdForBoost(ad);
+    setBoostModalOpen(true);
+  };
+
+  const handleCloseBoostModal = () => {
+    setBoostModalOpen(false);
+    setSelectedAdForBoost(null);
+  };
 
   const handleAdClick = (ad) => {
     navigate(`/ads/${ad.slug}`);
@@ -98,11 +112,35 @@ const ProfileAds = ({ userAds, onCreateAd, onEditAd, onDeleteAd }) => {
               </div>
 
               <div className="flex gap-2">
+                {(ad.isBoosted === '1' || ad.is_boosted === '1') ? (
+                  <div className="flex-1 flex flex-col items-center justify-center">
+                    <span className="inline-flex items-center justify-center py-2 sm:py-3 text-sm sm:text-base font-semibold text-white bg-[#D6BA69] rounded border border-[#D6BA69] cursor-default select-none w-full">
+                      <Zap className="w-4 h-4 mr-1" />
+                      Boosted
+                    </span>
+                    {(ad.boostEnd || ad.boost_end) && (
+                      <span className="text-xs text-gray-700 mt-1">
+                        Boost until {new Date(ad.boostEnd || ad.boost_end).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 py-2 sm:py-3 text-sm sm:text-base text-[#D6BA69] hover:bg-[#D6BA69]/10 border-[#D6BA69]"
+                    onClick={() => handleBoostAd(ad)}
+                    aria-label="Boost ad"
+                  >
+                    <Zap className="w-4 h-4 mr-1" />
+                    Boost
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
                   className="flex-1 py-2 sm:py-3 text-sm sm:text-base"
-                  onClick={() => onEditAd(ad)}
+                  onClick={() => navigate(`/edit-ad/${ad.slug}`)}
                   aria-label="Edit ad"
                 >
                   <Edit className="w-4 h-4 mr-1" />
@@ -122,6 +160,16 @@ const ProfileAds = ({ userAds, onCreateAd, onEditAd, onDeleteAd }) => {
           </div>
         ))}
       </div>
+
+      {/* Boost Modal */}
+      {boostModalOpen && selectedAdForBoost && (
+        <BoostAdModal
+          isOpen={boostModalOpen}
+          onClose={handleCloseBoostModal}
+          ad={selectedAdForBoost}
+          user={user}
+        />
+      )}
     </div>
   );
 };

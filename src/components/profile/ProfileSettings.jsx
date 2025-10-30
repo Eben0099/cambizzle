@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import userService from '../../services/userService';
 import { User, Shield, Upload, X, Camera, Trash2, Building2, Lock } from 'lucide-react';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
@@ -23,6 +24,11 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
   const [identityDocument, setIdentityDocument] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Identity verification upload state
+  const [identityUploadLoading, setIdentityUploadLoading] = useState(false);
+  const [identityUploadSuccess, setIdentityUploadSuccess] = useState(null);
+  const [identityUploadError, setIdentityUploadError] = useState(null);
 
   const handleFormInputChange = (e) => {
     const { name, value } = e.target;
@@ -125,6 +131,55 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
       console.error('Error during removal:', error);
     } finally {
       setUploadingPhoto(false);
+    }
+  };
+
+  // Handler for identity verification document upload
+  const handleIdentityVerificationSubmit = async () => {
+    setIdentityUploadLoading(true);
+    setIdentityUploadSuccess(null);
+    setIdentityUploadError(null);
+    try {
+      if (!editFormData.identityDocumentType || !editFormData.identityDocumentNumber || !identityDocument) {
+        setIdentityUploadError('Please provide all required fields and upload a PDF document.');
+        setIdentityUploadLoading(false);
+        return;
+      }
+      const formData = new FormData();
+      formData.append('document_type', editFormData.identityDocumentType);
+      formData.append('document_number', editFormData.identityDocumentNumber);
+      formData.append('document', identityDocument);
+      // Log FormData fields for debug
+      console.log('🔒 Identity Verification FormData:', [...formData.entries()].map(([k,v]) => `${k}: ${v instanceof Blob ? v.name : v}`));
+
+      // Always get userId from user prop, fallback to localStorage if missing
+      let userId = undefined;
+      let userObj = user;
+      if (!userObj) {
+        try {
+          userObj = JSON.parse(localStorage.getItem('user'));
+        } catch (e) {
+          userObj = undefined;
+        }
+      }
+      // Debug: log user object
+      console.log('🆔 User object for identity verification:', userObj);
+      if (userObj) {
+        userId = userObj.idUser || userObj.id || userObj._id;
+      }
+      if (!userId) {
+        setIdentityUploadError('User ID is missing. Please reconnect.');
+        setIdentityUploadLoading(false);
+        return;
+      }
+      const res = await userService.submitIdentityVerification(userId, formData);
+      setIdentityUploadSuccess('Document submitted successfully!');
+      setIdentityUploadError(null);
+    } catch (err) {
+      setIdentityUploadError(err?.response?.data?.message || err.message || 'Failed to submit document');
+      setIdentityUploadSuccess(null);
+    } finally {
+      setIdentityUploadLoading(false);
     }
   };
 
@@ -416,6 +471,23 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
                   </div>
                 </div>
               )}
+              {/* Identity verification submit button and feedback */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-2">
+                <Button
+                  onClick={handleIdentityVerificationSubmit}
+                  disabled={identityUploadLoading}
+                  className="bg-[#D6BA69] hover:bg-[#C5A952] text-black py-2 sm:py-3 text-xs sm:text-sm"
+                  aria-label="Submit identity verification"
+                >
+                  {identityUploadLoading ? 'Submitting...' : 'Submit for Verification'}
+                </Button>
+                {identityUploadSuccess && (
+                  <span className="text-green-600 text-xs ml-2">{identityUploadSuccess}</span>
+                )}
+                {identityUploadError && (
+                  <span className="text-red-600 text-xs ml-2">{identityUploadError}</span>
+                )}
+              </div>
             </div>
           </div>
         </div>

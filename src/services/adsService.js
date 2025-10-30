@@ -7,6 +7,25 @@ import { API_BASE_URL } from '../config/api';
 
 
 class AdsService {
+  /**
+   * Récupère une annonce par son slug depuis l'API backend
+   * @param {string} slug - Le slug de l'annonce
+   * @returns {Promise<Object>} - Les données de l'annonce
+   */
+  async getAdBySlug(slug) {
+    try {
+      this.token = localStorage.getItem('token');
+      this.setAuthHeader();
+      console.log('🔎 Appel API pour récupérer l\'annonce par slug:', slug);
+      const response = await axios.get(`${API_BASE_URL}/ads/${slug}`);
+      console.log('✅ Annonce récupérée par slug:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Erreur lors de la récupération de l\'annonce par slug:', error);
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Erreur lors de la récupération de l\'annonce';
+      throw new Error(errorMessage);
+    }
+  }
   async getSubcategoriesByCategory(categoryId) {
     try {
       this.token = localStorage.getItem('token');
@@ -358,6 +377,82 @@ class AdsService {
       return await this.mockApiCall(`/ads/${id}`, { method: 'PUT', body: adData });
     } catch (error) {
       throw error;
+    }
+  }
+
+  async updateAdBySlug(slug, adData) {
+    try {
+      console.log('📝 Mise à jour d\'annonce - Service appelé depuis UpdateAd ✅');
+      console.log('🔍 Type des données reçues:', adData instanceof FormData ? 'FormData' : typeof adData);
+
+      if (adData instanceof FormData) {
+        console.log('📤 Contenu FormData envoyé:');
+        for (let [key, value] of adData.entries()) {
+          if (value instanceof File) {
+            console.log(`  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
+          } else {
+            console.log(`  ${key}: ${value}`);
+          }
+        }
+      }
+
+      this.token = localStorage.getItem('token');
+      this.setAuthHeader();
+
+      console.log('🚀 Envoi vers l\'API:', `${API_BASE_URL}/ads/${slug}`);
+
+      // Log final du contenu envoyé juste avant l'appel
+      console.log('📤 === CONTENU FINAL ENVOYÉ À L\'API ===');
+      if (adData instanceof FormData) {
+        for (let [key, value] of adData.entries()) {
+          if (value instanceof File) {
+            console.log(`  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
+          } else {
+            console.log(`  ${key}: "${value}"`);
+          }
+        }
+      }
+      console.log('📤 === FIN CONTENU ===');
+
+      const response = await axios.post(`${API_BASE_URL}/ads/${slug}`, adData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      console.log('✅ Annonce mise à jour avec succès:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Erreur mise à jour annonce:', error);
+      console.error('📄 Status code:', error.response?.status);
+      console.error('📋 Response data complète:', error.response?.data);
+
+      // Log détaillé des messages d'erreur
+      if (error.response?.data?.messages) {
+        console.error('📋 Messages d\'erreur détaillés:');
+        Object.entries(error.response.data.messages).forEach(([field, messages]) => {
+          console.error(`  ${field}:`, Array.isArray(messages) ? messages.join(', ') : messages);
+        });
+      }
+
+      // Essayer d'extraire le message d'erreur le plus spécifique
+      let errorMessage = error.message || 'Erreur lors de la mise à jour de l\'annonce';
+
+      if (error.response?.data?.messages) {
+        // Si on a des messages détaillés, les formater
+        const messages = error.response.data.messages;
+        const firstField = Object.keys(messages)[0];
+        if (firstField && messages[firstField]) {
+          const fieldMessages = Array.isArray(messages[firstField]) ? messages[firstField] : [messages[firstField]];
+          errorMessage = `${firstField}: ${fieldMessages[0]}`;
+        }
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.error) {
+        errorMessage = `Erreur ${error.response.data.error}`;
+      }
+
+      throw new Error(errorMessage);
     }
   }
 

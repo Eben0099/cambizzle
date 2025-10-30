@@ -3,12 +3,13 @@ import { Upload, X, Image as ImageIcon, Move } from 'lucide-react';
 import { validateImageFile } from '../../utils/helpers';
 import Button from './Button';
 
-const ImageUpload = ({ 
-  images = [], 
-  onImagesChange, 
+const ImageUpload = ({
+  images = [],
+  onImagesChange,
   maxImages = 10,
-  className = '' 
+  className = ''
 }) => {
+
   const [dragOver, setDragOver] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState(null);
   const fileInputRef = useRef(null);
@@ -177,6 +178,9 @@ const ImageUpload = ({
                     src={image.url}
                     alt={`Image ${index + 1}`}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
                   />
                 </div>
                 
@@ -192,6 +196,7 @@ const ImageUpload = ({
                   {/* Controls */}
                   <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity space-y-1">
                     <button
+                      type="button"
                       onClick={() => removeImage(index)}
                       className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
                       title="Delete"
@@ -220,6 +225,7 @@ const ImageUpload = ({
             {/* Add More Button */}
             {canAddMore && (
               <button
+                type="button"
                 onClick={() => fileInputRef.current?.click()}
                 className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-[#D6BA69] hover:text-[#D6BA69] transition-colors"
               >
