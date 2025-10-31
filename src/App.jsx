@@ -30,6 +30,8 @@ import Brands from './pages/admin/Brands';
 import Locations from './pages/admin/Locations';
 import ModerationLogs from './pages/admin/ModerationLogs';
 import ReferralCodes from './pages/admin/ReferralCodes';
+import PromotionPackAdmin from './components/admin/PromotionPackAdmin';
+import Payments from './pages/admin/Payments';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -153,6 +155,8 @@ function App() {
                 <Route path="/admin/reports" element={<AdminLayout><Reports /></AdminLayout>} />
                 <Route path="/admin/moderation-logs" element={<AdminLayout><ModerationLogs /></AdminLayout>} />
                 <Route path="/admin/referralcodes" element={<AdminLayout><ReferralCodes /></AdminLayout>} />
+                <Route path="/admin/promotion-packs" element={<AdminLayout><PromotionPackAdmin /></AdminLayout>} />
+                <Route path="/admin/payments" element={<AdminLayout><Payments /></AdminLayout>} />
                 {/* Autres routes admin seront ajoutées ici */}
               </Routes>
             </Router>

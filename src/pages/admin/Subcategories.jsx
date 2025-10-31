@@ -73,10 +73,10 @@ const Subcategories = () => {
     category_id: "",
     name: "",
     slug: "",
-    iconPath: "",
     display_order: 1,
     is_active: true,
   });
+  const [iconFile, setIconFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   // Toasts
@@ -130,44 +130,45 @@ const Subcategories = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleFileChange = (e) => {
+    setIconFile(e.target.files[0] || null);
+  };
+
   // CREATE subcategory
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
       setSubmitting(true);
-
-      const payload = {
-        category_id: parseInt(formData.category_id),
-        name: formData.name,
-        slug: formData.slug,
-        iconPath: formData.iconPath || "",
-        is_active: formData.is_active ? 1 : 0,
-        display_order: parseInt(formData.display_order),
-      };
-
-      const response = await axios.post(
-        `${API_BASE_URL}/admin/referentials/subcategories`,
-        payload
-      );
-
-      if (response.data?.status === "success") {
+      const form = new FormData();
+      form.append('category_id', formData.category_id);
+      form.append('name', formData.name);
+  // slug supprimé, généré côté backend
+      form.append('is_active', formData.is_active ? '1' : '0');
+      form.append('display_order', formData.display_order);
+      if (iconFile) form.append('icon', iconFile);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/admin/referentials/subcategories`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      });
+      const data = await response.json();
+      if (data.status === "success") {
         setShowCreateModal(false);
         setFormData({
           category_id: "",
           name: "",
-          slug: "",
-          iconPath: "",
           display_order: 1,
           is_active: true,
         });
+        setIconFile(null);
         await fetchCategories();
         toast({ description: "Subcategory created successfully." });
       } else {
-        throw new Error(response.data?.message || "Failed to create subcategory");
+        throw new Error(data.message || "Failed to create subcategory");
       }
     } catch (err) {
-      const message =
-        err.response?.data?.message || err.message || "Error creating subcategory";
+      const message = err.message || "Error creating subcategory";
       toast({ description: message, variant: "destructive" });
       console.error("Error creating subcategory:", err);
     } finally {
@@ -181,8 +182,6 @@ const Subcategories = () => {
     setFormData({
       category_id: categoryId.toString(),
       name: subcategory.name,
-      slug: subcategory.slug,
-      iconPath: subcategory.iconPath || "",
       display_order: subcategory.displayOrder || 1,
       is_active: subcategory.isActive,
     });
@@ -193,43 +192,39 @@ const Subcategories = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     if (!selectedSubcategory) return;
-
     try {
       setSubmitting(true);
-
-      const payload = {
-        category_id: parseInt(formData.category_id),
-        name: formData.name,
-        slug: formData.slug,
-        iconPath: formData.iconPath || "",
-        is_active: formData.is_active ? 1 : 0,
-        display_order: parseInt(formData.display_order),
-      };
-
-      const response = await axios.put(
-        `${API_BASE_URL}/admin/referentials/subcategories/${selectedSubcategory.id}`,
-        payload
-      );
-
-      if (response.data?.status === "success") {
+      const form = new FormData();
+      form.append('category_id', formData.category_id);
+      form.append('name', formData.name);
+  // slug supprimé, généré côté backend
+      form.append('is_active', formData.is_active ? '1' : '0');
+      form.append('display_order', formData.display_order);
+      if (iconFile) form.append('icon', iconFile);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/admin/referentials/subcategories/${selectedSubcategory.id}`, {
+        method: 'POST', // POST pour upload fichier
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      });
+      const data = await response.json();
+      if (data.status === "success") {
         setShowEditModal(false);
         setSelectedSubcategory(null);
         setFormData({
           category_id: "",
           name: "",
-          slug: "",
-          iconPath: "",
           display_order: 1,
           is_active: true,
         });
+        setIconFile(null);
         await fetchCategories();
         toast({ description: "Subcategory updated successfully." });
       } else {
-        throw new Error(response.data?.message || "Failed to update subcategory");
+        throw new Error(data.message || "Failed to update subcategory");
       }
     } catch (err) {
-      const message =
-        err.response?.data?.message || err.message || "Error updating subcategory";
+      const message = err.message || "Error updating subcategory";
       toast({ description: message, variant: "destructive" });
       console.error("Error updating subcategory:", err);
     } finally {
@@ -632,36 +627,42 @@ const Subcategories = () => {
               />
             </div>
 
+            {/* Slug field removed, now generated by backend */}
+
             <div>
-              <Label htmlFor="slug" className="text-sm font-medium text-gray-700">
-                Slug <span className="text-red-500">*</span>
-              </Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">/</span>
-                <Input
-                  id="slug"
-                  name="slug"
-                  value={formData.slug}
-                  onChange={handleInputChange}
-                  placeholder="cars"
-                  required
-                  className="h-9 pl-8 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
-                />
-              </div>
-              <p className="text-xs text-gray-500 mt-1">Used in URLs - lowercase, no spaces, use hyphens</p>
+              <Label htmlFor="icon-edit" className="text-sm font-medium text-gray-700">Icon (image)</Label>
+              <input
+                id="icon-edit"
+                name="icon"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="block w-full text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer focus:outline-none focus:ring-[#D6BA69] focus:border-[#D6BA69]"
+              />
+              {iconFile && (
+                <div className="mt-2">
+                  <img src={URL.createObjectURL(iconFile)} alt="Preview" className="h-12 w-12 object-contain rounded" />
+                </div>
+              )}
+              <p className="text-xs text-gray-500 mt-1">Upload an icon image (PNG, JPG, SVG...)</p>
             </div>
 
             <div>
-              <Label htmlFor="iconPath" className="text-sm font-medium text-gray-700">Icon Path</Label>
-              <Input
-                id="iconPath"
-                name="iconPath"
-                value={formData.iconPath}
-                onChange={handleInputChange}
-                placeholder="e.g. /uploads/cars.svg"
-                className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
+              <Label htmlFor="icon" className="text-sm font-medium text-gray-700">Icon (image)</Label>
+              <input
+                id="icon"
+                name="icon"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="block w-full text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer focus:outline-none focus:ring-[#D6BA69] focus:border-[#D6BA69]"
               />
-              <p className="text-xs text-gray-500 mt-1">Path to SVG/PNG file (optional)</p>
+              {iconFile && (
+                <div className="mt-2">
+                  <img src={URL.createObjectURL(iconFile)} alt="Preview" className="h-12 w-12 object-contain rounded" />
+                </div>
+              )}
+              <p className="text-xs text-gray-500 mt-1">Upload an icon image (PNG, JPG, SVG...)</p>
             </div>
 
             <div>
@@ -704,7 +705,7 @@ const Subcategories = () => {
               <Button
                 type="submit"
                 className="flex-1 h-9 bg-[#D6BA69] hover:bg-[#C5A952] text-white text-sm rounded-lg disabled:opacity-50"
-                disabled={submitting || !formData.name || !formData.slug || !formData.category_id}
+                disabled={submitting || !formData.name || !formData.category_id}
               >
                 {submitting ? (
                   <>
@@ -767,36 +768,24 @@ const Subcategories = () => {
               />
             </div>
 
-            <div>
-              <Label htmlFor="slug" className="text-sm font-medium text-gray-700">
-                Slug <span className="text-red-500">*</span>
-              </Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">/</span>
-                <Input
-                  id="slug"
-                  name="slug"
-                  value={formData.slug}
-                  onChange={handleInputChange}
-                  placeholder="cars"
-                  required
-                  className="h-9 pl-8 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
-                />
-              </div>
-              <p className="text-xs text-gray-500 mt-1">Used in URLs - lowercase, no spaces, use hyphens</p>
-            </div>
+            {/* Slug field removed, now generated by backend */}
 
             <div>
-              <Label htmlFor="iconPath" className="text-sm font-medium text-gray-700">Icon Path</Label>
-              <Input
-                id="iconPath"
-                name="iconPath"
-                value={formData.iconPath}
-                onChange={handleInputChange}
-                placeholder="e.g. /uploads/cars.svg"
-                className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
+              <Label htmlFor="icon-edit" className="text-sm font-medium text-gray-700">Icon (image)</Label>
+              <input
+                id="icon-edit"
+                name="icon"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="block w-full text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer focus:outline-none focus:ring-[#D6BA69] focus:border-[#D6BA69]"
               />
-              <p className="text-xs text-gray-500 mt-1">Path to SVG/PNG file (optional)</p>
+              {iconFile && (
+                <div className="mt-2">
+                  <img src={URL.createObjectURL(iconFile)} alt="Preview" className="h-12 w-12 object-contain rounded" />
+                </div>
+              )}
+              <p className="text-xs text-gray-500 mt-1">Upload an icon image (PNG, JPG, SVG...)</p>
             </div>
 
             <div>
@@ -839,7 +828,7 @@ const Subcategories = () => {
               <Button
                 type="submit"
                 className="flex-1 h-9 bg-[#D6BA69] hover:bg-[#C5A952] text-white text-sm rounded-lg disabled:opacity-50"
-                disabled={submitting || !formData.name || !formData.slug || !formData.category_id}
+                disabled={submitting || !formData.name || !formData.category_id}
               >
                 {submitting ? (
                   <>

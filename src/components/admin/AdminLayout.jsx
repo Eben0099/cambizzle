@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, Navigate } from "react-router-dom";
-import { LayoutDashboard, Users, FileText, FolderTree, Filter, MapPin, AlertTriangle, Settings, LogOut, Tag, Shield, Menu, X, Home } from "lucide-react";
+import { LayoutDashboard, Users, FileText, FolderTree, Filter, MapPin, AlertTriangle, Settings, LogOut, Tag, Shield, Menu, X, Home, User, CreditCard } from "lucide-react";
 import Loader from "../ui/Loader";
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/Button";
@@ -8,8 +8,10 @@ import adminService from "../../services/adminService";
 import { useAuth } from "../../contexts/AuthContext";
 
 const navigation = [
-  { name: "Home", href: "/", icon: Home },
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { name: "My profile", href: "/profile", icon: User },
+  { name: "Payments", href: "/admin/payments", icon: CreditCard },
+  // Les autres liens seront triés plus bas
   { name: "Users", href: "/admin/users", icon: Users },
   { name: "Ads", href: "/admin/ads", icon: FileText },
   { name: "Categories", href: "/admin/categories", icon: FolderTree },
@@ -17,6 +19,7 @@ const navigation = [
   { name: "Dynamic Filters", href: "/admin/filters", icon: Filter },
   { name: "Brands", href: "/admin/brands", icon: Tag },
   { name: "Locations", href: "/admin/locations", icon: MapPin },
+  { name: "Promotion Packs", href: "/admin/promotion-packs", icon: Tag },
   { name: "Reports", href: "/admin/reports", icon: AlertTriangle },
   { name: "Moderation Logs", href: "/admin/moderation-logs", icon: Shield },
   { name: "Referral Codes", href: "/admin/referralcodes", icon: Tag },
@@ -104,7 +107,8 @@ const AdminLayout = ({ children }) => {
 
         {/* Navigation */}
         <nav className="flex-1 p-2 sm:p-3 space-y-1 sm:space-y-1.5 overflow-y-auto">
-          {navigation.map((item) => (
+          {/* Dashboard, My profile, Payments en haut */}
+          {[navigation[0], navigation[1], navigation[2]].map((item) => (
             <NavLink
               key={item.name}
               to={item.href}
@@ -132,6 +136,36 @@ const AdminLayout = ({ children }) => {
               )}
             </NavLink>
           ))}
+          {/* Liens restants triés alphabétiquement */}
+          {navigation.slice(3)
+            .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+            .map((item) => (
+              <NavLink
+                key={item.name}
+                to={item.href}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200",
+                    isActive
+                      ? "bg-[#D6BA69] text-gray-900 shadow-md border border-[#D6BA69]/50"
+                      : "text-gray-300 hover:bg-gray-800 hover:text-[#D6BA69] hover:shadow-sm"
+                  )
+                }
+                aria-label={`Navigate to ${item.name}`}
+              >
+                {({ isActive }) => (
+                  <>
+                    <item.icon
+                      className={cn(
+                        "h-4 w-4 sm:h-5 sm:w-5",
+                        isActive ? "text-gray-900" : "text-gray-400 group-hover:text-[#D6BA69]"
+                      )}
+                    />
+                    {item.name}
+                  </>
+                )}
+              </NavLink>
+            ))}
         </nav>
 
         {/* Footer */}

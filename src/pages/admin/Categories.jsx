@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { SERVER_BASE_URL } from "../../config/api";
+import { API_BASE_URL } from "../../config/api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -60,10 +62,10 @@ const Categories = () => {
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
-    icon_path: "",
     display_order: 1,
     is_active: true,
   });
+  const [iconFile, setIconFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   const { toast } = useToast();
@@ -90,11 +92,15 @@ const Categories = () => {
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleFileChange = (e) => {
+    setIconFile(e.target.files[0] || null);
   };
 
   // CREATE
@@ -102,20 +108,33 @@ const Categories = () => {
     e.preventDefault();
     try {
       setSubmitting(true);
-      const response = await adminService.createCategory(formData);
-      if (response.status === "success") {
+      const form = new FormData();
+      form.append('name', formData.name);
+  // slug supprimé, généré côté backend
+      form.append('is_active', formData.is_active ? '1' : '0');
+      form.append('display_order', formData.display_order);
+      if (iconFile) form.append('icon', iconFile);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/admin/referentials/categories`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      });
+      const data = await response.json();
+      if (data.status === "success") {
         setShowCreateModal(false);
         setFormData({
           name: "",
-          slug: "",
-          icon_path: "",
           display_order: 1,
           is_active: true,
         });
+        setIconFile(null);
         fetchCategories();
         toast({
           description: "Category created successfully.",
         });
+      } else {
+        throw new Error(data.message || "Error creating category.");
       }
     } catch (err) {
       toast({
@@ -132,8 +151,6 @@ const Categories = () => {
     setSelectedCategory(category);
     setFormData({
       name: category.name,
-      slug: category.slug,
-      icon_path: category.iconPath || "",
       display_order: category.displayOrder || 1,
       is_active: category.isActive,
     });
@@ -146,17 +163,32 @@ const Categories = () => {
     if (!selectedCategory) return;
     try {
       setSubmitting(true);
-      const response = await adminService.updateCategory(selectedCategory.id, formData);
-      if (response.status === "success") {
+      const form = new FormData();
+      form.append('name', formData.name);
+      // slug supprimé, généré côté backend
+      form.append('is_active', formData.is_active ? '1' : '0');
+      form.append('display_order', formData.display_order);
+      if (iconFile) form.append('icon', iconFile);
+      // Log FormData content
+      for (let pair of form.entries()) {
+        console.log('FormData:', pair[0], pair[1]);
+      }
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/admin/referentials/categories/${selectedCategory.id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      });
+      const data = await response.json();
+      if (data.status === "success") {
         setShowEditModal(false);
         setSelectedCategory(null);
         setFormData({
           name: "",
-          slug: "",
-          icon_path: "",
           display_order: 1,
           is_active: true,
         });
+        setIconFile(null);
         fetchCategories();
         toast({
           description: "Category updated successfully.",
@@ -201,9 +233,13 @@ const Categories = () => {
     }
   };
 
+  // Tri alphabétique des catégories
+  const sortedCategories = [...categories].sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+  );
   // Pagination
-  const totalPages = Math.ceil(categories.length / itemsPerPage);
-  const paginatedCategories = categories.slice(
+  const totalPages = Math.ceil(sortedCategories.length / itemsPerPage);
+  const paginatedCategories = sortedCategories.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -312,9 +348,12 @@ const Categories = () => {
                     </TableCell>
                     <TableCell className="px-4 py-3">
                       {category.iconPath ? (
-                        <span className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded">
-                          {category.iconPath}
-                        </span>
+                        <img
+                          src={category.iconPath.startsWith('http') ? category.iconPath : `${SERVER_BASE_URL}${category.iconPath}`}
+                          alt={category.name}
+                          className="w-10 h-10 object-cover rounded-md border"
+                          style={{ background: '#f9fafb' }}
+                        />
                       ) : (
                         <span className="text-xs text-gray-400">No icon</span>
                       )}
@@ -409,46 +448,45 @@ const Categories = () => {
                 className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
               />
             </div>
+            {/* Slug field removed, now generated by backend */}
+
             <div>
-              <Label htmlFor="slug" className="text-sm font-medium text-gray-700">
-                Slug <span className="text-red-500">*</span>
+              <Label htmlFor="icon-edit" className="text-sm font-medium text-gray-700">
+                Icon (image)
               </Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                  /
-                </span>
-                <Input
-                  id="slug"
-                  name="slug"
-                  value={formData.slug}
-                  onChange={handleInputChange}
-                  placeholder="electronics"
-                  required
-                  className="h-9 pl-8 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
-                />
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Used in URLs - lowercase, no spaces, use hyphens.
-              </p>
+              <input
+                id="icon-edit"
+                name="icon"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="block w-full text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer focus:outline-none focus:ring-[#D6BA69] focus:border-[#D6BA69]"
+              />
+              {iconFile && (
+                <div className="mt-2">
+                  <img src={URL.createObjectURL(iconFile)} alt="Preview" className="h-12 w-12 object-contain rounded" />
+                </div>
+              )}
+              <p className="text-xs text-gray-500 mt-1">Upload an icon image (PNG, JPG, SVG...)</p>
             </div>
             <div>
-              <Label
-                htmlFor="icon_path"
-                className="text-sm font-medium text-gray-700"
-              >
-                Icon Path
+              <Label htmlFor="icon" className="text-sm font-medium text-gray-700">
+                Icon (image)
               </Label>
-              <Input
-                id="icon_path"
-                name="icon_path"
-                value={formData.icon_path}
-                onChange={handleInputChange}
-                placeholder="e.g. icons/electronics.svg"
-                className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
+              <input
+                id="icon"
+                name="icon"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="block w-full text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer focus:outline-none focus:ring-[#D6BA69] focus:border-[#D6BA69]"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Path to SVG/PNG file (optional)
-              </p>
+              {iconFile && (
+                <div className="mt-2">
+                  <img src={URL.createObjectURL(iconFile)} alt="Preview" className="h-12 w-12 object-contain rounded" />
+                </div>
+              )}
+              <p className="text-xs text-gray-500 mt-1">Upload an icon image (PNG, JPG, SVG...)</p>
             </div>
             <div>
               <Label
@@ -537,33 +575,23 @@ const Categories = () => {
                 className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
               />
             </div>
+            {/* Slug field removed, now generated by backend */}
             <div>
-              <Label htmlFor="slug" className="text-sm font-medium text-gray-700">
-                Slug
-              </Label>
-              <Input
-                id="slug"
-                name="slug"
-                value={formData.slug}
-                onChange={handleInputChange}
-                required
-                className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
+              <Label htmlFor="icon-edit" className="text-sm font-medium text-gray-700">Icon (image)</Label>
+              <input
+                id="icon-edit"
+                name="icon"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="block w-full text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer focus:outline-none focus:ring-[#D6BA69] focus:border-[#D6BA69]"
               />
-            </div>
-            <div>
-              <Label
-                htmlFor="icon_path"
-                className="text-sm font-medium text-gray-700"
-              >
-                Icon Path
-              </Label>
-              <Input
-                id="icon_path"
-                name="icon_path"
-                value={formData.icon_path}
-                onChange={handleInputChange}
-                className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
-              />
+              {iconFile && (
+                <div className="mt-2">
+                  <img src={URL.createObjectURL(iconFile)} alt="Preview" className="h-12 w-12 object-contain rounded" />
+                </div>
+              )}
+              <p className="text-xs text-gray-500 mt-1">Upload an icon image (PNG, JPG, SVG...)</p>
             </div>
             <div>
               <Label
