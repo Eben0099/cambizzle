@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Package, Plus, Eye, Calendar, Edit, Trash2, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../ui/Button';
-import { formatPrice } from '../../utils/helpers';
+import { formatPrice, getPhotoUrl } from '../../utils/helpers';
 import BoostAdModal from '../ads/BoostAdModal';
 
 const ProfileAds = ({ userAds, onCreateAd, onEditAd, onDeleteAd, user }) => {
@@ -67,7 +67,7 @@ const ProfileAds = ({ userAds, onCreateAd, onEditAd, onDeleteAd, user }) => {
             <div className="relative cursor-pointer" onClick={() => handleAdClick(ad)}>
               {ad.photos && ad.photos.length > 0 ? (
                 <img
-                  src={ad.photos[0].originalUrl}
+                  src={getPhotoUrl(ad.photos[0].originalUrl)}
                   alt={ad.title}
                   className="w-full h-40 sm:h-48 object-cover"
                 />

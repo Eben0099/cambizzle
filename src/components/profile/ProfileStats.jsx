@@ -1,6 +1,13 @@
 import { Package, Eye, Heart, Calendar } from 'lucide-react';
+import useFavorites from '../../hooks/useFavorites';
 
-const ProfileStats = ({ user, userAds, favoriteAds }) => {
+const ProfileStats = ({ user, userAds }) => {
+  const { totalFavorites, favorites, loading } = useFavorites();
+  
+  console.log('ProfileStats - totalFavorites:', totalFavorites);
+  console.log('ProfileStats - favorites:', favorites);
+  console.log('ProfileStats - loading:', loading);
+  
   const stats = [
     { 
       label: 'Active Ads', 
@@ -11,14 +18,14 @@ const ProfileStats = ({ user, userAds, favoriteAds }) => {
     },
     { 
       label: 'Total Views', 
-      value: userAds.reduce((sum, ad) => sum + ad.viewCount, 0), 
+      value: userAds.reduce((sum, ad) => sum + (parseInt(ad.viewCount) || 0), 0), 
       icon: Eye,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100'
     },
     { 
       label: 'Favorites', 
-      value: favoriteAds.length, 
+      value: typeof totalFavorites === 'number' ? totalFavorites : parseInt(totalFavorites) || 0,
       icon: Heart,
       color: 'text-red-500',
       bgColor: 'bg-red-100'

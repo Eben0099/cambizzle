@@ -33,8 +33,15 @@ export const getPhotoUrl = (photoPath) => {
   // Si c'est une URL blob (pour les aperçus temporaires), la retourner telle quelle
   if (photoPath.startsWith('blob:')) return photoPath;
   
-  // Sinon, construire l'URL complète avec l'API base URL
-  const cleanPath = photoPath.startsWith('/') ? photoPath : `/${photoPath}`;
+  // Nettoyer le chemin en supprimant /api si présent (pour les assets)
+  let cleanPath = photoPath.startsWith('/') ? photoPath : `/${photoPath}`;
+  cleanPath = cleanPath.replace(/^\/api/, '');
+
+  // S'assurer que le chemin commence par /
+  if (!cleanPath.startsWith('/')) {
+    cleanPath = `/${cleanPath}`;
+  }
+
   return `${SERVER_BASE_URL}${cleanPath}`;
 };
 

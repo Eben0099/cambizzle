@@ -1,19 +1,29 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, MapPin, Eye, Star, Badge } from 'lucide-react';
-import { formatPrice, formatRelativeDate } from '../../utils/helpers';
+import { formatPrice, formatRelativeDate, getPhotoUrl } from '../../utils/helpers';
 import Card from '../ui/Card';
+import useFavorites from '../../hooks/useFavorites';
+import { useAuth } from '../../contexts/AuthContext';
+import { useFavoriteStatus } from '../../hooks/useFavoriteStatus';
 
-const AdCard = ({ ad, onFavorite, isFavorited = false }) => {
+const AdCard = ({ ad }) => {
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const { toggleFavorite } = useFavorites();
+  const { isFavorite, loading, refreshStatus } = useFavoriteStatus(ad.id);
 
-  const handleFavoriteClick = (e) => {
+  const handleFavoriteClick = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (onFavorite) {
-      onFavorite(ad.id);
+    if (!isAuthenticated) {
+      // TODO: Show login modal or redirect to login
+      return;
     }
+    await toggleFavorite(ad.id);
+    // Rafraîchir le statut après le toggle
+    await refreshStatus();
   };
 
   // Calcul de la remise basé sur les prix (nouveau format API)
@@ -48,7 +58,7 @@ const AdCard = ({ ad, onFavorite, isFavorited = false }) => {
           {ad.photos && ad.photos.length > 0 && !imageError ? (
             <>
               <img
-                src={ad.photos[0].originalUrl}
+                src={getPhotoUrl(ad.photos[0].originalUrl)}
                 alt={ad.title}
                 className={`w-full h-full object-cover transition-opacity duration-300 ${
                   isImageLoading ? 'opacity-0' : 'opacity-100'
@@ -81,13 +91,20 @@ const AdCard = ({ ad, onFavorite, isFavorited = false }) => {
           {/* Favorite Button */}
           <button
             onClick={handleFavoriteClick}
-            className={`absolute top-2 right-2 p-1.5 rounded-full transition-colors ${
-              isFavorited
-                ? 'bg-red-500 text-white'
+            className={`absolute top-2 right-2 p-1.5 rounded-full transition-all duration-300 transform hover:scale-110 ${
+              isFavorite
+                ? 'bg-red-500 text-white hover:bg-red-600'
                 : 'bg-white/90 text-gray-600 hover:bg-white hover:text-red-500'
             }`}
+            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
           >
-            <Heart className={`w-3.5 h-3.5 ${isFavorited ? 'fill-current' : ''}`} />
+            <Heart 
+              className={`w-3.5 h-3.5 transition-all duration-300 ${
+                isFavorite 
+                  ? 'fill-current animate-heartbeat' 
+                  : 'hover:animate-pulse'
+              }`} 
+            />
           </button>
 
           {/* Discount Badge */}

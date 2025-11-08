@@ -104,7 +104,6 @@ const Home = () => {
                 <div className="relative group">
                   <Input
                     type="text"
-                    placeholder="Filter ads by keywords (title, description, brand, location...)..."
                     value={keywordFilter}
                     onChange={(e) => setKeywordFilter(e.target.value)}
                     className="text-base sm:text-lg py-3 sm:py-4 pr-12 bg-white text-black rounded-xl shadow-sm group-hover:shadow-md transition-shadow duration-300"
@@ -149,9 +148,9 @@ const Home = () => {
                     <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
                       Recent Listings
                     </h2>
-                    <p className="text-base sm:text-lg text-gray-600">
+                    {/* <p className="text-base sm:text-lg text-gray-600">
                       Explore the latest offers
-                    </p>
+                    </p> */}
                   </div>
                   <Link to="/search">
                     <Button 

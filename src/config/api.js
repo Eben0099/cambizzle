@@ -14,8 +14,13 @@ export const SERVER_BASE_URL = SERVER_ENV === 'prod'
   ? 'https://cambizzle.seed-innov.com'
   : 'http://localhost:8080';
 
+// Créer une instance axios configurée
+const api = axios.create({
+  baseURL: API_BASE_URL,
+});
+
 // Configurer l'intercepteur axios pour ajouter automatiquement le token à toutes les requêtes
-axios.interceptors.request.use(
+api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -27,6 +32,8 @@ axios.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
+export default api;
 
 // Intercepteur pour gérer les erreurs d'authentification
 axios.interceptors.response.use(

@@ -1,4 +1,6 @@
-﻿// Ads.jsx
+﻿import { SERVER_BASE_URL } from '../../config/api';
+import { getPhotoUrl } from '../../utils/helpers';
+// Ads.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import adminService from '../../services/adminService';
@@ -384,7 +386,7 @@ const Ads = () => {
                   <div className="flex-shrink-0">
                     {ad.photos && ad.photos.length > 0 ? (
                       <img
-                        src={ad.photos[0].originalUrl || ad.photos[0].url || ad.photos[0]}
+                        src={getPhotoUrl(ad.photos[0].originalUrl || ad.photos[0].url || ad.photos[0])}
                         alt={ad.photos[0].altText || ad.title || 'Ad image'}
                         className="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-lg"
                       />
@@ -443,7 +445,7 @@ const Ads = () => {
                     <Button
                       size="sm"
                       className="h-8 text-xs bg-[#D6BA69] hover:bg-[#C5A952] text-white rounded-lg flex items-center"
-                      onClick={() => openDetailsModal(ad)}
+                      onClick={() => navigate(`/ads/${ad.slug}`)}
                       aria-label={`View details for ${ad.title}`}
                     >
                       <Eye className="h-3 w-3 mr-1" />
@@ -665,7 +667,7 @@ const Ads = () => {
                     {selectedAd.photos.map((photo, index) => (
                       <img
                         key={photo.id || index}
-                        src={photo.originalUrl || photo.url || photo}
+                        src={getPhotoUrl(photo.originalUrl || photo.url || photo)}
                         alt={photo.altText || 'Photo'}
                         className="w-full h-40 object-cover rounded-lg"
                       />

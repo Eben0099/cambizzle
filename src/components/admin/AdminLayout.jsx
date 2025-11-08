@@ -8,17 +8,19 @@ import adminService from "../../services/adminService";
 import { useAuth } from "../../contexts/AuthContext";
 
 const navigation = [
+  // Section 1: Main
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { name: "My profile", href: "/profile", icon: User },
   { name: "Payments", href: "/admin/payments", icon: CreditCard },
-  // Les autres liens seront triés plus bas
   { name: "Users", href: "/admin/users", icon: Users },
   { name: "Ads", href: "/admin/ads", icon: FileText },
+  // Section 2: Content Management
   { name: "Categories", href: "/admin/categories", icon: FolderTree },
   { name: "Subcategories", href: "/admin/subcategories", icon: FolderTree },
   { name: "Dynamic Filters", href: "/admin/filters", icon: Filter },
   { name: "Brands", href: "/admin/brands", icon: Tag },
   { name: "Locations", href: "/admin/locations", icon: MapPin },
+  // Section 3: Promotion, Reports, Moderation, Referral
   { name: "Promotion Packs", href: "/admin/promotion-packs", icon: Tag },
   { name: "Reports", href: "/admin/reports", icon: AlertTriangle },
   { name: "Moderation Logs", href: "/admin/moderation-logs", icon: Shield },
@@ -107,8 +109,8 @@ const AdminLayout = ({ children }) => {
 
         {/* Navigation */}
         <nav className="flex-1 p-2 sm:p-3 space-y-1 sm:space-y-1.5 overflow-y-auto">
-          {/* Dashboard, My profile, Payments en haut */}
-          {[navigation[0], navigation[1], navigation[2]].map((item) => (
+          {/* Main Section */}
+          {[navigation[0], navigation[1], navigation[2], navigation[3], navigation[4]].map((item) => (
             <NavLink
               key={item.name}
               to={item.href}
@@ -136,36 +138,64 @@ const AdminLayout = ({ children }) => {
               )}
             </NavLink>
           ))}
-          {/* Liens restants triés alphabétiquement */}
-          {navigation.slice(3)
-            .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
-            .map((item) => (
-              <NavLink
-                key={item.name}
-                to={item.href}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200",
-                    isActive
-                      ? "bg-[#D6BA69] text-gray-900 shadow-md border border-[#D6BA69]/50"
-                      : "text-gray-300 hover:bg-gray-800 hover:text-[#D6BA69] hover:shadow-sm"
-                  )
-                }
-                aria-label={`Navigate to ${item.name}`}
-              >
-                {({ isActive }) => (
-                  <>
-                    <item.icon
-                      className={cn(
-                        "h-4 w-4 sm:h-5 sm:w-5",
-                        isActive ? "text-gray-900" : "text-gray-400 group-hover:text-[#D6BA69]"
-                      )}
-                    />
-                    {item.name}
-                  </>
-                )}
-              </NavLink>
-            ))}
+          {/* Content Management Section */}
+          <div className="mt-4 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">Content Management</div>
+          {[navigation[5], navigation[6], navigation[7], navigation[8], navigation[9]].map((item) => (
+            <NavLink
+              key={item.name}
+              to={item.href}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200",
+                  isActive
+                    ? "bg-[#D6BA69] text-gray-900 shadow-md border border-[#D6BA69]/50"
+                    : "text-gray-300 hover:bg-gray-800 hover:text-[#D6BA69] hover:shadow-sm"
+                )
+              }
+              aria-label={`Navigate to ${item.name}`}
+            >
+              {({ isActive }) => (
+                <>
+                  <item.icon
+                    className={cn(
+                      "h-4 w-4 sm:h-5 sm:w-5",
+                      isActive ? "text-gray-900" : "text-gray-400 group-hover:text-[#D6BA69]"
+                    )}
+                  />
+                  {item.name}
+                </>
+              )}
+            </NavLink>
+          ))}
+          {/* Promotion, Reports, Moderation, Referral Section */}
+          <div className="mt-4 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">Promotion & Reports</div>
+          {[navigation[10], navigation[11], navigation[12], navigation[13]].map((item) => (
+            <NavLink
+              key={item.name}
+              to={item.href}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200",
+                  isActive
+                    ? "bg-[#D6BA69] text-gray-900 shadow-md border border-[#D6BA69]/50"
+                    : "text-gray-300 hover:bg-gray-800 hover:text-[#D6BA69] hover:shadow-sm"
+                )
+              }
+              aria-label={`Navigate to ${item.name}`}
+            >
+              {({ isActive }) => (
+                <>
+                  <item.icon
+                    className={cn(
+                      "h-4 w-4 sm:h-5 sm:w-5",
+                      isActive ? "text-gray-900" : "text-gray-400 group-hover:text-[#D6BA69]"
+                    )}
+                  />
+                  {item.name}
+                </>
+              )}
+            </NavLink>
+          ))}
         </nav>
 
         {/* Footer */}

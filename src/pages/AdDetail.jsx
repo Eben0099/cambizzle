@@ -206,8 +206,8 @@ const AdDetail = () => {
       <BreadcrumbSchema
         items={[
           { name: 'Home', url: '/' },
-          { name: ad.category?.name || 'Category', url: `/search?category=${ad.category?.id}` },
-          { name: ad.subcategory?.name || 'Subcategory', url: `/search?subcategory=${ad.subcategory?.slug}` },
+          { name: ad.category?.name || 'Category', url: `/search?category=${ad.category?.slug}` },
+          { name: ad.subcategory?.name || 'Subcategory', url: `/search?category=${ad.category?.slug}&subcategory=${ad.subcategory?.slug}` },
           { name: ad.title, url: `/ad/${ad.slug}` }
         ]}
       />
@@ -255,14 +255,14 @@ const AdDetail = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <nav className="flex items-center space-x-2 text-sm">
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/ads')} 
               className="text-gray-500 hover:text-gray-700 transition-colors"
             >
               Home
             </button>
             <ChevronRight className="w-4 h-4 text-gray-400" />
             <button
-              onClick={() => navigate('/ads')}
+              onClick={() => navigate('/search')}
               className="text-gray-500 hover:text-gray-700 transition-colors"
             >
               All Ads
@@ -271,7 +271,7 @@ const AdDetail = () => {
               <>
                 <ChevronRight className="w-4 h-4 text-gray-400" />
                 <button
-                  onClick={() => navigate(`/category/${encodeURIComponent(ad.categoryName.toLowerCase())}`)}
+                  onClick={() => navigate(`/search?category=${ad.category?.slug || ad.categorySlug}`)}
                   className="text-gray-500 hover:text-gray-700 transition-colors"
                 >
                   {ad.categoryName}
@@ -282,7 +282,7 @@ const AdDetail = () => {
               <>
                 <ChevronRight className="w-4 h-4 text-gray-400" />
                 <button
-                  onClick={() => navigate(`/subcategory/${encodeURIComponent(ad.subcategoryName.toLowerCase())}`)}
+                  onClick={() => navigate(`/search?category=${ad.category?.slug || ad.categorySlug}&subcategory=${ad.subcategory?.slug || ad.subcategorySlug}`)}
                   className="text-gray-500 hover:text-gray-700 transition-colors"
                 >
                   {ad.subcategoryName}
@@ -304,7 +304,7 @@ const AdDetail = () => {
           <div className="lg:col-span-8 space-y-8">
             {/* Image Carousel */}
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <ImageCarousel images={ad.photos?.map(photo => photo.originalUrl) || []} />
+              <ImageCarousel images={ad.photos?.map(photo => getPhotoUrl(photo.originalUrl)) || []} />
             </div>
 
             {/* Ad Details */}
@@ -386,8 +386,8 @@ const AdDetail = () => {
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Specifications</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {ad.filters.map((filter, index) => (
-                        <div key={index} className="flex justify-between py-3 border-b border-gray-100">
-                          <span className="text-gray-600 font-medium">{filter.filterName}</span>
+                        <div key={index} className="flex flex-row items-start py-3 border-b border-gray-100">
+                          <span className="text-gray-600 font-medium mr-2 min-w-[120px]">{filter.filterName}:</span>
                           <span className="text-gray-900">{filter.value}</span>
                         </div>
                       ))}

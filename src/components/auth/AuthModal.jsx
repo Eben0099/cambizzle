@@ -399,7 +399,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
             className="w-full flex items-center justify-center px-4 py-3 sm:py-4 border border-gray-300 rounded-lg shadow-sm bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#D6BA69] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base"
           >
             <Mail className="w-5 h-5 mr-3 flex-shrink-0" />
-            <span className="truncate">Continue with Email</span>
+            <span className="truncate">Continue with Email or Phone Number</span>
           </button>
         </div>
 
@@ -432,29 +432,31 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
           </button>
           <div className="flex-1">
             <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Log in</h2>
+            {/*
             <p className="text-sm sm:text-base text-gray-600 mt-1">
               Log in with your email and phone
             </p>
+            */}
           </div>
         </div>
 
         {/* Form */}
         <form onSubmit={handleLoginSubmit} className="space-y-4 sm:space-y-6">
           <div className="space-y-4">
-            <Input
-              label="Email (optional)"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              error={errors.email}
-              placeholder="your@email.com"
-            />
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Email <span className="text-gray-500">(optional)</span></label>
+              <Input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                error={errors.email}
+              />
+            </div>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Phone</label>
+              <label className="block text-sm font-medium text-gray-700">Phone <span className="text-red-600">*</span></label>
               <PhoneInput
-                placeholder="+237 6 12 34 56 78"
                 defaultCountry="CM"
                 value={formData.phone}
                 onChange={handlePhoneChange}
@@ -473,7 +475,6 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 value={formData.password}
                 onChange={handleInputChange}
                 error={errors.password}
-                placeholder="Your password"
                 required
               />
               <div className="text-xs text-gray-500 mt-1">Password must be at least 8 characters.</div>
@@ -538,9 +539,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
           </button>
           <div className="flex-1">
             <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Sign up</h2>
-            <p className="text-sm sm:text-base text-gray-600 mt-1">
-              Create your account with your email
-            </p>
+            {/* Removed registration subtitle as requested */}
           </div>
         </div>
 
@@ -555,7 +554,6 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 value={formData.firstName}
                 onChange={handleInputChange}
                 error={errors.firstName}
-                placeholder="John"
                 required
               />
               <Input
@@ -564,26 +562,24 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 value={formData.lastName}
                 onChange={handleInputChange}
                 error={errors.lastName}
-                placeholder="Doe"
                 required
               />
             </div>
 
-            <Input
-              label="Email"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              error={errors.email}
-              placeholder="your@email.com"
-              required
-            />
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Email <span className="text-gray-500">(optional)</span></label>
+              <Input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                error={errors.email}
+              />
+            </div>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Phone</label>
+              <label className="block text-sm font-medium text-gray-700">Phone <span className="text-red-600">*</span></label>
               <PhoneInput
-                placeholder="+237 6 12 34 56 78"
                 defaultCountry="CM"
                 value={formData.phone}
                 onChange={handlePhoneChange}
@@ -605,7 +601,6 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 value={formData.password}
                 onChange={handleInputChange}
                 error={errors.password}
-                placeholder="Minimum 8 characters"
                 required
               />
               <div className="text-xs text-gray-500 mt-1">Password must be at least 8 characters.</div>
@@ -626,7 +621,6 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
                 error={errors.confirmPassword}
-                placeholder="Confirm your password"
                 required
               />
               <button
@@ -645,7 +639,6 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
             value={formData.referralCode}
             onChange={handleInputChange}
             error={errors.referralCode}
-            placeholder="Enter referral code if you have one"
           />
 
           {/* Seller Option */}
@@ -770,7 +763,6 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 value={sellerData.businessName}
                 onChange={handleSellerInputChange}
                 error={errors.businessName}
-                placeholder="My Business LLC"
                 required
               />
 
@@ -784,7 +776,6 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                   onChange={handleSellerInputChange}
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D6BA69] focus:border-transparent resize-none text-sm sm:text-base"
-                  placeholder="Describe your business, products and services..."
                   required
                 />
                 {errors.businessDescription && (
@@ -798,7 +789,6 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 value={sellerData.businessAddress}
                 onChange={handleSellerInputChange}
                 error={errors.businessAddress}
-                placeholder="123 Peace Street, Douala"
                 required
               />
 
@@ -806,7 +796,6 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 <div className="space-y-1">
                   <label className="block text-sm font-medium text-gray-700">Business Phone</label>
                   <PhoneInput
-                    placeholder="+237 6 12 34 56 78"
                     value={sellerData.businessPhone}
                     onChange={handleSellerPhoneChange}
                     international
@@ -822,7 +811,6 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                   value={sellerData.businessEmail}
                   onChange={handleSellerInputChange}
                   error={errors.businessEmail}
-                  placeholder="contact@mybusiness.com"
                   required
                 />
               </div>
@@ -842,7 +830,6 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 name="websiteUrl"
                 value={sellerData.websiteUrl}
                 onChange={handleSellerInputChange}
-                placeholder="https://www.mybusiness.com"
                 icon={Globe}
               />
 
@@ -852,7 +839,6 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                   name="facebookUrl"
                   value={sellerData.facebookUrl}
                   onChange={handleSellerInputChange}
-                  placeholder="https://facebook.com/mybusiness"
                   icon={Facebook}
                 />
                 <Input
@@ -860,7 +846,6 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                   name="instagramUrl"
                   value={sellerData.instagramUrl}
                   onChange={handleSellerInputChange}
-                  placeholder="https://instagram.com/mybusiness"
                   icon={Instagram}
                 />
               </div>

@@ -26,12 +26,11 @@ const Profile = () => {
     user,
     sellerProfile,
     userAds,
-    favoriteAds,
     isLoading,
     updateUser,
     updateSellerProfile,
     deleteAd,
-    removeFavorite
+    reloadUserData
   } = useProfile();
 
 
@@ -119,16 +118,7 @@ const Profile = () => {
     }
   };
 
-  const handleRemoveFavorite = async (ad) => {
-    try {
-      await removeFavorite(ad.id);
-      console.log('Retiré des favoris:', ad);
-      // TODO: Afficher un message de succès
-    } catch (error) {
-      console.error('Erreur lors de la suppression des favoris:', error);
-      // TODO: Afficher un message d'erreur
-    }
-  };
+  
 
   const handleEditBusiness = () => {
     setIsBusinessEditModalOpen(true);
@@ -242,7 +232,6 @@ return (
       <ProfileStats
         user={user}
         userAds={userAds}
-        favoriteAds={favoriteAds}
         className="mb-6"
       />
 
@@ -280,10 +269,7 @@ return (
 
           {activeTab === 'favorites' && (
             <div className="space-y-6">
-              <ProfileFavorites
-                favoriteAds={favoriteAds}
-                onRemoveFavorite={handleRemoveFavorite}
-              />
+              <ProfileFavorites />
             </div>
           )}
 

@@ -133,14 +133,16 @@ const SellerProfile = ({ seller, onContact, onCall, adTitle }) => {
             )}
             <div className="flex gap-3 mt-4">
               {seller.phoneNumber && (
-                <button
-                  onClick={() => handleWhatsapp(adTitle)}
-                  className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                  aria-label="Contact on WhatsApp"
-                >
-                  <WhatsappIcon size={20} />
-                  <span>WhatsApp</span>
-                </button>
+                <div className="flex w-full justify-end">
+                  <button
+                    onClick={() => handleWhatsapp(adTitle)}
+                    className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    aria-label="Contact on WhatsApp"
+                  >
+                    <WhatsappIcon size={20} />
+                    <span>WhatsApp</span>
+                  </button>
+                </div>
               )}
             </div>
           </div>

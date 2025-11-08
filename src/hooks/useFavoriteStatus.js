@@ -1,0 +1,24 @@
+import { useState, useEffect } from 'react';
+import favoriteService from '../services/favoriteService';
+
+export const useFavoriteStatus = (adId) => {
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    const checkStatus = async () => {
+        try {
+            const status = await favoriteService.checkFavoriteStatus(adId);
+            setIsFavorite(status);
+        } catch (error) {
+            console.error("Error checking favorite status:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        checkStatus();
+    }, [adId]);
+
+    return { isFavorite, loading, refreshStatus: checkStatus };
+};

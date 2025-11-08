@@ -472,7 +472,7 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
                 </div>
               )}
               {/* Identity verification submit button and feedback */}
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-2">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-2 justify-end">
                 <Button
                   onClick={handleIdentityVerificationSubmit}
                   disabled={identityUploadLoading}
@@ -515,14 +515,16 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
               <p className="text-xs sm:text-sm text-gray-600 mb-4">
                 Once your account is deleted, all your data will be permanently removed.
               </p>
-              <Button
-                variant="outline"
-                className="text-red-600 hover:bg-red-50 py-2 sm:py-3 text-xs sm:text-sm"
-                onClick={() => setShowDeleteConfirm(true)}
-                aria-label="Delete account"
-              >
-                Delete My Account
-              </Button>
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  className="text-red-600 hover:bg-red-50 py-2 sm:py-3 text-xs sm:text-sm"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  aria-label="Delete account"
+                >
+                  Delete My Account
+                </Button>
+              </div>
             </div>
           </div>
         </div>

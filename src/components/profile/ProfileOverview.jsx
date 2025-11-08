@@ -1,7 +1,7 @@
 import { TrendingUp, Award, Shield, User, Package, CheckCircle, XCircle, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../ui/Button';
-import { formatPrice } from '../../utils/helpers';
+import { formatPrice, getPhotoUrl } from '../../utils/helpers';
 
 const ProfileOverview = ({ user, userAds, onVerifyIdentity }) => {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ const ProfileOverview = ({ user, userAds, onVerifyIdentity }) => {
                 >
                   {ad.photos && ad.photos.length > 0 ? (
                     <img
-                      src={ad.photos[0].originalUrl}
+                      src={getPhotoUrl(ad.photos[0].originalUrl)}
                       alt={ad.title}
                       className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-md"
                     />

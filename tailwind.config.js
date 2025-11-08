@@ -17,6 +17,15 @@ export default {
       },
     },
     extend: {
+      keyframes: {
+        heartbeat: {
+          '0%, 100%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.1)' }
+        }
+      },
+      animation: {
+        heartbeat: 'heartbeat 0.5s ease-in-out',
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

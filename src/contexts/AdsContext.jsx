@@ -214,7 +214,42 @@ export const AdsProvider = ({ children }) => {
 export const useAds = () => {
   const context = useContext(AdsContext);
   if (!context) {
-    throw new Error('useAds must be used within an AdsProvider');
+    // Pendant le développement avec React Fast Refresh, le contexte peut ne pas être disponible temporairement
+    // Retourner une valeur par défaut au lieu de lancer une erreur
+    console.warn('useAds: Context not available, using default values');
+    return {
+      ads: [],
+      currentAd: null,
+      searchResults: [],
+      filters: {
+        category: '',
+        priceMin: '',
+        priceMax: '',
+        location: '',
+        type: '',
+        condition: ''
+      },
+      pagination: {
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0,
+        limit: 20
+      },
+      isLoading: false,
+      error: null,
+      fetchAds: async () => {},
+      searchAds: async () => {},
+      getAdById: async () => {},
+      createAd: async () => {},
+      updateAd: async () => {},
+      deleteAd: async () => {},
+      setFilters: () => {},
+      clearFilters: () => {},
+      reportAd: async () => {},
+      favoriteAd: async () => {},
+      unfavoriteAd: async () => {},
+      clearError: () => {}
+    };
   }
   return context;
 };

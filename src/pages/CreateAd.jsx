@@ -1,7 +1,8 @@
 import Select from 'react-select';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Euro, MapPin, Tag, Camera, Loader2 } from 'lucide-react';
+import { ArrowLeft, Tag, Camera, Loader2, MapPin } from 'lucide-react';
+import { FaWallet } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { useAds } from '../contexts/AdsContext';
 import { CATEGORIES, AD_TYPES } from '../utils/constants';
@@ -24,7 +25,6 @@ const CreateAd = () => {
     brandId: '',
     discountPercent: 0,
     type: 'sell',
-    condition: '',
     tags: '',
     isPremium: false,
     isNegotiable: false,
@@ -172,62 +172,51 @@ const CreateAd = () => {
     
     if (step === 1) {
       if (!formData.title.trim()) {
-        newErrors.title = 'Le titre est requis';
+        newErrors.title = 'Title is required';
       } else if (formData.title.length < 10) {
-        newErrors.title = 'Le titre doit contenir au moins 10 caractères';
+        newErrors.title = 'Title must be at least 10 characters';
       }
-      
       if (!formData.description.trim()) {
-        newErrors.description = 'La description est requise';
+        newErrors.description = 'Description is required';
       } else if (formData.description.length < 20) {
-        newErrors.description = 'La description doit contenir au moins 20 caractères';
+        newErrors.description = 'Description must be at least 20 characters';
       }
-      
       if (!formData.category) {
-        newErrors.category = 'Sélectionnez une catégorie';
+        newErrors.category = 'Please select a category';
       }
-
       if (!formData.type) {
-        newErrors.type = 'Sélectionnez un type d\'annonce';
+        newErrors.type = 'Please select an ad type';
       }
-
       if (!formData.subcategory) {
-        newErrors.subcategory = 'La sous-catégorie est requise';
+        newErrors.subcategory = 'Subcategory is required';
       }
     }
-    
     if (step === 2) {
       if (!formData.price) {
-        newErrors.price = 'Le prix est requis';
+        newErrors.price = 'Price is required';
       } else {
         const priceRaw = formData.price.replace(/\s/g, '');
         if (parseFloat(priceRaw) <= 0) {
-          newErrors.price = 'Le prix doit être supérieur à 0';
+          newErrors.price = 'Price must be greater than 0';
         }
       }
-      
       if (formData.originalPrice) {
         const originalPriceRaw = formData.originalPrice.replace(/\s/g, '');
         const priceRaw = formData.price.replace(/\s/g, '');
         if (parseFloat(originalPriceRaw) <= parseFloat(priceRaw)) {
-          newErrors.originalPrice = 'Le prix original doit être supérieur au prix de vente';
+          newErrors.originalPrice = 'Original price must be greater than selling price';
         }
       }
-
       if (!formData.locationId) {
-        newErrors.locationId = 'La localisation est requise';
+        newErrors.locationId = 'Location is required';
       }
     }
-    
     if (step === 3) {
-      // Validation du champ brandId si la sous-catégorie a des marques
       if (subcategoryFields.brands && subcategoryFields.brands.length > 0) {
         if (!formData.brandId) {
-          newErrors.brandId = 'La marque est requise';
+          newErrors.brandId = 'Brand is required';
         }
       }
-
-      // Validation des champs dynamiques requis
       if (subcategoryFields.filters) {
         subcategoryFields.filters.forEach(filter => {
           const value = formData.filters[filter.id];
@@ -238,30 +227,28 @@ const CreateAd = () => {
             hasValue = !!(value && typeof value === 'string' && value.trim() !== '');
           }
           if (filter.isRequired && !hasValue) {
-            newErrors[`filters.${filter.id}`] = `${filter.name} est requis`;
+            newErrors[`filters.${filter.id}`] = `${filter.name} is required`;
           }
         });
       }
     }
-
     if (step === 4) {
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
       const maxSize = 5 * 1024 * 1024;
-      
       if (images.length < 3) {
-        newErrors.images = 'Au moins 3 photos sont requises';
+        newErrors.images = 'At least 3 photos are required';
       } else if (images.length > 10) {
-        newErrors.images = 'Maximum 10 photos autorisées';
+        newErrors.images = 'Maximum 10 photos allowed';
       } else {
         for (let i = 0; i < images.length; i++) {
           const img = images[i];
           if (img.file) {
             if (!allowedTypes.includes(img.file.type)) {
-              newErrors.images = `Format de photo non autorisé (photo ${i + 1}). Formats acceptés : JPG, PNG, WEBP.`;
+              newErrors.images = `Photo format not allowed (photo ${i + 1}). Accepted formats: JPG, PNG, WEBP.`;
               break;
             }
             if (img.file.size > maxSize) {
-              newErrors.images = `Photo trop volumineuse (photo ${i + 1}). Taille max : 5MB.`;
+              newErrors.images = `Photo too large (photo ${i + 1}). Max size: 5MB.`;
               break;
             }
           }
@@ -351,7 +338,6 @@ const CreateAd = () => {
       formDataToSend.append('original_price', originalPriceRaw || priceRaw);
       formDataToSend.append('discount_percentage', formData.discountPercent || 0);
       formDataToSend.append('type', formData.type);
-      formDataToSend.append('condition', formData.condition);
       formDataToSend.append('tags', formData.tags);
       formDataToSend.append('is_premium', formData.isPremium ? 1 : 0);
       formDataToSend.append('is_negotiable', formData.isNegotiable ? 1 : 0);
@@ -407,23 +393,9 @@ const CreateAd = () => {
     }
   };
 
-  const conditionOptions = [
-    { value: 'new', label: 'New' },
-    { value: 'like_new', label: 'Like new' },
-    { value: 'good', label: 'Good condition' },
-    { value: 'fair', label: 'Fair condition' },
-    { value: 'poor', label: 'Needs renovation' }
-  ];
-
-  const typeOptions = [
-    { value: 'sell', label: 'Sell' },
-    { value: 'rent', label: 'Rent' },
-    { value: 'service', label: 'Service' }
-  ];
-
   const steps = [
     { number: 1, title: 'General Information', icon: Tag },
-    { number: 2, title: 'Price and Location', icon: Euro },
+    { number: 2, title: 'Price and Location', icon: FaWallet },
     { number: 3, title: 'Specific Characteristics', icon: MapPin },
     { number: 4, title: 'Photos', icon: Camera }
   ];
@@ -448,9 +420,6 @@ const CreateAd = () => {
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
               Create an Ad
             </h1>
-            <p className="text-gray-600 mt-1 text-sm sm:text-base">
-              Easily sell or rent your items
-            </p>
           </div>
         </div>
 
@@ -461,7 +430,6 @@ const CreateAd = () => {
               const Icon = step.icon;
               const isActive = currentStep === step.number;
               const isCompleted = currentStep > step.number;
-             
               return (
                 <div key={step.number} className="flex items-center flex-1">
                   <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${
@@ -471,7 +439,9 @@ const CreateAd = () => {
                         ? 'border-[#D6BA69] bg-[#D6BA69]/10 text-[#D6BA69]'
                         : 'border-gray-300 bg-white text-gray-400'
                   }`}>
-                    <Icon className="w-5 h-5" />
+                    {step.number === 2
+                      ? <Icon style={{ width: 20, height: 20 }} />
+                      : <Icon className="w-5 h-5" />}
                   </div>
                   <div className="ml-3 hidden sm:block">
                     <p className={`text-sm font-medium ${
@@ -501,11 +471,6 @@ const CreateAd = () => {
           {currentStep === 1 && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
               <div className="space-y-6">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                    General Information
-                  </h2>
-                </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -517,11 +482,9 @@ const CreateAd = () => {
                       onChange={handleChange}
                       className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                     >
-                      {typeOptions.map(option => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
+                      <option value="sell">Sell</option>
+                      <option value="rent">Rent</option>
+                      <option value="service">Service</option>
                     </select>
                     {errors.type && (
                       <p className="text-sm text-red-600 mt-1">{errors.type}</p>
@@ -529,7 +492,7 @@ const CreateAd = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Category *
+                      Category <span className="text-red-500">*</span>
                     </label>
                     {creationLoading ? (
                       <div className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 flex items-center">
@@ -558,7 +521,7 @@ const CreateAd = () => {
                   {/* Subcategory */}
                   <div className="lg:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Subcategory *
+                      Subcategory <span className="text-red-500">*</span>
                     </label>
                     <select
                       name="subcategory"
@@ -580,19 +543,20 @@ const CreateAd = () => {
                       <p className="text-sm text-red-600 mt-1">{errors.subcategory}</p>
                     )}
                   </div>
-                  <Input
-                    label="Ad Title *"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleChange}
-                    error={errors.title}
-                    placeholder="Ex: iPhone 14 Pro Max 256GB - Like new"
-                    helperText="Be precise and attractive (min. 10 characters)"
-                    className="lg:col-span-2"
-                  />
+                  <div className="lg:col-span-2">
+                    <Input
+                      label={<span>Ad Title <span className="text-red-500">*</span></span>}
+                      name="title"
+                      value={formData.title}
+                      onChange={handleChange}
+                      error={errors.title}
+                      helperText="Be precise and attractive (min. 10 characters)"
+                      className="w-full"
+                    />
+                  </div>
                   <div className="lg:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Description *
+                      Description <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       name="description"
@@ -600,7 +564,6 @@ const CreateAd = () => {
                       onChange={handleChange}
                       rows={6}
                       className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] resize-vertical transition-all bg-white"
-                      placeholder="Describe your item in detail: condition, features, reason for selling..."
                     />
                     {errors.description && (
                       <p className="text-sm text-red-600 mt-1">{errors.description}</p>
@@ -609,31 +572,16 @@ const CreateAd = () => {
                       {formData.description.length} characters (min. 20)
                     </p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Condition
-                    </label>
-                    <select
-                      name="condition"
-                      value={formData.condition}
+                  <div className="lg:col-span-2">
+                    <Input
+                      label="Keywords (optional)"
+                      name="tags"
+                      value={formData.tags}
                       onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
-                    >
-                      {conditionOptions.map(option => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
+                      helperText="Add keywords to improve visibility"
+                      className="w-full"
+                    />
                   </div>
-                  <Input
-                    label="Keywords (optional)"
-                    name="tags"
-                    value={formData.tags}
-                    onChange={handleChange}
-                    placeholder="smartphone, apple, iphone (separated by commas)"
-                    helperText="Add keywords to improve visibility"
-                  />
                 </div>
               </div>
             </div>
@@ -643,14 +591,9 @@ const CreateAd = () => {
           {currentStep === 2 && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
               <div className="space-y-6">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                    Price and Location
-                  </h2>
-                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Input
-                    label="Selling Price *"
+                    label={<span>Selling Price <span className="text-red-500">*</span></span>}
                     type="text"
                     name="price"
                     value={formData.price}
@@ -665,7 +608,6 @@ const CreateAd = () => {
                       }
                     }}
                     error={errors.price}
-                    placeholder="0"
                   />
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Negotiable price</label>
@@ -701,8 +643,6 @@ const CreateAd = () => {
                       calculateDiscount();
                     }}
                     error={errors.originalPrice}
-                    placeholder="0"
-                    helperText="To display a discount"
                   />
                 </div>
                 {formData.discountPercent > 0 && (
@@ -714,7 +654,7 @@ const CreateAd = () => {
                 )}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Location *
+                    Location <span className="text-red-500">*</span>
                   </label>
                   {creationLoading ? (
                     <div className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 flex items-center">
@@ -748,19 +688,11 @@ const CreateAd = () => {
           {currentStep === 3 && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
               <div className="space-y-6">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                    Specific Characteristics
-                  </h2>
-                  <p className="text-gray-600">
-                    Fill in the specific characteristics of your product
-                  </p>
-                </div>
                 {/* Brand Selection */}
                 {subcategoryFields.brands && subcategoryFields.brands.length > 0 && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Brand *
+                      Brand <span className="text-red-500">*</span>
                     </label>
                     {fieldsLoading ? (
                       <div className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 flex items-center">
@@ -803,8 +735,7 @@ const CreateAd = () => {
                         {subcategoryFields.filters.map(filter => (
                           <div key={filter.id}>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              {filter.name}
-                              {filter.isRequired && <span className="text-red-500 ml-1">*</span>}
+                              {filter.name} <span className="text-red-500">*</span>
                             </label>
                             {filter.type === 'select' && filter.options.length > 0 ? (
                               <select
@@ -853,7 +784,6 @@ const CreateAd = () => {
                                   }));
                                 }}
                                 className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
-                                placeholder={`Enter ${filter.name.toLowerCase()}`}
                               />
                             ) : filter.type === 'date' ? (
                               <input
@@ -875,6 +805,7 @@ const CreateAd = () => {
                             ) : filter.type === 'checkbox' && filter.options.length > 0 ? (
                               <Select
                                 isMulti
+                                closeMenuOnSelect={false}
                                 name={`filters.${filter.id}`}
                                 options={[...filter.options]
                                   .sort((a, b) => {
@@ -916,7 +847,6 @@ const CreateAd = () => {
                                     gap: 8
                                   })
                                 }}
-                                placeholder={`Select ${filter.name.toLowerCase()}`}
                                 formatOptionLabel={(option, { context, isSelected }) =>
                                   context === 'menu' ? (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -935,7 +865,7 @@ const CreateAd = () => {
                                   )
                                 }
                               />
-                            ) : (
+                            ) : filter.type === 'text' ? (
                               <input
                                 type="text"
                                 name={`filters.${filter.id}`}
@@ -951,8 +881,10 @@ const CreateAd = () => {
                                   }));
                                 }}
                                 className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
-                                placeholder={`Enter ${filter.name.toLowerCase()}`}
                               />
+                            ) : null}
+                            {errors[`filters.${filter.id}`] && (
+                              <p className="text-sm text-red-600 mt-1">{errors[`filters.${filter.id}`]}</p>
                             )}
                           </div>
                         ))}

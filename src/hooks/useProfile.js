@@ -8,7 +8,6 @@ export const useProfile = () => {
   const [user, setUser] = useState(null);
   const [sellerProfile, setSellerProfile] = useState(null);
   const [userAds, setUserAds] = useState([]);
-  const [favoriteAds, setFavoriteAds] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -72,33 +71,7 @@ export const useProfile = () => {
           setUserAds([]);
         }
 
-        // Charger les favoris de l'utilisateur depuis l'API
-        try {
-          console.log('❤️ Chargement favoris...');
-          const favoritesResponse = await fetch(`${API_BASE_URL}/favorites`, {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
-              'Content-Type': 'application/json'
-            }
-          });
 
-          if (favoritesResponse.ok) {
-            const favoritesData = await favoritesResponse.json();
-            console.log('✅ Favoris chargés:', favoritesData.favorites?.length || 0, 'favoris');
-            setFavoriteAds(favoritesData.favorites || []);
-          } else if (favoritesResponse.status === 401) {
-            // Token invalide - laisser le contexte d'auth gérer ça
-            console.warn('Token invalide lors du chargement des favoris');
-            setFavoriteAds([]);
-          } else {
-            console.warn('⚠️ Endpoint favoris non disponible (status:', favoritesResponse.status, ')');
-            setFavoriteAds([]);
-          }
-        } catch (favoritesError) {
-          console.error('Erreur lors du chargement des favoris:', favoritesError);
-          console.warn('⚠️ Endpoint favoris probablement non implémenté côté backend');
-        setFavoriteAds([]);
-        }
 
         // Charger le profil vendeur de l'utilisateur depuis l'API
         try {
@@ -320,38 +293,13 @@ export const useProfile = () => {
     }
   };
 
-  const removeFavorite = async (adId) => {
-    try {
-  const response = await fetch(`${API_BASE_URL}/favorites/${adId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        // Supprimer des favoris de l'état local
-        setFavoriteAds(prev => prev.filter(ad => ad.id !== adId));
-        return { success: true };
-      } else {
-        throw new Error('Erreur lors de la suppression des favoris');
-      }
-    } catch (error) {
-      console.error('Erreur lors de la suppression des favoris:', error);
-      throw error;
-    }
-  };
-
   return {
     user,
     sellerProfile,
     userAds,
-    favoriteAds,
     isLoading,
     updateUser,
     updateSellerProfile,
     deleteAd,
-    removeFavorite
   };
 };

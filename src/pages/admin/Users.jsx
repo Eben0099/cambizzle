@@ -26,6 +26,7 @@ import {
 import Loader from "../../components/ui/Loader";
 import adminService from "../../services/adminService";
 import { API_CONFIG } from "../../utils/constants";
+import { SERVER_BASE_URL } from "../../config/api";
 
 const Users = () => {
   // States
@@ -339,7 +340,7 @@ const Users = () => {
                   <div className="flex-shrink-0">
                     {user.photoUrl ? (
                       <img
-                        src={`${API_CONFIG.BASE_URL}/${user.photoUrl}`}
+                        src={`${SERVER_BASE_URL}/${user.photoUrl}`}
                         alt={`${user.firstName} ${user.lastName}`}
                         className="h-12 w-12 rounded-full object-cover ring-1 ring-gray-200"
                       />
@@ -470,22 +471,22 @@ const Users = () => {
           {selectedUserDetails ? (
             <div className="space-y-3 text-sm">
               <div className="flex items-center gap-3">
-                {selectedUserDetails.photoUrl ? (
+                {selectedUserDetails.photo_url || selectedUserDetails.photoUrl ? (
                   <img
-                    src={`${API_CONFIG.BASE_URL}/${selectedUserDetails.photoUrl}`}
+                    src={`${SERVER_BASE_URL}/${selectedUserDetails.photo_url || selectedUserDetails.photoUrl}`}
                     alt="Photo"
                     className="h-10 w-10 rounded-full object-cover"
                   />
                 ) : (
                   <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#D6BA69] to-[#C5A952] flex items-center justify-center">
                     <span className="text-white text-sm font-bold">
-                      {selectedUserDetails.firstName[0]}{selectedUserDetails.lastName[0]}
+                      {(selectedUserDetails.first_name || selectedUserDetails.firstName)?.[0]}{(selectedUserDetails.last_name || selectedUserDetails.lastName)?.[0]}
                     </span>
                   </div>
                 )}
                 <div>
-                  <div className="font-semibold">{selectedUserDetails.firstName} {selectedUserDetails.lastName}</div>
-                  <div className="text-xs text-gray-500">ID: #{selectedUserDetails.idUser}</div>
+                  <div className="font-semibold">{selectedUserDetails.first_name || selectedUserDetails.firstName} {selectedUserDetails.last_name || selectedUserDetails.lastName}</div>
+                  <div className="text-xs text-gray-500">ID: #{selectedUserDetails.id_user || selectedUserDetails.idUser}</div>
                 </div>
               </div>
               <div className="space-y-2 text-gray-700">
@@ -499,15 +500,61 @@ const Users = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-gray-400" />
-                  Role: {getRoleBadge(selectedUserDetails.roleId)}
+                  Role: <span className="ml-1">{selectedUserDetails.role || selectedUserDetails.roleId}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Shield className="h-4 w-4 text-gray-400" />
-                  Status: {getStatusBadge(selectedUserDetails)}
+                  Status: <span className="ml-1">{
+                    selectedUserDetails.is_verified !== undefined
+                      ? (selectedUserDetails.is_verified === 1 || selectedUserDetails.is_verified === "1" ? 'Verified' : selectedUserDetails.is_verified === 2 || selectedUserDetails.is_verified === "2" ? 'Pending' : 'Unverified')
+                      : (selectedUserDetails.isVerified === 1 || selectedUserDetails.isVerified === "1" ? 'Verified' : selectedUserDetails.isVerified === 2 || selectedUserDetails.isVerified === "2" ? 'Pending' : 'Unverified')
+                  }</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-gray-400" />
-                  Registered: {formatDate(selectedUserDetails.createdAt)}
+                  Registered: {formatDate(selectedUserDetails.created_at || selectedUserDetails.createdAt)}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">Referral code:</span> {selectedUserDetails.referral_code || selectedUserDetails.referralCode || 'N/A'}
+                </div>
+                {/* Identity Section */}
+                <div className="mt-2 p-2 bg-gray-50 rounded-lg border">
+                  <div className="font-semibold mb-1">Identity</div>
+                  <div className="text-xs text-gray-600">Type: <span className="font-medium">{selectedUserDetails.identity_document_type || selectedUserDetails.identityDocumentType || 'N/A'}</span></div>
+                  <div className="text-xs text-gray-600">Number: <span className="font-medium">{selectedUserDetails.identity_document_number || selectedUserDetails.identityDocumentNumber || 'N/A'}</span></div>
+                  <div className="text-xs text-gray-600">Status: <span className="font-medium">{selectedUserDetails.identity?.status_label || selectedUserDetails.identityStatusLabel || 'N/A'}</span></div>
+                  <div className="text-xs text-gray-600">Vérifié le: <span className="font-medium">{selectedUserDetails.identity_verified_at ? formatDate(selectedUserDetails.identity_verified_at) : selectedUserDetails.identityVerifiedAt ? formatDate(selectedUserDetails.identityVerifiedAt) : 'Non vérifié'}</span></div>
+                  {selectedUserDetails.identity_review_reason && (
+                    <div className="text-xs text-red-600">Raison du refus: {selectedUserDetails.identity_review_reason}</div>
+                  )}
+                  {/* Document display/download */}
+                  {(selectedUserDetails.identity_document_url || selectedUserDetails.identityDocumentUrl) && (
+                    <div className="mt-2">
+                      {(() => {
+                        const url = `${SERVER_BASE_URL}/${selectedUserDetails.identity_document_url || selectedUserDetails.identityDocumentUrl}`;
+                        const isPdf = url.toLowerCase().endsWith('.pdf');
+                        if (isPdf) {
+                          return (
+                            <div>
+                              <a href={url} download target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-xs">Télécharger le PDF</a>
+                              <div className="mt-2 border rounded overflow-hidden" style={{height: '300px'}}>
+                                <iframe src={url} title="Document PDF" width="100%" height="100%" style={{border:0}} />
+                              </div>
+                            </div>
+                          );
+                        } else {
+                          return (
+                            <div>
+                              <a href={url} download target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-xs">Télécharger l'image</a>
+                              <div className="mt-2">
+                                <img src={url} alt="Document identité" className="max-h-48 rounded border" />
+                              </div>
+                            </div>
+                          );
+                        }
+                      })()}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
