@@ -5,6 +5,7 @@ import SEO from '../components/SEO';
 import { ProductSchema, BreadcrumbSchema } from '../components/StructuredData';
 import { API_BASE_URL, SERVER_BASE_URL } from '../config/api';
 import { useParams, useNavigate } from 'react-router-dom';
+import useWeglotRetranslate from '../hooks/useWeglotRetranslate';
 import { 
   ArrowLeft, 
   Heart, 
@@ -43,6 +44,7 @@ const AdDetail = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const { ads, favorites = [], toggleFavorite, reportAd } = useAds();
+  const retranslateWeglot = useWeglotRetranslate();
   
   const [ad, setAd] = useState(null);
   const [seller, setSeller] = useState(null);
@@ -112,6 +114,9 @@ const AdDetail = () => {
         } else {
           throw new Error('Invalid ad data');
         }
+        
+        // Retranslate après que le contenu soit chargé
+        retranslateWeglot();
       } catch (error) {
         console.error('Error fetching ad details:', error);
         setAd(null);
@@ -123,7 +128,7 @@ const AdDetail = () => {
     if (slug) {
       fetchAdDetails();
     }
-  }, [slug, navigate]);
+  }, [slug, navigate, retranslateWeglot]);
 
   const isInFavorites = ad && favorites.some(fav => fav.id === ad.id);
 
@@ -212,7 +217,7 @@ const AdDetail = () => {
         ]}
       />
       {/* Navigation */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <button 
@@ -434,7 +439,7 @@ const AdDetail = () => {
                 name: seller?.firstName && seller?.lastName 
                   ? `${seller.firstName} ${seller.lastName}` 
                   : (seller?.firstName || ad?.sellerUsername || 'Seller'),
-                avatar: seller?.photoUrl ? (seller.photoUrl.startsWith('http') ? seller.photoUrl : `${SERVER_BASE_URL}/${seller.photoUrl}`) : null,
+                avatar: seller?.photoUrl ? (seller.photoUrl.startsWith('http') ? seller.photoUrl : `${SERVER_BASE_URL}/${seller.photoUrl}`.replace(/\/+/g, '/')) : null,
                 memberSince: formatDate(seller?.createdAt || ad?.createdAt),
                 rating: seller?.rating || 0,
                 reviewCount: seller?.reviewCount || 0,

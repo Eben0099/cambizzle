@@ -133,14 +133,24 @@ const UpdateAd = () => {
           loadSubcategoryFields(data.subcategorySlug);
         }
 
+        // Correction: utiliser SERVER_BASE_URL pour les images
+        const SERVER_BASE_URL = 'http://localhost:8080/api'; // à remplacer par import si déjà présent
         const mappedImages = (data.photos || [])
           .sort((a, b) => parseInt(a.displayOrder) - parseInt(b.displayOrder))
-          .map((photo, index) => ({
-            url: photo.originalUrl,
-            file: null,
-            id: `existing-${photo.id}-${Date.now() + index}`, // Inclure l'ID réel de l'API
-            originalId: photo.id // Garder l'ID original pour référence
-          }));
+          .map((photo, index) => {
+            let imageUrl = photo.originalUrl;
+            if (imageUrl && !imageUrl.startsWith('http')) {
+              // Supprimer tout / initial
+              imageUrl = imageUrl.replace(/^\/+/, '');
+              imageUrl = `${SERVER_BASE_URL}/${imageUrl}`;
+            }
+            return {
+              url: imageUrl,
+              file: null,
+              id: `existing-${photo.id}-${Date.now() + index}`,
+              originalId: photo.id
+            };
+          });
 
         setImages(mappedImages);
       } catch (err) {
@@ -596,8 +606,7 @@ const UpdateAd = () => {
 
   const typeOptions = [
     { value: 'sell', label: 'Sell' },
-    { value: 'rent', label: 'Rent' },
-    { value: 'service', label: 'Service' }
+    { value: 'rent', label: 'Rent' }
   ];
 
   const steps = [
@@ -709,7 +718,7 @@ const UpdateAd = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Category *
+                      Category <span className="text-red-600">*</span>
                     </label>
                     {creationLoading ? (
                       <div className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 flex items-center">
@@ -738,7 +747,7 @@ const UpdateAd = () => {
                   {/* Subcategory */}
                   <div className="lg:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Subcategory *
+                      Subcategory <span className="text-red-600">*</span>
                     </label>
                     <select
                       name="subcategory"
@@ -772,7 +781,7 @@ const UpdateAd = () => {
                   />
                   <div className="lg:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Description *
+                      Description <span className="text-red-600">*</span>
                     </label>
                     <textarea
                       name="description"
@@ -830,7 +839,7 @@ const UpdateAd = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Input
-                    label="Selling Price *"
+                    label={<>Selling Price <span className="text-red-600">*</span></>}
                     type="text"
                     name="price"
                     value={formData.price}
@@ -847,23 +856,6 @@ const UpdateAd = () => {
                     error={errors.price}
                     placeholder="0"
                   />
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Negotiable price</label>
-                    <select
-                      name="isNegotiable"
-                      value={formData.isNegotiable ? '1' : '0'}
-                      onChange={e => {
-                        setFormData(prev => ({
-                          ...prev,
-                          isNegotiable: e.target.value === '1'
-                        }));
-                      }}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
-                    >
-                      <option value="0">No</option>
-                      <option value="1">Yes</option>
-                    </select>
-                  </div>
                   <Input
                     label="Original Price (optional)"
                     type="text"
@@ -884,6 +876,23 @@ const UpdateAd = () => {
                     placeholder="0"
                     helperText="To display a discount"
                   />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Negotiable price</label>
+                    <select
+                      name="isNegotiable"
+                      value={formData.isNegotiable ? '1' : '0'}
+                      onChange={e => {
+                        setFormData(prev => ({
+                          ...prev,
+                          isNegotiable: e.target.value === '1'
+                        }));
+                      }}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
+                    >
+                      <option value="0">No</option>
+                      <option value="1">Yes</option>
+                    </select>
+                  </div>
                 </div>
                 {formData.discountPercent > 0 && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -893,9 +902,9 @@ const UpdateAd = () => {
                   </div>
                 )}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Location *
-                  </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Location <span className="text-red-600">*</span>
+                    </label>
                   {creationLoading ? (
                     <div className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 flex items-center">
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -1055,6 +1064,9 @@ const UpdateAd = () => {
                             ) : filter.type === 'checkbox' && filter.options.length > 0 ? (
                               <Select
                                 isMulti
+                                closeMenuOnSelect={false}
+                                hideSelectedOptions={false}
+                                isClearable={true}
                                 name={`filters.${filter.id}`}
                                 options={[...filter.options]
                                   .sort((a, b) => {
@@ -1076,6 +1088,8 @@ const UpdateAd = () => {
                                   }));
                                 }}
                                 classNamePrefix="react-select"
+                                menuPlacement="auto"
+                                menuShouldScrollIntoView={false}
                                 styles={{
                                   control: (base) => ({ 
                                     ...base, 

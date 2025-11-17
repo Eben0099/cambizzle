@@ -16,7 +16,7 @@ export const getPhotoUrl = (photoPath) => {
     cleanUrl = cleanUrl.replace('www.cambizzle.seed-innov.com', 'cambizzle.seed-innov.com');
     
     // Nettoyer les chemins redondants/exposés
-    cleanUrl = cleanUrl.replace(/\/api\/home\/[^\/]+\/public_html\/cambizzle\/api\//, '/');
+    cleanUrl = cleanUrl.replace(/\/api\/home\/[^\/]+\/public_html\/cambizzle\/api\//, '/api/');
     
     // S'assurer que l'URL commence bien par le bon domaine
     if (cleanUrl.includes('cambizzle.seed-innov.com') && !cleanUrl.startsWith('https://cambizzle.seed-innov.com/')) {
@@ -33,11 +33,10 @@ export const getPhotoUrl = (photoPath) => {
   // Si c'est une URL blob (pour les aperçus temporaires), la retourner telle quelle
   if (photoPath.startsWith('blob:')) return photoPath;
   
-  // Nettoyer le chemin en supprimant /api si présent (pour les assets)
+  // Préparer le chemin : s'assurer qu'il commence par /
   let cleanPath = photoPath.startsWith('/') ? photoPath : `/${photoPath}`;
-  cleanPath = cleanPath.replace(/^\/api/, '');
 
-  // S'assurer que le chemin commence par /
+  // S'assurer que le chemin commence par / et non pas par //
   if (!cleanPath.startsWith('/')) {
     cleanPath = `/${cleanPath}`;
   }

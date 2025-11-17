@@ -280,8 +280,7 @@ const Search = () => {
 
   const typeOptions = [
     { value: 'sell', label: 'Sale' },
-    { value: 'rent', label: 'Rent' },
-    { value: 'service', label: 'Service' }
+    { value: 'rent', label: 'Rent' }
   ];
 
   // Frontend sorting function (new API format)
@@ -414,7 +413,6 @@ const Search = () => {
           <div className="relative">
             <Input
               type="text"
-              placeholder="Filter results by keywords (title, description, brand, location...)..."
               value={keywordFilter}
               onChange={(e) => setKeywordFilter(e.target.value)}
               className="w-full pl-10 pr-10 h-12 text-base"
@@ -455,7 +453,7 @@ const Search = () => {
 
             <Select value={sortBy} onValueChange={handleSortChange}>
               <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Sort by" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {sortOptions.map(option => (
@@ -496,10 +494,9 @@ const Search = () => {
                   onValueChange={(value) => handleFilterChange('category', value)}
                 >
                   <SelectTrigger id="category">
-                    <SelectValue placeholder="All categories" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All categories</SelectItem>
                     {creationData.categories.map(category => (
                       <SelectItem key={category.id} value={category.id}>
                         {category.name}
@@ -516,10 +513,9 @@ const Search = () => {
                   onValueChange={(value) => handleFilterChange('type', value)}
                 >
                   <SelectTrigger id="type">
-                    <SelectValue placeholder="All types" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All types</SelectItem>
                     {typeOptions.map(type => (
                       <SelectItem key={type.value} value={type.value}>
                         {type.label}
@@ -536,10 +532,9 @@ const Search = () => {
                   onValueChange={(value) => handleFilterChange('condition', value)}
                 >
                   <SelectTrigger id="condition">
-                    <SelectValue placeholder="All conditions" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All conditions</SelectItem>
                     {conditionOptions.map(condition => (
                       <SelectItem key={condition.value} value={condition.value}>
                         {condition.label}
@@ -554,7 +549,6 @@ const Search = () => {
                 <Input
                   id="priceMin"
                   type="number"
-                  placeholder="0"
                   value={localFilters.priceMin}
                   onChange={(e) => handleFilterChange('priceMin', e.target.value)}
                   className="h-10"
@@ -566,7 +560,6 @@ const Search = () => {
                 <Input
                   id="priceMax"
                   type="number"
-                  placeholder="Unlimited"
                   value={localFilters.priceMax}
                   onChange={(e) => handleFilterChange('priceMax', e.target.value)}
                   className="h-10"
@@ -580,10 +573,9 @@ const Search = () => {
                   onValueChange={(value) => handleFilterChange('location', value)}
                 >
                   <SelectTrigger id="location">
-                    <SelectValue placeholder="All locations" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All locations</SelectItem>
                     {creationData.locations.map(loc => (
                       <SelectItem key={loc.id} value={loc.city}>
                         {loc.city} ({loc.region})

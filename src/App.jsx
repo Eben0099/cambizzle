@@ -7,6 +7,7 @@ import { Toaster as Sonner } from './components/ui/sonner';
 import { TooltipProvider } from './components/ui/tooltip';
 import WeglotProvider from './components/WeglotProvider';
 import Header from './components/layout/Header';
+import Footer from './components/layout/Footer';
 import CategoryAds from './pages/CategoryAds';
 import SubcategoryAds from './pages/SubcategoryAds';
 import AdminLayout from './components/admin/AdminLayout';
@@ -19,6 +20,9 @@ import UpdateAd from './pages/UpdateAd';
 import Profile from './pages/Profile';
 import AdDetail from './pages/AdDetail';
 import TestPromotionPacks from './pages/TestPromotionPacks';
+import About from './pages/About';
+import Terms from './pages/Terms';
+import SafetyTipsPage from './pages/SafetyTips';
 import Dashboard from './pages/admin/Dashboard';
 import Users from './pages/admin/Users';
 import Ads from './pages/admin/Ads';
@@ -36,112 +40,45 @@ import './App.css';
 
 const queryClient = new QueryClient();
 
+// Layout wrapper pour les pages publiques avec Header et Footer
+const PublicLayout = ({ children }) => (
+  <div className="min-h-screen bg-gray-50 flex flex-col">
+    <Header />
+    <main className="flex-1">
+      {children}
+    </main>
+    <Footer />
+  </div>
+);
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <WeglotProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <AuthProvider>
-            <AdsProvider>
-              <Router>
+      <Router>
+        <WeglotProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <AuthProvider>
+              <AdsProvider>
               <Routes>
-                {/* Routes publiques avec header */}
-                <Route path="/" element={
-                  <div className="min-h-screen bg-gray-50">
-                    <Header />
-                    <main>
-                      <Home />
-                    </main>
-                  </div>
-                } />
-                <Route path="/login" element={
-                  <div className="min-h-screen bg-gray-50">
-                    <Header />
-                    <main>
-                      <Login />
-                    </main>
-                  </div>
-                } />
-                <Route path="/register" element={
-                  <div className="min-h-screen bg-gray-50">
-                    <Header />
-                    <main>
-                      <Register />
-                    </main>
-                  </div>
-                } />
-                <Route path="/search" element={
-                  <div className="min-h-screen bg-gray-50">
-                    <Header />
-                    <main>
-                      <Search />
-                    </main>
-                  </div>
-                } />
-                <Route path="/category/:categoryId" element={
-                  <div className="min-h-screen bg-gray-50">
-                    <Header />
-                    <main>
-                      {/* Affiche les annonces d'une catégorie */}
-                      <CategoryAds />
-                    </main>
-                  </div>
-                } />
-                <Route path="/subcategory" element={
-                  <div className="min-h-screen bg-gray-50">
-                    <Header />
-                    <main>
-                      {/* Affiche les annonces d'une sous-catégorie */}
-                      <SubcategoryAds />
-                    </main>
-                  </div>
-                } />
-                <Route path="/create-ad" element={
-                  <div className="min-h-screen bg-gray-50">
-                    <Header />
-                    <main>
-                      <CreateAd />
-                    </main>
-                  </div>
-                } />
-                <Route path="/profile" element={
-                  <div className="min-h-screen bg-gray-50">
-                    <Header />
-                    <main>
-                      <Profile />
-                    </main>
-                  </div>
-                } />
-
-                {/* Test page for promotion packs */}
-                <Route path="/test/promotion-packs" element={
-                  <div className="min-h-screen bg-gray-50">
-                    <Header />
-                    <main>
-                      <TestPromotionPacks />
-                    </main>
-                  </div>
-                } />
-
-                <Route path="/ads/:slug" element={
-                  <div className="min-h-screen bg-gray-50">
-                    <Header />
-                    <main>
-                      <AdDetail />
-                    </main>
-                  </div>
-                } />
-
-                <Route path="/edit-ad/:slug" element={
-                  <div className="min-h-screen bg-gray-50">
-                    <Header />
-                    <main>
-                      <UpdateAd />
-                    </main>
-                  </div>
-                } />
+                {/* Routes publiques avec Header et Footer */}
+                <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
+                <Route path="/login" element={<PublicLayout><Login /></PublicLayout>} />
+                <Route path="/register" element={<PublicLayout><Register /></PublicLayout>} />
+                <Route path="/search" element={<PublicLayout><Search /></PublicLayout>} />
+                <Route path="/category/:categoryId" element={<PublicLayout><CategoryAds /></PublicLayout>} />
+                <Route path="/subcategory" element={<PublicLayout><SubcategoryAds /></PublicLayout>} />
+                <Route path="/create-ad" element={<PublicLayout><CreateAd /></PublicLayout>} />
+                <Route path="/profile" element={<PublicLayout><Profile /></PublicLayout>} />
+                <Route path="/test/promotion-packs" element={<PublicLayout><TestPromotionPacks /></PublicLayout>} />
+                <Route path="/ads/:slug" element={<PublicLayout><AdDetail /></PublicLayout>} />
+                <Route path="/edit-ad/:slug" element={<PublicLayout><UpdateAd /></PublicLayout>} />
+                
+                {/* Info Pages */}
+                <Route path="/about" element={<PublicLayout><About /></PublicLayout>} />
+                <Route path="/terms" element={<PublicLayout><Terms /></PublicLayout>} />
+                <Route path="/safety-tips" element={<PublicLayout><SafetyTipsPage /></PublicLayout>} />
 
                 {/* Routes admin sans header */}
                 <Route path="/admin" element={<AdminLayout><Dashboard /></AdminLayout>} />
@@ -159,11 +96,11 @@ function App() {
                 <Route path="/admin/payments" element={<AdminLayout><Payments /></AdminLayout>} />
                 {/* Autres routes admin seront ajoutées ici */}
               </Routes>
-            </Router>
-          </AdsProvider>
-        </AuthProvider>
-      </TooltipProvider>
-      </WeglotProvider>
+            </AdsProvider>
+          </AuthProvider>
+        </TooltipProvider>
+        </WeglotProvider>
+      </Router>
     </QueryClientProvider>
   );
 }

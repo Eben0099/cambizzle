@@ -340,7 +340,7 @@ const Users = () => {
                   <div className="flex-shrink-0">
                     {user.photoUrl ? (
                       <img
-                        src={`${SERVER_BASE_URL}/${user.photoUrl}`}
+                        src={`${SERVER_BASE_URL}/${user.photoUrl}`.replace(/\/+/g, '/')}
                         alt={`${user.firstName} ${user.lastName}`}
                         className="h-12 w-12 rounded-full object-cover ring-1 ring-gray-200"
                       />
@@ -473,7 +473,7 @@ const Users = () => {
               <div className="flex items-center gap-3">
                 {selectedUserDetails.photo_url || selectedUserDetails.photoUrl ? (
                   <img
-                    src={`${SERVER_BASE_URL}/${selectedUserDetails.photo_url || selectedUserDetails.photoUrl}`}
+                    src={`${SERVER_BASE_URL}/${selectedUserDetails.photo_url || selectedUserDetails.photoUrl}`.replace(/\/+/g, '/')}
                     alt="Photo"
                     className="h-10 w-10 rounded-full object-cover"
                   />
@@ -531,7 +531,7 @@ const Users = () => {
                   {(selectedUserDetails.identity_document_url || selectedUserDetails.identityDocumentUrl) && (
                     <div className="mt-2">
                       {(() => {
-                        const url = `${SERVER_BASE_URL}/${selectedUserDetails.identity_document_url || selectedUserDetails.identityDocumentUrl}`;
+                        const url = `${SERVER_BASE_URL}/${selectedUserDetails.identity_document_url || selectedUserDetails.identityDocumentUrl}`.replace(/\/+/g, '/');
                         const isPdf = url.toLowerCase().endsWith('.pdf');
                         if (isPdf) {
                           return (

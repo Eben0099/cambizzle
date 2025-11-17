@@ -79,7 +79,7 @@ const CategoryGrid = ({ categories, isLoading, error }) => {
                   <div className="w-12 h-12 bg-[#D6BA69] rounded-lg flex items-center justify-center">
                     {category.iconPath ? (
                       <img
-                        src={`${SERVER_BASE_URL}/${category.iconPath}`}
+                        src={`${SERVER_BASE_URL}/${category.iconPath}`.replace(/\/+/g, '/')}
                         alt={category.name}
                         className="w-6 h-6 text-white"
                         onError={(e) => {
@@ -135,7 +135,7 @@ const CategoryGrid = ({ categories, isLoading, error }) => {
                         <div className="w-8 h-8 bg-[#D6BA69] bg-opacity-20 rounded-md flex items-center justify-center">
                           {subcategory.iconPath ? (
                             <img
-                              src={`${SERVER_BASE_URL}/${subcategory.iconPath}`}
+                              src={`${SERVER_BASE_URL}/${subcategory.iconPath}`.replace(/\/+/g, '/')}
                               alt={subcategory.name}
                               className="w-4 h-4"
                               onError={(e) => {

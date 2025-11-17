@@ -484,7 +484,6 @@ const CreateAd = () => {
                     >
                       <option value="sell">Sell</option>
                       <option value="rent">Rent</option>
-                      <option value="service">Service</option>
                     </select>
                     {errors.type && (
                       <p className="text-sm text-red-600 mt-1">{errors.type}</p>
@@ -609,23 +608,6 @@ const CreateAd = () => {
                     }}
                     error={errors.price}
                   />
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Negotiable price</label>
-                    <select
-                      name="isNegotiable"
-                      value={formData.isNegotiable ? '1' : '0'}
-                      onChange={e => {
-                        setFormData(prev => ({
-                          ...prev,
-                          isNegotiable: e.target.value === '1'
-                        }));
-                      }}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
-                    >
-                      <option value="0">No</option>
-                      <option value="1">Yes</option>
-                    </select>
-                  </div>
                   <Input
                     label="Original Price (optional)"
                     type="text"
@@ -644,6 +626,23 @@ const CreateAd = () => {
                     }}
                     error={errors.originalPrice}
                   />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Negotiable price</label>
+                    <select
+                      name="isNegotiable"
+                      value={formData.isNegotiable ? '1' : '0'}
+                      onChange={e => {
+                        setFormData(prev => ({
+                          ...prev,
+                          isNegotiable: e.target.value === '1'
+                        }));
+                      }}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
+                    >
+                      <option value="0">No</option>
+                      <option value="1">Yes</option>
+                    </select>
+                  </div>
                 </div>
                 {formData.discountPercent > 0 && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -806,6 +805,8 @@ const CreateAd = () => {
                               <Select
                                 isMulti
                                 closeMenuOnSelect={false}
+                                hideSelectedOptions={false}
+                                isClearable={true}
                                 name={`filters.${filter.id}`}
                                 options={[...filter.options]
                                   .sort((a, b) => {
@@ -827,6 +828,8 @@ const CreateAd = () => {
                                   }));
                                 }}
                                 classNamePrefix="react-select"
+                                menuPlacement="auto"
+                                menuShouldScrollIntoView={false}
                                 styles={{
                                   control: (base) => ({ 
                                     ...base, 

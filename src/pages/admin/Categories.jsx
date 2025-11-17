@@ -42,7 +42,7 @@ import Input from "@/components/ui/Input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import adminService from "@/services/adminService";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 const Categories = () => {
   // States
@@ -67,8 +67,6 @@ const Categories = () => {
   });
   const [iconFile, setIconFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-
-  const { toast } = useToast();
 
   useEffect(() => {
     fetchCategories();
@@ -130,17 +128,12 @@ const Categories = () => {
         });
         setIconFile(null);
         fetchCategories();
-        toast({
-          description: "Category created successfully.",
-        });
+        toast.success("Category created successfully.");
       } else {
         throw new Error(data.message || "Error creating category.");
       }
     } catch (err) {
-      toast({
-        description: err.message || "Error creating category.",
-        variant: "destructive",
-      });
+      toast.error(err.message || "Error creating category.");
     } finally {
       setSubmitting(false);
     }
@@ -190,15 +183,10 @@ const Categories = () => {
         });
         setIconFile(null);
         fetchCategories();
-        toast({
-          description: "Category updated successfully.",
-        });
+        toast.success("Category updated successfully.");
       }
     } catch (err) {
-      toast({
-        description: err.message || "Error updating category.",
-        variant: "destructive",
-      });
+      toast.error(err.message || "Error updating category.");
     } finally {
       setSubmitting(false);
     }
@@ -219,15 +207,10 @@ const Categories = () => {
         setShowDeleteDialog(false);
         setSelectedCategory(null);
         fetchCategories();
-        toast({
-          description: "Category deleted successfully.",
-        });
+        toast.success("Category deleted successfully.");
       }
     } catch (err) {
-      toast({
-        description: err.message || "Error deleting category.",
-        variant: "destructive",
-      });
+      toast.error(err.message || "Error deleting category.");
     } finally {
       setSubmitting(false);
     }
@@ -349,7 +332,7 @@ const Categories = () => {
                     <TableCell className="px-4 py-3">
                       {category.iconPath ? (
                         <img
-                          src={category.iconPath.startsWith('http') ? category.iconPath : `${SERVER_BASE_URL}${category.iconPath}`}
+                          src={category.iconPath.startsWith('http') ? category.iconPath : `${SERVER_BASE_URL}${category.iconPath}`.replace(/\/+/g, '/')}
                           alt={category.name}
                           className="w-10 h-10 object-cover rounded-md border"
                           style={{ background: '#f9fafb' }}

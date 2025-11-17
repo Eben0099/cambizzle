@@ -227,7 +227,7 @@ const Home = () => {
             </section>
 
             {/* Features Section */}
-            <section className="py-12 sm:py-16 bg-white">
+            {/* <section className="py-12 sm:py-16 bg-white">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-12">
                   <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
@@ -282,10 +282,10 @@ const Home = () => {
                   </Card>
                 </div>
               </div>
-            </section>
+            </section> */}
 
             {/* CTA Section */}
-            <section className="py-12 sm:py-16 bg-gradient-to-r from-[#D6BA69] to-[#C5A858]">
+            {/* <section className="py-12 sm:py-16 bg-gradient-to-r from-[#D6BA69] to-[#C5A858]">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                 <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black mb-4">
                   Ready to Start?
@@ -314,7 +314,7 @@ const Home = () => {
                   </Link>
                 </div>
               </div>
-            </section>
+            </section> */}
           </div>
         </div>
       </div>

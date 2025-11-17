@@ -486,6 +486,15 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
+
+            <div className="text-right">
+              <button
+                type="button"
+                className="text-sm text-[#D6BA69] hover:text-[#C5A952] font-medium transition-colors"
+              >
+                Forgot password?
+              </button>
+            </div>
           </div>
 
           {message && (

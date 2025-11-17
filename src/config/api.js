@@ -9,10 +9,10 @@ export const API_BASE_URL = SERVER_ENV === 'prod'
   ? 'https://cambizzle.seed-innov.com/api'
   : 'http://localhost:8080/api';
 
-// Export de l'URL complète du serveur (sans /api) pour les assets
+// Export de l'URL complète du serveur (avec /api) pour les uploads et assets
 export const SERVER_BASE_URL = SERVER_ENV === 'prod'
-  ? 'https://cambizzle.seed-innov.com'
-  : 'http://localhost:8080';
+  ? 'https://cambizzle.seed-innov.com/api'
+  : 'http://localhost:8080/api';
 
 // Créer une instance axios configurée
 const api = axios.create({

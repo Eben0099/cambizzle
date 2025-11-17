@@ -47,7 +47,14 @@ export const WEGLOT_CONFIG = {
       '.notranslate',
       'code',
       'pre'
-    ]
+    ],
+    
+    // ⭐ IMPORTANT: Options pour traduire TOUTES les pages
+    // Traiter le contenu modifié au runtime
+    enableAutoUpdate: true,
+    
+    // Profondeur de traduction (0 = limité, 1 = standard, 2 = complet)
+    translateCompletePage: true
   }
 };
 

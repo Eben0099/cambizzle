@@ -174,10 +174,10 @@ const CategorySidebar = ({ className = '' }) => {
 
   // Mobile Toggle Button
   const MobileToggleButton = () => (
-    <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-40 shadow-sm">
+    <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-20 shadow-sm">
       <button
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="flex items-center justify-between w-full text-left rounded-lg p-3 hover:bg-gray-50 transition-colors"
+        className="flex items-center justify-between w-full text-left rounded-lg p-3 hover:bg-gray-50 transition-colors relative z-10"
         aria-label="Toggle categories menu"
         aria-expanded={isMobileMenuOpen}
       >
