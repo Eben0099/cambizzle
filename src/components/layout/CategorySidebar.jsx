@@ -251,13 +251,7 @@ const CategorySidebar = ({ className = '' }) => {
                 >
                   {/* Main Category Card */}
                   <button
-                    onClick={(e) => {
-                      if (hasSub) {
-                        toggleMobileCategory(e, category.slug);
-                      } else {
-                        handleCategoryClick(category.slug);
-                      }
-                    }}
+                    onClick={() => handleCategoryClick(category.slug)}
                     className="w-full bg-white rounded-xl p-4 border border-gray-200 hover:border-[#D6BA69] hover:bg-[#D6BA69]/5 transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#D6BA69] focus:ring-offset-1 shadow-sm hover:shadow-md"
                     aria-label={`Voir ${category.name}`}
                   >

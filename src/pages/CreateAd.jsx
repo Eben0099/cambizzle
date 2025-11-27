@@ -670,7 +670,7 @@ const CreateAd = () => {
                       <option value=""></option>
                       {creationData.locations?.map(location => (
                         <option key={location.id} value={location.id}>
-                          {location.city} - {location.region}
+                          {location.city}
                         </option>
                       ))}
                     </select>
@@ -933,8 +933,8 @@ const CreateAd = () => {
                     images.length >= 3 ? 'text-green-800' : 'text-yellow-800'
                   }`}>
                     {images.length >= 3 
-                      ? '✅ Minimum 3 photos requirement met!' 
-                      : `⚠️ ${3 - images.length} more photo(s) needed (minimum 3 required)`
+                      ? 'Minimum 3 photos requirement met!' 
+                      : `${3 - images.length} more photo(s) needed (minimum 3 required)`
                     }
                   </p>
                 </div>
@@ -943,41 +943,40 @@ const CreateAd = () => {
           )}
 
           {/* Navigation Buttons */}
-          <div className="flex flex-col sm:flex-row justify-between gap-4 mt-8 pt-6 border-t border-gray-200">
-            <div>
-              {currentStep > 1 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handlePrevious}
-                  className="bg-white border-black text-black hover:bg-gray-50 hover:border-gray-300 px-6 py-3 rounded-lg font-medium transition-colors"
-                >
-                  Previous
-                </Button>
-              )}
-            </div>
-            <div className="flex items-center gap-4">
-              {currentStep < 4 ? (
-                <Button
-                  type="button"
-                  variant="primary"
-                  onClick={handleNext}
-                  className="bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
-                >
-                  Next
-                </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  variant="primary"
-                  loading={isLoading}
-                  disabled={!canSubmit || isLoading}
-                  className="bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] px-8 py-3 rounded-lg font-semibold transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? 'Publishing...' : 'Publish Ad'}
-                </Button>
-              )}
-            </div>
+          <div className="flex items-center justify-between gap-4 mt-8 pt-6 border-t border-gray-200">
+            {currentStep > 1 && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handlePrevious}
+                className="bg-white border-black text-black hover:bg-gray-50 hover:border-gray-300 px-6 py-3 rounded-lg font-medium transition-colors"
+              >
+                Previous
+              </Button>
+            )}
+            {currentStep === 1 && (
+              <div />
+            )}
+            {currentStep < 4 ? (
+              <Button
+                type="button"
+                variant="primary"
+                onClick={handleNext}
+                className="bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
+              >
+                Next
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                variant="primary"
+                loading={isLoading}
+                disabled={!canSubmit || isLoading}
+                className="bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] px-6 py-3 rounded-lg font-medium transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? 'Publishing...' : 'Publish'}
+              </Button>
+            )}
           </div>
 
           {errors.submit && (

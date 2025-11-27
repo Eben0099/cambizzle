@@ -30,6 +30,7 @@ const useHomeAds = (initialPage = 1, perPage = 8) => {
         discountPercentage: ad.discountPercentage || ad.discount_percentage,
         hasDiscount: ad.hasDiscount || ad.has_discount,
         isNegotiable: ad.isNegotiable || ad.is_negotiable,
+        isBoosted: ad.isBoosted || ad.is_boosted,
         referralCode: ad.referralCode || ad.referral_code,
         status: ad.status,
         moderationStatus: ad.moderationStatus || ad.moderation_status,
@@ -47,6 +48,7 @@ const useHomeAds = (initialPage = 1, perPage = 8) => {
         categoryName: ad.categoryName || ad.category_name,
         brandName: ad.brandName || ad.brand_name,
         sellerUsername: ad.sellerUsername || ad.seller_username,
+        userVerified: ad.userVerified || ad.user_verified,
         photos: ad.photos || [],
         filters: ad.filters || []
       }));

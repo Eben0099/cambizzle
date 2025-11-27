@@ -1,232 +1,212 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
+import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
+import 'react-phone-number-input/style.css'; // Important !
 import { useAuth } from '../contexts/AuthContext';
 import Button from '../components/ui/Button';
-import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  const { login, error, clearError } = useAuth();
+  const { login, error: serverError, clearError } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-
   const from = location.state?.from?.pathname || '/';
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
-    clearError();
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-    
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
-    }
-    
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    }
-    
-    return newErrors;
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    const formErrors = validateForm();
-    if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
+
+    // Reset errors
+    setErrors({});
+    clearError();
+
+    let hasError = false;
+    const newErrors = {};
+
+    if (!phone) {
+      newErrors.phone = 'Phone number is required';
+      hasError = true;
+    } else if (!isValidPhoneNumber(phone)) {
+      newErrors.phone = 'Invalid phone number';
+      hasError = true;
+    }
+
+    if (!password) {
+      newErrors.password = 'Password is required';
+      hasError = true;
+    }
+
+    if (hasError) {
+      setErrors(newErrors);
       return;
     }
 
     setIsLoading(true);
-    setErrors({});
 
     try {
-      const result = await login(formData);
+      const result = await login({ phone, password }); // ton contexte doit accepter phone maintenant
       if (result.success) {
         navigate(from, { replace: true });
       }
     } catch (err) {
-      // Error is handled by context
+      // géré par le contexte
     } finally {
       setIsLoading(false);
     }
   };
 
-return (
-  <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-8 sm:py-12 sm:px-6 lg:px-8">
-    <div className="sm:mx-auto sm:w-full sm:max-w-md">
-      <Link 
-        to="/" 
-        className="flex justify-center items-center space-x-3 mb-6 sm:mb-8"
-      >
-        <div className="w-12 h-12 bg-[#D6BA69] rounded-lg flex items-center justify-center shadow-sm">
-          <span className="text-black font-bold text-2xl">C</span>
-        </div>
-        <span className="text-2xl sm:text-3xl font-bold text-black hidden sm:block">
-          Cambizzle
-        </span>
-      </Link>
-      
-      <div className="text-center">
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-          Log in to your account
-        </h2>
-        <p className="text-sm text-gray-600">
-          Or{' '}
-          <Link 
-            to="/register" 
-            className="font-medium text-[#D6BA69] hover:text-[#D6BA69]/80 transition-colors"
-          >
-            create a new account
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center px-4 py-12">
+      {/* Container principal - responsive */}
+      <div className="w-full max-w-md">
+        {/* Logo + Nom */}
+        <div className="text-center mb-10">
+          <Link to="/" className="inline-flex flex-col items-center gap-4">
+            <div className="w-16 h-16 bg-[#D6BA69] rounded-2xl flex items-center justify-center shadow-lg">
+              <span className="text-3xl font-black text-black">C</span>
+            </div>
+            <span className="text-3xl font-bold text-gray-900 tracking-tight">
+              Cambizzle
+            </span>
           </Link>
-        </p>
-      </div>
-    </div>
 
-    <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          )}
-
-          <div>
-            <Input
-              label="Email address"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              error={errors.email}
-              required
-              autoComplete="email"
-              placeholder="your@email.com"
-              className="border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
-            />
-          </div>
-
-          <div className="relative">
-            <Input
-              label="Password"
-              type={showPassword ? 'text' : 'password'}
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              error={errors.password}
-              required
-              autoComplete="current-password"
-              placeholder="Your password"
-              className="pr-12 border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
-            />
-            <button
-              type="button"
-              className="absolute right-4 top-10 sm:top-11 text-gray-400 hover:text-gray-600 transition-colors"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? (
-                <EyeOff className="w-5 h-5" />
-              ) : (
-                <Eye className="w-5 h-5" />
-              )}
-            </button>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-[#D6BA69] focus:ring-[#D6BA69] border-gray-300 rounded"
-              />
-              <label 
-                htmlFor="remember-me" 
-                className="ml-2 block text-sm text-gray-900 cursor-pointer"
-              >
-                Remember me
-              </label>
-            </div>
-
-            <Link
-              to="/forgot-password"
-              className="text-sm text-[#D6BA69] hover:text-[#D6BA69]/80 transition-colors"
-            >
-              Forgot password?
-            </Link>
-          </div>
-
-          <Button
-            type="submit"
-            variant="primary"
-            className="w-full bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] px-6 py-3 rounded-lg font-medium transition-colors shadow-sm disabled:opacity-50"
-            loading={isLoading}
-            disabled={isLoading}
-          >
-            Sign in
-          </Button>
-        </form>
-
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-3 bg-white text-gray-500">Test Accounts</span>
-            </div>
-          </div>
-
-          <div className="mt-4 space-y-2">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full text-left justify-start bg-white border-black text-black hover:bg-gray-50 hover:border-gray-300 px-4 py-2 rounded-lg font-medium transition-colors"
-              onClick={() => setFormData({ email: 'admin@cambizzle.com', password: 'admin123' })}
-            >
-              Admin: admin@cambizzle.com / admin123
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full text-left justify-start bg-white border-black text-black hover:bg-gray-50 hover:border-gray-300 px-4 py-2 rounded-lg font-medium transition-colors"
-              onClick={() => setFormData({ email: 'seller@test.com', password: 'seller123' })}
-            >
-              Seller: seller@test.com / seller123
-            </Button>
-          </div>
+          <h1 className="mt-8 text-2xl font-bold text-gray-900">
+            Welcome back
+          </h1>
+          <p className="mt-2 text-sm text-gray-600">
+            Sign in to your account to continue
+          </p>
         </div>
+
+        {/* Card du formulaire */}
+        <Card className="bg-white/90 backdrop-blur shadow-xl border-0 rounded-3xl overflow-hidden">
+          <div className="p-8 sm:p-10">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Message d'erreur serveur */}
+              {serverError && (
+                <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl p-4">
+                  {serverError}
+                </div>
+              )}
+
+              {/* Champ téléphone */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Phone number
+                </label>
+                <PhoneInput
+                  international
+                  countryCallingCodeEditable={false}
+                  defaultCountry="CM"
+                  value={phone}
+                  onChange={(value) => setPhone(value || '')}
+                  className={`phone-input-custom ${errors.phone ? 'error' : ''}`}
+                />
+                {errors.phone && (
+                  <p className="mt-2 text-sm text-red-600">{errors.phone}</p>
+                )}
+              </div>
+
+              {/* Mot de passe */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={`w-full px-4 py-3 rounded-xl border ${
+                      errors.password
+                        ? 'border-red-500 focus:border-red-500'
+                        : 'border-gray-300 focus:border-[#D6BA69]'
+                    } focus:outline-none focus:ring-2 focus:ring-[#D6BA69]/20 transition`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="mt-2 text-sm text-red-600">{errors.password}</p>
+                )}
+              </div>
+
+              {/* Remember + Forgot */}
+              <div className="flex items-center justify-between text-sm">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 text-[#D6BA69] rounded focus:ring-[#D6BA69]"
+                  />
+                  <span className="text-gray-700">Remember me</span>
+                </label>
+
+                <Link
+                  to="/forgot-password"
+                  className="font-medium text-[#D6BA69] hover:text-[#D6BA69]/80 transition"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+
+              {/* Bouton principal */}
+              <Button
+                type="submit"
+                loading={isLoading}
+                disabled={isLoading}
+                className="w-full bg-[#D6BA69] hover:bg-[#c5a55d] text-black font-semibold py-4 rounded-xl shadow-lg transform transition hover:scale-[1.02] active:scale-100"
+              >
+                {isLoading ? 'Signing in...' : 'Sign in'}
+              </Button>
+            </form>
+
+            {/* Lien inscription */}
+            <p className="mt-8 text-center text-sm text-gray-600">
+              Don't have an account?{' '}
+              <Link
+                to="/register"
+                className="font-semibold text-[#D6BA69] hover:text-[#c5a55d] transition"
+              >
+                Sign up
+              </Link>
+            </p>
+          </div>
+        </Card>
       </div>
+
+      {/* Style custom pour react-phone-number-input */}
+      <style jsx>{`
+        .phone-input-custom :global(.PhoneInputInput) {
+          height: 52px;
+          padding-left: 12px;
+          border-radius: 12px;
+          border: 1px solid ${errors.phone ? '#ef4444' : '#d1d5db'};
+          outline: none;
+          font-size: 1rem;
+          transition: all 0.2s;
+        }
+        .phone-input-custom :global(.PhoneInputInput:focus) {
+          border-color: #d6ba69;
+          box-shadow: 0 0 0 3px rgba(214, 186, 105, 0.15);
+        }
+        .phone-input-custom.error :global(.PhoneInputInput) {
+          border-color: #ef4444;
+          box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+        }
+      `}</style>
     </div>
-  </div>
-);
+  );
 };
 
 export default Login;

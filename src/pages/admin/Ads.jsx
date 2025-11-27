@@ -141,6 +141,23 @@ const Ads = () => {
     try {
       setLoading(true);
       await adminService.rejectAd(selectedAd.id, rejectReason, rejectNotes);
+      
+      // Envoyer notification WhatsApp à l'utilisateur
+      if (selectedAd.user?.phone) {
+        const phoneNumber = selectedAd.user.phone.replace(/\s+/g, '');
+        const message = encodeURIComponent(
+          `Hello ${selectedAd.user.firstName || ''},\n\n` +
+          `Your ad "${selectedAd.title}" has been rejected.\n\n` +
+          `Reason: ${rejectReason}\n` +
+          (rejectNotes ? `Notes: ${rejectNotes}\n\n` : '\n') +
+          `Please review and resubmit your ad with the necessary corrections.\n\n` +
+          `Best regards,\nCambizzle Team`
+        );
+        
+        // Ouvrir WhatsApp dans un nouvel onglet
+        window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+      }
+      
       setShowRejectModal(false);
       setRejectReason('');
       setRejectNotes('');

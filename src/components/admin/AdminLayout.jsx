@@ -80,7 +80,7 @@ const AdminLayout = ({ children }) => {
       <Button
         variant="ghost"
         size="icon"
-        className="fixed top-4 left-4 z-50 md:hidden bg-gray-950 text-[#D6BA69] hover:bg-gray-800 h-10 w-10"
+        className="fixed top-4 right-4 z-50 md:hidden bg-gray-950 text-[#D6BA69] hover:bg-gray-800 h-10 w-10"
         onClick={toggleSidebar}
         aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
       >

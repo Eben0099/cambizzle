@@ -3,6 +3,7 @@ import { isValidPhoneNumber } from 'react-phone-number-input';
 import { Mail, Eye, EyeOff, ArrowLeft, Store, Clock, Globe, Facebook, Instagram } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/authService';
+import { API_BASE_URL } from '../../config/api';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import 'react-phone-number-input/style.css';
@@ -23,9 +24,11 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
   const [step, setStep] = useState('choice'); // 'choice', 'form', 'seller'
   const [mode, setMode] = useState(initialMode);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [isResetMode, setIsResetMode] = useState(false);
 
   const { user, login, register, updateUser } = useAuth();
 
@@ -74,6 +77,8 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
     setStep('choice');
     setMode(initialMode);
     setShowPassword(false);
+    setShowConfirmPassword(false);
+    setIsResetMode(false);
     setIsLoading(false);
     setErrors({});
     setFormData({
@@ -151,6 +156,73 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
       setIsLoading(false);
     }
   };
+
+  const handleResetPasswordSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setErrors({});
+    setMessage("");
+
+    try {
+      if (!formData.phone) {
+        setErrors({ phone: 'Phone number is required' });
+        setIsLoading(false);
+        return;
+      }
+
+      if (!formData.password) {
+        setErrors({ password: 'New password is required' });
+        setIsLoading(false);
+        return;
+      }
+
+      if (formData.password.length < 8) {
+        setErrors({ password: 'Password must be at least 8 characters' });
+        setIsLoading(false);
+        return;
+      }
+
+      if (formData.password !== formData.confirmPassword) {
+        setErrors({ confirmPassword: 'Passwords do not match' });
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phone: formData.phone,
+          password: formData.password
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessage("Password reset successful! Redirecting to login...");
+        setTimeout(() => {
+          setIsResetMode(false);
+          setFormData({
+            ...formData,
+            phone: '',
+            password: '',
+            confirmPassword: ''
+          });
+          setStep('choice');
+        }, 1500);
+      } else {
+        setErrors({ submit: data.message || 'Failed to reset password' });
+      }
+    } catch (error) {
+      setErrors({ submit: 'Error during password reset' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -353,6 +425,107 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
   // Ordre des jours de la semaine pour l'affichage
   const weekOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
+  const renderResetPasswordForm = () => (
+    <div className="px-4 py-6 sm:px-6 lg:px-8">
+      <div className="space-y-6 sm:space-y-8">
+        {/* Header with Back Button */}
+        <div className="flex items-start space-x-3">
+          <button
+            onClick={() => setIsResetMode(false)}
+            className="mt-1 p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div className="flex-1">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Reset Password</h2>
+            <p className="text-sm sm:text-base text-gray-600 mt-1">
+              Enter your phone and new password
+            </p>
+          </div>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleResetPasswordSubmit} className="space-y-4 sm:space-y-6">
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Phone <span className="text-red-600">*</span></label>
+              <PhoneInput
+                defaultCountry="CM"
+                value={formData.phone}
+                onChange={handlePhoneChange}
+                international
+                required
+                className="[&_.PhoneInputInput]:outline-none [&_.PhoneInputInput]:ring-0 [&_.PhoneInputInput]:border-none [&_.PhoneInputInput]:focus:outline-none [&_.PhoneInputInput]:focus:ring-0 [&_.PhoneInputInput]:focus:border-none w-full px-3 py-2 border rounded-lg transition-colors duration-200 border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69] text-gray-900 bg-white"
+              />
+              {errors.phone && <p className="text-sm text-red-600">{errors.phone}</p>}
+            </div>
+
+            <div className="relative">
+              <Input
+                label="New Password"
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                error={errors.password}
+                required
+              />
+              <div className="text-xs text-gray-500 mt-1">Password must be at least 8 characters.</div>
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+
+            <div className="relative">
+              <Input
+                label="Confirm Password"
+                type={showConfirmPassword ? 'text' : 'password'}
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                error={errors.confirmPassword}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+          </div>
+
+          {message && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <p className="text-sm text-green-600">{message}</p>
+            </div>
+          )}
+
+          {errors.submit && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <p className="text-sm text-red-600">{errors.submit}</p>
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            variant="primary"
+            className="w-full py-3 sm:py-4 bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] font-semibold rounded-lg transition-colors shadow-sm disabled:opacity-50"
+            loading={isLoading}
+            disabled={isLoading}
+          >
+            Reset Password
+          </Button>
+        </form>
+      </div>
+    </div>
+  );
+
   const renderChoice = () => (
     <div className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="space-y-6 sm:space-y-8">
@@ -382,7 +555,8 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
             <span className="truncate">Continue with Google</span>
           </button>
 
-          <button
+          {/* Facebook Login/Register Button - Commented Out */}
+          {/* <button
             onClick={() => handleSocialAuth('facebook')}
             disabled={isLoading}
             className="w-full flex items-center justify-center px-4 py-3 sm:py-4 border border-gray-300 rounded-lg shadow-sm bg-[#1877F2] text-white hover:bg-[#166FE5] focus:outline-none focus:ring-2 focus:ring-[#D6BA69] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base"
@@ -391,7 +565,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
               <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
             </svg>
             <span className="truncate">Continue with Facebook</span>
-          </button>
+          </button> */}
 
           <button
             onClick={() => setStep('form')}
@@ -490,6 +664,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
             <div className="text-right">
               <button
                 type="button"
+                onClick={() => setIsResetMode(true)}
                 className="text-sm text-[#D6BA69] hover:text-[#C5A952] font-medium transition-colors"
               >
                 Forgot password?
@@ -512,7 +687,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
           <Button
             type="submit"
             variant="primary"
-            className="w-full py-3 sm:py-4 bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] font-semibold py-3 rounded-lg transition-colors shadow-sm disabled:opacity-50"
+            className="w-full py-3 sm:py-4 bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] font-semibold rounded-lg transition-colors shadow-sm disabled:opacity-50"
             loading={isLoading}
             disabled={isLoading}
           >
@@ -967,7 +1142,9 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
   );
 
   const renderContent = () => {
-    if (step === 'choice') {
+    if (isResetMode) {
+      return renderResetPasswordForm();
+    } else if (step === 'choice') {
       return renderChoice();
     } else if (step === 'seller') {
       return renderSellerForm();

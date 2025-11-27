@@ -56,7 +56,11 @@ class AdsService {
       this.setAuthHeader();
 
       const response = await axios.get(`${API_BASE_URL}/ads`, {
-        params: { page, per_page: perPage }
+        params: { 
+          page, 
+          per_page: perPage,
+          moderation_status: 'approved'
+        }
       });
 
       console.log('✅ Annonces récupérées:', response.data);
@@ -599,6 +603,37 @@ class AdsService {
                           error.response?.data?.error ||
                           error.message ||
                           'Erreur lors de la récupération des annonces par catégorie';
+      throw new Error(errorMessage);
+    }
+  }
+
+  // Récupère les filtres disponibles pour une sous-catégorie
+  async getFiltersBySubcategory(subcategorySlug) {
+    try {
+      console.log('🔧 Récupération des filtres pour la sous-catégorie:', subcategorySlug);
+      this.token = localStorage.getItem('token');
+      this.setAuthHeader();
+
+      const response = await axios.get(`${API_BASE_URL}/filters/by-subcategory/${subcategorySlug}`);
+
+      console.log('✅ Filtres récupérés:', {
+        count: response.data?.length || 0,
+        filters: response.data
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error('❌ Erreur récupération filtres:', error);
+      
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+      }
+      
+      const errorMessage = error.response?.data?.message ||
+                          error.response?.data?.error ||
+                          error.message ||
+                          'Erreur lors de la récupération des filtres';
       throw new Error(errorMessage);
     }
   }

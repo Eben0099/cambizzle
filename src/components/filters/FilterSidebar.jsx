@@ -1,0 +1,131 @@
+import React from 'react';
+import { X, RotateCcw } from 'lucide-react';
+import FilterSelect from './FilterSelect';
+import FilterRadio from './FilterRadio';
+import FilterCheckbox from './FilterCheckbox';
+import FilterText from './FilterText';
+import FilterNumber from './FilterNumber';
+import FilterRange from './FilterRange';
+import Button from '../ui/Button';
+import { countActiveFilters } from '../../utils/filterHelpers';
+
+/**
+ * Composant sidebar pour afficher et gérer les filtres
+ */
+const FilterSidebar = ({ 
+  filters = [], 
+  selectedFilters = {}, 
+  onChange, 
+  onReset, 
+  onClose,
+  loading = false 
+}) => {
+  
+  // Rendu d'un filtre selon son type
+  const renderFilter = (filter) => {
+    const value = selectedFilters[filter.id];
+    
+    switch (filter.type) {
+      case 'select':
+        return <FilterSelect filter={filter} value={value} onChange={onChange} />;
+      case 'radio':
+        return <FilterRadio filter={filter} value={value} onChange={onChange} />;
+      case 'checkbox':
+        return <FilterCheckbox filter={filter} value={value} onChange={onChange} />;
+      case 'text':
+        return <FilterText filter={filter} value={value} onChange={onChange} />;
+      case 'number':
+        return <FilterNumber filter={filter} value={value} onChange={onChange} />;
+      case 'range':
+        return <FilterRange filter={filter} value={value} onChange={onChange} />;
+      default:
+        console.warn(`Type de filtre non supporté: ${filter.type}`);
+        return null;
+    }
+  };
+
+  const activeFiltersCount = countActiveFilters(selectedFilters);
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+        <div className="flex items-center space-x-2">
+          <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+          {activeFiltersCount > 0 && (
+            <span className="bg-[#D6BA69] text-black text-xs font-medium px-2 py-1 rounded-full">
+              {activeFiltersCount}
+            </span>
+          )}
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          {activeFiltersCount > 0 && (
+            <button
+              onClick={onReset}
+              className="text-sm text-gray-600 hover:text-gray-900 flex items-center space-x-1"
+              title="Reset all filters"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>Reset</span>
+            </button>
+          )}
+          
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="lg:hidden text-gray-600 hover:text-gray-900"
+              title="Close filters"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Filters list */}
+      <div className="p-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+        {loading ? (
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                <div className="h-10 bg-gray-200 rounded"></div>
+              </div>
+            ))}
+          </div>
+        ) : filters.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <p className="text-sm">No filters available for this subcategory</p>
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {filters
+              .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+              .map((filter) => (
+                <div key={filter.id} className="pb-4 border-b border-gray-100 last:border-b-0">
+                  {renderFilter(filter)}
+                </div>
+              ))}
+          </div>
+        )}
+      </div>
+
+      {/* Footer with apply button for mobile */}
+      {onClose && (
+        <div className="p-4 border-t border-gray-200 lg:hidden">
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={onClose}
+            className="w-full"
+          >
+            Apply Filters
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default FilterSidebar;

@@ -45,9 +45,9 @@ return (
           <div className="w-9 h-9 bg-[#D6BA69] rounded-lg flex items-center justify-center shadow-sm">
             <span className="text-black font-bold text-xl">C</span>
           </div>
-          <span className="text-xl font-bold text-[#D6BA69] hidden sm:block">
+          {/* <span className="text-xl font-bold text-[#D6BA69] hidden sm:block">
             Cambizzle
-          </span>
+          </span> */}
         </Link>
 
         {/* Desktop Navigation */}
@@ -144,7 +144,7 @@ return (
                       <span>My profile</span>
                     </Link>
                     <Link 
-                      to="/my-ads" 
+                      to="/profile#my-ads" 
                       className="flex items-center px-4 py-3 text-sm text-gray-300 hover:bg-black/20 hover:text-white transition-colors"
                     >
                       <Plus className="w-4 h-4 mr-3" />
@@ -229,31 +229,13 @@ return (
                 <User className="w-5 h-5" />
                 <span className="font-medium">My profile</span>
               </Link>
-              {user?.role === 'admin' && (
-                <Link
-                  to="/admin"
-                  className="flex items-center space-x-3 p-3 rounded-lg hover:bg-black/10 text-gray-300 hover:text-white transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <Shield className="w-5 h-5 text-[#D6BA69]" />
-                  <span className="font-medium">Admin Panel</span>
-                </Link>
-              )}
               <Link
-                  to="/admin"
-                  className="flex items-center space-x-3 p-3 rounded-lg hover:bg-black/10 text-gray-300 hover:text-white transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <Shield className="w-5 h-5 text-[#D6BA69]" />
-                  <span className="font-medium">Admin Panel</span>
-                </Link>
-              <Link
-                to="/favorites"
+                to="/profile#my-ads"
                 className="flex items-center space-x-3 p-3 rounded-lg hover:bg-black/10 text-gray-300 hover:text-white transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                <Heart className="w-5 h-5" />
-                <span className="font-medium">My favorites</span>
+                <Plus className="w-5 h-5" />
+                <span className="font-medium">My ads</span>
               </Link>
               <button
                 onClick={() => {

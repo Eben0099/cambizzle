@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, MapPin, Eye, Star, Badge } from 'lucide-react';
+import { Heart, MapPin, Eye, Star, ShieldCheck, Zap } from 'lucide-react';
 import { formatPrice, formatRelativeDate, getPhotoUrl } from '../../utils/helpers';
 import Card from '../ui/Card';
 import useFavorites from '../../hooks/useFavorites';
@@ -49,6 +49,9 @@ const AdCard = ({ ad }) => {
       rawDiscountPercentageSnake: ad.discount_percentage
     });
   }
+
+  // Debug vérification vendeur
+  console.log('🛡️ AdCard userVerified:', { title: ad.title, userVerified: ad.userVerified });
 
   return (
     <Card hover className="overflow-hidden h-full">
@@ -113,6 +116,27 @@ const AdCard = ({ ad }) => {
               -{discountPercentage}%
             </div>
           )}
+
+          {/* Verified Badge */}
+          {ad.userVerified === 1 && (
+            <div className="absolute bottom-2 right-2 flex items-center gap-1">
+              <div className="bg-green-500 text-white p-1.5 rounded-full">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              {ad.isBoosted == 1 && (
+                <div className="bg-yellow-500 text-white p-1.5 rounded-full">
+                  <Zap className="w-4 h-4" />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Boosted Badge (if no verified badge) */}
+          {ad.isBoosted === 1 && ad.userVerified !== 1 && (
+            <div className="absolute bottom-2 right-2 bg-yellow-500 text-white p-1.5 rounded-full">
+              <Zap className="w-4 h-4" />
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -166,10 +190,6 @@ const AdCard = ({ ad }) => {
               </div>
               <div className="flex items-center space-x-1">
                 <span className="text-xs text-gray-700 truncate max-w-[60px]">{ad.sellerUsername}</span>
-                {/* Vérification vendeur - à implémenter plus tard */}
-                {/* {ad.seller?.isVerified && (
-                  <Badge className="w-3 h-3 text-[#D6BA69]" />
-                )} */}
               </div>
             </div>
 

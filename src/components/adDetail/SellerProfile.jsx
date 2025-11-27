@@ -42,7 +42,13 @@ const SellerProfile = ({ seller, onContact, onCall, adTitle }) => {
           </div>
           <div className="flex-1">
             <h4 className="font-semibold text-gray-900 text-lg">{seller.name || 'Seller'}</h4>
-            <div className="flex items-center space-x-2 text-sm text-gray-600 mt-1">
+            {seller.isVerified && (
+              <div className="flex items-center space-x-2 mt-2 p-2 bg-green-50 rounded border border-green-200 w-fit">
+                <Shield className="w-4 h-4 text-green-600" />
+                <span className="text-xs text-green-700 font-medium">Verified Seller</span>
+              </div>
+            )}
+            <div className="flex items-center space-x-2 text-sm text-gray-600 mt-2">
               <Clock className="w-4 h-4" />
               <span>Member since {seller.memberSince || 'N/A'}</span>
             </div>
@@ -85,12 +91,6 @@ const SellerProfile = ({ seller, onContact, onCall, adTitle }) => {
             </div>
           )}
         </div>
-        {seller.isVerified && (
-          <div className="flex items-center space-x-2 mb-6 p-3 bg-green-50 rounded-lg border border-green-200">
-            <Shield className="w-5 h-5 text-green-600" />
-            <span className="text-sm text-green-700 font-medium">Verified Seller</span>
-          </div>
-        )}
         <div className="space-y-3">
           <button
             onClick={() => setShowContactModal(true)}
@@ -120,8 +120,11 @@ const SellerProfile = ({ seller, onContact, onCall, adTitle }) => {
               </div>
             </div>
             {seller.phoneNumber && (
-              <div className="flex items-center gap-2">
-                <Phone className="w-5 h-5 text-gray-700" />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Phone className="w-5 h-5 text-gray-700" />
+                  <span className="font-medium text-gray-600">Phone</span>
+                </div>
                 <span className="font-medium text-gray-900">{seller.phoneNumber}</span>
               </div>
             )}
@@ -139,8 +142,8 @@ const SellerProfile = ({ seller, onContact, onCall, adTitle }) => {
                     className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                     aria-label="Contact on WhatsApp"
                   >
-                    <WhatsappIcon size={20} />
                     <span>WhatsApp</span>
+                    <WhatsappIcon size={20} />
                   </button>
                 </div>
               )}

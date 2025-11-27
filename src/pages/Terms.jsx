@@ -27,36 +27,6 @@ const Terms = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 space-y-8">
             
-            {/* 13. Modifications */}
-            <section>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">13. Modifications</h2>
-              <p className="text-gray-600 leading-relaxed">
-                We reserve the right to modify or update these Terms at any time. Any changes will be posted on this page, and the effective date will be updated. You are encouraged to review these Terms periodically.
-              </p>
-            </section>
-
-            {/* 14. Contact Us */}
-            <section className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">14. Contact Us</h2>
-              <p className="text-gray-600 leading-relaxed mb-4">
-                If you have any questions or concerns regarding these Terms and Conditions, please contact us at:
-              </p>
-              <ul className="space-y-2 text-gray-600 ml-6">
-                <li className="flex gap-3">
-                  <span className="text-[#D6BA69]">•</span>
-                  <span>Website: <a href="https://www.cambizzle.com" className="text-[#D6BA69] hover:underline">www.cambizzle.com</a></span>
-                </li>
-                <li className="flex gap-3">
-                  <span className="text-[#D6BA69]">•</span>
-                  <span>Email: <a href="mailto:info@cambizzle.com" className="text-[#D6BA69] hover:underline">info@cambizzle.com</a></span>
-                </li>
-                <li className="flex gap-3">
-                  <span className="text-[#D6BA69]">•</span>
-                  <span>Phone: +237678185437</span>
-                </li>
-              </ul>
-            </section>
-
             {/* 1. Introduction */}
             <section>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Introduction</h2>
@@ -212,6 +182,36 @@ const Terms = () => {
               <p className="text-gray-600 leading-relaxed">
                 These Terms are governed by and construed in accordance with the laws of Cameroon. Any disputes arising under or in connection with these Terms will be subject to the exclusive jurisdiction of the courts in Cameroon.
               </p>
+            </section>
+
+            {/* 13. Modifications */}
+            <section>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">13. Modifications</h2>
+              <p className="text-gray-600 leading-relaxed">
+                We reserve the right to modify or update these Terms at any time. Any changes will be posted on this page, and the effective date will be updated. You are encouraged to review these Terms periodically.
+              </p>
+            </section>
+
+            {/* 14. Contact Us */}
+            <section className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">14. Contact Us</h2>
+              <p className="text-gray-600 leading-relaxed mb-4">
+                If you have any questions or concerns regarding these Terms and Conditions, please contact us at:
+              </p>
+              <ul className="space-y-2 text-gray-600 ml-6">
+                <li className="flex gap-3">
+                  <span className="text-[#D6BA69]">•</span>
+                  <span>Website: <a href="https://www.cambizzle.com" className="text-[#D6BA69] hover:underline">www.cambizzle.com</a></span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="text-[#D6BA69]">•</span>
+                  <span>Email: <a href="mailto:info@cambizzle.com" className="text-[#D6BA69] hover:underline">info@cambizzle.com</a></span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="text-[#D6BA69]">•</span>
+                  <span>Phone: +237678185437</span>
+                </li>
+              </ul>
             </section>
           </div>
         </div>

@@ -84,7 +84,12 @@ export const AdsProvider = ({ children }) => {
   const fetchAds = useCallback(async (page = 1, filters = {}) => {
     try {
       setLoading(true);
-      const response = await adsService.getAds({ page, ...filters });
+      // Toujours ajouter le filtre moderation_status: approved
+      const response = await adsService.getAds({ 
+        page, 
+        moderation_status: 'approved',
+        ...filters 
+      });
       // Nouveau format API : les annonces sont dans response.ads
       dispatch({ type: 'SET_ADS', payload: response.ads || response.data || [] });
       dispatch({ type: 'SET_PAGINATION', payload: response.pagination });
@@ -96,7 +101,11 @@ export const AdsProvider = ({ children }) => {
   const searchAds = useCallback(async (query, filters = {}) => {
     try {
       setLoading(true);
-      const response = await adsService.searchAds(query, filters);
+      // Toujours ajouter le filtre moderation_status: approved
+      const response = await adsService.searchAds(query, { 
+        moderation_status: 'approved',
+        ...filters 
+      });
       // Nouveau format API : les annonces sont dans response.ads
       dispatch({ type: 'SET_SEARCH_RESULTS', payload: response.ads || response.data || [] });
       dispatch({ type: 'SET_PAGINATION', payload: response.pagination });
