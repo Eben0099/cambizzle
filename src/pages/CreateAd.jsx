@@ -1,7 +1,7 @@
 import Select from 'react-select';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Tag, Camera, Loader2, MapPin } from 'lucide-react';
+import { ArrowLeft, Tag, Camera, Loader2, MapPin, Zap } from 'lucide-react';
 import { FaWallet } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { useAds } from '../contexts/AdsContext';
@@ -12,6 +12,8 @@ import Card from '../components/ui/Card';
 import ImageUpload from '../components/ui/ImageUpload';
 import useAdCreation from '../hooks/useAdCreation';
 import { adsService } from '../services/adsService';
+import StepBoostPlan from '../components/StepBoostPlan';
+import PaymentModal from '../components/PaymentModal';
 
 const CreateAd = () => {
   const [formData, setFormData] = useState({
@@ -28,7 +30,10 @@ const CreateAd = () => {
     tags: '',
     isPremium: false,
     isNegotiable: false,
-    filters: {}
+    filters: {},
+    boost_plan_id: null,
+    phone: '',
+    payment_method: 'mtn_mobile_money'
   });
   
   const [subcategories, setSubcategories] = useState([]);
@@ -37,6 +42,7 @@ const CreateAd = () => {
   const [errors, setErrors] = useState({});
   const [currentStep, setCurrentStep] = useState(1);
   const [canSubmit, setCanSubmit] = useState(false);
+  const [paymentModal, setPaymentModal] = useState({ show: false, paymentInfo: null, adId: null });
 
   const { user, isAuthenticated } = useAuth();
   const { createAd } = useAds();
@@ -71,13 +77,14 @@ const CreateAd = () => {
       ...validateStep(1),
       ...validateStep(2),
       ...validateStep(3),
-      ...validateStep(4)
+      ...validateStep(4),
+      ...validateStep(5)
     };
     
     const hasNoErrors = Object.keys(allErrors).length === 0;
     const hasMinimumImages = images.length >= 3;
     
-    setCanSubmit(hasNoErrors && hasMinimumImages && currentStep === 4);
+    setCanSubmit(hasNoErrors && hasMinimumImages && currentStep === 5);
   }, [formData, images, currentStep]);
 
   const handleImagesChange = (newImages) => {
@@ -138,6 +145,17 @@ const CreateAd = () => {
           setSubcategories([]);
           console.error('Erreur chargement sous-catégories:', err);
         }
+      }
+      return;
+    }
+
+    if (name === 'phone' || name === 'payment_method') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+      if (errors[name]) {
+        setErrors(prev => ({ ...prev, [name]: '' }));
       }
       return;
     }
@@ -255,6 +273,22 @@ const CreateAd = () => {
         }
       }
     }
+    if (step === 5) {
+      // Boost plan validation - always valid since "No boost" is an option
+      if (formData.boost_plan_id !== null && formData.boost_plan_id !== undefined) {
+        // If a paid plan is selected, validate phone and payment method
+        if (formData.selectedPlan && formData.selectedPlan.price > 0) {
+          if (!formData.phone.trim()) {
+            newErrors.phone = 'Phone number is required for paid boosts';
+          } else if (formData.phone.length < 10) {
+            newErrors.phone = 'Please enter a valid phone number';
+          }
+          if (!formData.payment_method) {
+            newErrors.payment_method = 'Payment method is required for paid boosts';
+          }
+        }
+      }
+    }
     
     return newErrors;
   };
@@ -267,7 +301,9 @@ const CreateAd = () => {
     }
     
     setErrors({});
-    setCurrentStep(prev => prev + 1);
+    if (currentStep < 5) {
+      setCurrentStep(prev => prev + 1);
+    }
   };
 
   const handlePrevious = () => {
@@ -378,12 +414,38 @@ const CreateAd = () => {
         }
       });
 
+      // Ajouter les informations de boost
+      if (formData.boost_plan_id !== null && formData.boost_plan_id !== undefined) {
+        formDataToSend.append('boost_plan_id', formData.boost_plan_id);
+        if (formData.selectedPlan && formData.selectedPlan.price > 0) {
+          formDataToSend.append('phone', formData.phone.trim());
+          formDataToSend.append('payment_method', formData.payment_method);
+        }
+      }
+
       console.log('📤 Envoi des données...');
       const result = await adsService.createAd(formDataToSend);
       console.log('📡 Réponse API reçue:', result);
 
-      if (result.ad) {
+      if (result.status === 'success') {
+        // Ad created successfully without payment
         navigate('/profile');
+      } else if (result.status === 'payment_pending') {
+        // Check if required data exists - be more flexible
+        const adId = result.adId || result.ad_id || result.id || result.ad?.id;
+        const paymentInfo = result.payment_info || result.paymentInfo;
+
+        console.log('💳 Payment pending - extracted data:', { adId, paymentInfo, fullResult: result });
+
+        // Show payment modal even if adId is missing (we mainly need paymentInfo)
+        setPaymentModal({
+          show: true,
+          paymentInfo: paymentInfo || {},
+          adId: adId || null
+        });
+      } else {
+        // Handle unexpected status
+        setErrors({ submit: result.message || 'Unexpected response from server' });
       }
     } catch (err) {
       console.error('Erreur création annonce:', err);
@@ -397,7 +459,8 @@ const CreateAd = () => {
     { number: 1, title: 'General Information', icon: Tag },
     { number: 2, title: 'Price and Location', icon: FaWallet },
     { number: 3, title: 'Specific Characteristics', icon: MapPin },
-    { number: 4, title: 'Photos', icon: Camera }
+    { number: 4, title: 'Photos', icon: Camera },
+    { number: 5, title: 'Boost Plan', icon: Zap }
   ];
 
   if (!isAuthenticated) {
@@ -609,7 +672,16 @@ const CreateAd = () => {
                     error={errors.price}
                   />
                   <Input
-                    label="Original Price (optional)"
+                    label={
+                      <span>
+                        Original Price (optional)
+                        {formData.price && (
+                          <span className="text-red-500 text-xs ml-2">
+                            (must be higher than selling price)
+                          </span>
+                        )}
+                      </span>
+                    }
                     type="text"
                     name="originalPrice"
                     value={formData.originalPrice}
@@ -942,6 +1014,16 @@ const CreateAd = () => {
             </div>
           )}
 
+          {/* Step 5: Boost Plan */}
+          {currentStep === 5 && (
+            <StepBoostPlan
+              formData={formData}
+              setFormData={setFormData}
+              errors={errors}
+              setErrors={setErrors}
+            />
+          )}
+
           {/* Navigation Buttons */}
           <div className="flex items-center justify-between gap-4 mt-8 pt-6 border-t border-gray-200">
             {currentStep > 1 && (
@@ -957,7 +1039,7 @@ const CreateAd = () => {
             {currentStep === 1 && (
               <div />
             )}
-            {currentStep < 4 ? (
+            {currentStep < 5 ? (
               <Button
                 type="button"
                 variant="primary"
@@ -985,6 +1067,22 @@ const CreateAd = () => {
             </div>
           )}
         </form>
+
+        {/* Payment Modal */}
+        {paymentModal.show && (
+          <PaymentModal
+            paymentInfo={paymentModal.paymentInfo}
+            adId={paymentModal.adId}
+            onClose={() => setPaymentModal({ show: false, paymentInfo: null, adId: null })}
+            onSuccess={() => {
+              setPaymentModal({ show: false, paymentInfo: null, adId: null });
+              navigate('/profile');
+            }}
+            onFailure={() => {
+              // Keep modal open for retry
+            }}
+          />
+        )}
       </div>
     </div>
   );

@@ -683,6 +683,45 @@ class AdsService {
       throw new Error(errorMessage);
     }
   }
+
+  /**
+   * Récupère la liste des plans de boost actifs
+   * @returns {Promise<Array>} - Liste des plans de boost
+   */
+  async getPromotionPacks() {
+    try {
+      this.token = localStorage.getItem('token');
+      this.setAuthHeader();
+      console.log('🔎 Récupération des plans de boost');
+      const response = await axios.get(`${API_BASE_URL}/promotion-packs`);
+      console.log('✅ Plans de boost récupérés:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Erreur récupération plans de boost:', error);
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Erreur lors de la récupération des plans de boost';
+      throw new Error(errorMessage);
+    }
+  }
+
+  /**
+   * Vérifie le statut d'un paiement spécifique auprès de Campay
+   * @param {string|number} paymentId - ID du paiement
+   * @returns {Promise<Object>} - Statut du paiement
+   */
+  async checkPaymentStatus(paymentId) {
+    try {
+      this.token = localStorage.getItem('token');
+      this.setAuthHeader();
+      console.log('🔎 Vérification statut paiement:', paymentId);
+      const response = await axios.get(`${API_BASE_URL}/boost/check-payment/${paymentId}`);
+      console.log('✅ Statut paiement récupéré:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Erreur vérification statut paiement:', error);
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Erreur lors de la vérification du paiement';
+      throw new Error(errorMessage);
+    }
+  }
 }
 
 export const adsService = new AdsService();

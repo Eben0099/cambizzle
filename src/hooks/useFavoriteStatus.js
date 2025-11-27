@@ -11,6 +11,10 @@ export const useFavoriteStatus = (adId) => {
             setIsFavorite(status);
         } catch (error) {
             console.error("Error checking favorite status:", error);
+            // If unauthorized, treat as not favorite
+            if (error.response?.status === 401) {
+                setIsFavorite(false);
+            }
         } finally {
             setLoading(false);
         }
