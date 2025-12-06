@@ -20,6 +20,24 @@ export const buildFilterQueryParams = (selectedFilters) => {
       return;
     }
 
+    // Filtres spéciaux : location et price
+    if (filterId === 'location') {
+      queryParams['location'] = value;
+      return;
+    }
+
+    if (filterId === 'price') {
+      if (typeof value === 'object') {
+        if (value.min !== null && value.min !== undefined && value.min !== '') {
+          queryParams['price_min'] = value.min;
+        }
+        if (value.max !== null && value.max !== undefined && value.max !== '') {
+          queryParams['price_max'] = value.max;
+        }
+      }
+      return;
+    }
+
     // Si c'est un objet avec min et/ou max (range)
     if (typeof value === 'object' && !Array.isArray(value)) {
       if (value.min !== null && value.min !== undefined && value.min !== '') {
@@ -57,6 +75,22 @@ export const parseFiltersFromURL = (searchParams) => {
   const selectedFilters = {};
 
   for (const [key, value] of searchParams.entries()) {
+    // Filtre spécial : location
+    if (key === 'location') {
+      selectedFilters['location'] = value;
+      continue;
+    }
+
+    // Filtre spécial : price_min et price_max
+    if (key === 'price_min' || key === 'price_max') {
+      if (!selectedFilters['price']) {
+        selectedFilters['price'] = {};
+      }
+      const rangeType = key === 'price_min' ? 'min' : 'max';
+      selectedFilters['price'][rangeType] = value;
+      continue;
+    }
+
     // Identifier les paramètres de filtres
     if (key.startsWith('filter_')) {
       const parts = key.replace('filter_', '').split('_');
@@ -136,6 +170,14 @@ export const resetFilters = () => {
  */
 export const formatFilterLabel = (filter, value) => {
   if (!filter || !value) return '';
+  
+  // Filtre spécial : price
+  if (filter.id === 'price' && typeof value === 'object' && !Array.isArray(value)) {
+    const parts = [];
+    if (value.min) parts.push(`${value.min} XAF`);
+    if (value.max) parts.push(`${value.max} XAF`);
+    return `Price: ${parts.join(' - ')}`;
+  }
   
   // Pour les ranges
   if (typeof value === 'object' && !Array.isArray(value)) {

@@ -14,6 +14,7 @@ import { countActiveFilters } from '../../utils/filterHelpers';
  */
 const FilterSidebar = ({ 
   filters = [], 
+  filterMetadata = { locations: [], priceRange: null },
   selectedFilters = {}, 
   onChange, 
   onReset, 
@@ -45,6 +46,12 @@ const FilterSidebar = ({
   };
 
   const activeFiltersCount = countActiveFilters(selectedFilters);
+
+  // Debug locations
+  console.log('🗺️ FilterSidebar - filterMetadata:', filterMetadata);
+  console.log('🏙️ Locations disponibles:', filterMetadata?.locations);
+  const cities = filterMetadata?.locations?.filter(loc => loc.type === 'city') || [];
+  console.log('🏙️ Villes filtrées:', cities);
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -94,19 +101,58 @@ const FilterSidebar = ({
               </div>
             ))}
           </div>
-        ) : filters.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <p className="text-sm">No filters available for this subcategory</p>
-          </div>
         ) : (
           <div className="space-y-1">
-            {filters
-              .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
-              .map((filter) => (
-                <div key={filter.id} className="pb-4 border-b border-gray-100 last:border-b-0">
-                  {renderFilter(filter)}
-                </div>
-              ))}
+            {/* Filtre de localisation */}
+            {filterMetadata?.locations && filterMetadata.locations.length > 0 && (
+              <div className="pb-4 border-b border-gray-100">
+                <FilterSelect
+                  filter={{
+                    id: 'location',
+                    name: 'Location',
+                    type: 'select',
+                    options: filterMetadata.locations
+                      .map((loc, index) => ({
+                        id: loc.id || `loc-${index}`,
+                        value: loc.city || loc.name
+                      }))
+                      .sort((a, b) => a.value.localeCompare(b.value))
+                  }}
+                  value={selectedFilters.location}
+                  onChange={onChange}
+                />
+              </div>
+            )}
+
+            {/* Filtre de prix */}
+            {filterMetadata?.priceRange && (
+              <div className="pb-4 border-b border-gray-100">
+                <FilterRange
+                  filter={{
+                    id: 'price',
+                    name: 'Price Range',
+                    type: 'range'
+                  }}
+                  value={selectedFilters.price}
+                  onChange={onChange}
+                />
+              </div>
+            )}
+
+            {/* Filtres dynamiques de la sous-catégorie */}
+            {Array.isArray(filters) && filters.length > 0 ? (
+              filters
+                .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+                .map((filter) => (
+                  <div key={filter.id} className="pb-4 border-b border-gray-100 last:border-b-0">
+                    {renderFilter(filter)}
+                  </div>
+                ))
+            ) : (
+              <div className="text-center py-4 text-gray-500">
+                <p className="text-sm">No additional filters available</p>
+              </div>
+            )}
           </div>
         )}
       </div>

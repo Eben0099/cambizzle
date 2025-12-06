@@ -174,7 +174,7 @@ const AdCard = ({ ad }) => {
             <div className="flex items-center space-x-1">
               <MapPin className="w-3 h-3" />
               <span className="truncate">
-                {ad.locationName} ({ad.locationType})
+                {ad.locationName}
               </span>
             </div>
             <span className="text-xs">{formatRelativeDate(ad.createdAt)}</span>

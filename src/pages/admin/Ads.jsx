@@ -21,7 +21,9 @@ import {
   MapPin,
   Tag,
   DollarSign,
-  Loader as LucideLoader
+  Loader as LucideLoader,
+  Zap,
+  Shield
 } from 'lucide-react';
 import Loader from "../../components/ui/Loader";
 import {
@@ -416,9 +418,19 @@ const Ads = () => {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start mb-2 gap-2">
-                      <h3 id={`ad-title-${ad.id}`} className="text-sm sm:text-base font-semibold text-gray-900 truncate">
-                        {ad.title}
-                      </h3>
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <h3 id={`ad-title-${ad.id}`} className="text-sm sm:text-base font-semibold text-gray-900 truncate">
+                          {ad.title}
+                        </h3>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {ad.isBoosted == "1" && (
+                            <Zap className="h-4 w-4 text-yellow-500 fill-yellow-500" title="Annonce boostée" />
+                          )}
+                          {ad.userVerified === 1 && (
+                            <Shield className="h-4 w-4 text-blue-500 fill-blue-500" title="Utilisateur vérifié" />
+                          )}
+                        </div>
+                      </div>
                       <div className="flex-shrink-0">{getModerationStatusBadge(ad.moderationStatus)}</div>
                     </div>
 

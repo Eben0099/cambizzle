@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import userService from '../../services/userService';
-import { User, Shield, Upload, X, Camera, Trash2, Building2, Lock } from 'lucide-react';
+import { User, Shield, Upload, X, Camera, Trash2, Building2, Lock, Eye, EyeOff } from 'lucide-react';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import PhoneInput from 'react-phone-input-2';
@@ -23,12 +23,25 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
 
   const [identityDocument, setIdentityDocument] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoUploadSuccess, setPhotoUploadSuccess] = useState(null);
+  const [photoUploadError, setPhotoUploadError] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Identity verification upload state
   const [identityUploadLoading, setIdentityUploadLoading] = useState(false);
   const [identityUploadSuccess, setIdentityUploadSuccess] = useState(null);
   const [identityUploadError, setIdentityUploadError] = useState(null);
+
+  // Change password state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [passwordChangeLoading, setPasswordChangeLoading] = useState(false);
+  const [passwordChangeSuccess, setPasswordChangeSuccess] = useState(null);
+  const [passwordChangeError, setPasswordChangeError] = useState(null);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleFormInputChange = (e) => {
     const { name, value } = e.target;
@@ -114,6 +127,39 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
       }));
 
       console.log('✅ Image processed successfully');
+
+      // Immediately upload photo to server
+      try {
+        setPhotoUploadSuccess(null);
+        setPhotoUploadError(null);
+        const formData = new FormData();
+        // Convert base64 to Blob
+        const base64Data = base64.split(',')[1];
+        const mimeType = base64.split(',')[0].split(':')[1].split(';')[0];
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const imageBlob = new Blob([bytes], { type: mimeType });
+        formData.append('photo', imageBlob, 'profile-photo.jpg');
+
+        const result = await onUpdateProfile(formData);
+        console.log('📤 Profile photo uploaded to server');
+        // If backend returned updated user with photoUrl, use it instead of preview
+        if (result?.user?.photoUrl || result?.user?.photo_url) {
+          const serverPhotoUrl = result.user.photoUrl || result.user.photo_url;
+          setEditFormData(prev => ({
+            ...prev,
+            photoUrl: serverPhotoUrl,
+            photoBase64: null
+          }));
+        }
+        setPhotoUploadSuccess('Profile photo updated successfully');
+      } catch (uploadErr) {
+        console.error('❌ Failed to upload profile photo:', uploadErr);
+        setPhotoUploadError(uploadErr?.message || 'Failed to upload profile photo');
+      }
     } catch (error) {
       console.error('Error processing image:', error);
       alert('Error processing image');
@@ -124,11 +170,22 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
 
   const handleRemovePhoto = async () => {
     setUploadingPhoto(true);
+    setPhotoUploadSuccess(null);
+    setPhotoUploadError(null);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setEditFormData(prev => ({ ...prev, photoUrl: '' }));
+      // Optimistic UI update
+      setEditFormData(prev => ({ ...prev, photoUrl: '', photoBase64: null }));
+
+      // Inform server to remove profile photo
+      const result = await onUpdateProfile({ photo_url: '' });
+      // Use returned user to reflect server state
+      if (result?.user?.photoUrl === '' || result?.user?.photo_url === '') {
+        setEditFormData(prev => ({ ...prev, photoUrl: '', photoBase64: null }));
+      }
+      setPhotoUploadSuccess('Profile photo removed successfully');
     } catch (error) {
       console.error('Error during removal:', error);
+      setPhotoUploadError(error?.message || 'Failed to remove profile photo');
     } finally {
       setUploadingPhoto(false);
     }
@@ -200,6 +257,57 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
     setIdentityDocument(file);
   };
 
+  const handleChangePassword = async () => {
+    setPasswordChangeLoading(true);
+    setPasswordChangeSuccess(null);
+    setPasswordChangeError(null);
+    try {
+      const curr = currentPassword.trim();
+      const next = newPassword.trim();
+      const confirm = confirmNewPassword.trim();
+
+      if (!curr || !next || !confirm) {
+        setPasswordChangeError('All password fields are required');
+        setPasswordChangeLoading(false);
+        return;
+      }
+
+      if (next !== confirm) {
+        setPasswordChangeError('New password and confirmation do not match');
+        setPasswordChangeLoading(false);
+        return;
+      }
+
+      if (next.length < 6) {
+        setPasswordChangeError('New password must be at least 6 characters');
+        setPasswordChangeLoading(false);
+        return;
+      }
+
+      // Some backends (yours) use the same /users/me update endpoint to change password.
+      // Send a FormData so it is passed through as-is to the API (and not transformed).
+      const formData = new FormData();
+      formData.append('current_password', curr);
+      formData.append('new_password', next);
+
+      const result = await onUpdateProfile(formData);
+
+      // If update succeeded, clear fields and show success
+      setPasswordChangeSuccess('Password changed successfully');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmNewPassword('');
+      // Optionally reflect server-updated user data if returned
+      if (result?.user) {
+        // nothing special here — parent hook already updates auth context
+      }
+    } catch (err) {
+      setPasswordChangeError(err?.message || 'Failed to change password');
+    } finally {
+      setPasswordChangeLoading(false);
+    }
+  };
+
   const handleSave = () => {
     console.log('💾 handleSave called');
     console.log('📊 Current editFormData:', editFormData);
@@ -207,11 +315,16 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
     // Create a FormData to send data and image
     const formData = new FormData();
 
-    // Add text fields
-    formData.append('first_name', editFormData.firstName);
-    formData.append('last_name', editFormData.lastName);
-    formData.append('email', editFormData.email);
-    formData.append('slug', editFormData.slug);
+    // Add text fields only if provided (no required fields)
+    const firstName = (editFormData.firstName || '').trim();
+    const lastName = (editFormData.lastName || '').trim();
+    const email = (editFormData.email || '').trim();
+    const slug = (editFormData.slug || '').trim();
+
+    if (firstName) formData.append('first_name', firstName);
+    if (lastName) formData.append('last_name', lastName);
+    if (email) formData.append('email', email);
+    if (slug) formData.append('slug', slug);
 
     // Add phone only if it has changed
     if (editFormData.phone && editFormData.phone !== user?.phone) {
@@ -237,12 +350,7 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
     console.log('📤 FormData prepared with', [...formData.entries()].length, 'fields');
     console.log('🔍 FormData fields:', [...formData.entries()].map(([key, value]) => `${key}: ${value instanceof Blob ? 'Blob(' + value.size + ' bytes)' : value}`));
 
-    // Validate data
-    if (!editFormData.firstName || !editFormData.lastName || !editFormData.email) {
-      alert('First name, last name, and email are required');
-      return;
-    }
-
+    // No required-field validation; submit partial updates as provided
     onUpdateProfile(formData);
   };
 
@@ -312,6 +420,12 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
               <p className="text-xs sm:text-sm text-gray-500 mt-2">
                 JPG, PNG, or GIF. Maximum size: 5MB
               </p>
+              {photoUploadSuccess && (
+                <p className="text-xs sm:text-sm text-green-600 mt-2">{photoUploadSuccess}</p>
+              )}
+              {photoUploadError && (
+                <p className="text-xs sm:text-sm text-red-600 mt-2">{photoUploadError}</p>
+              )}
             </div>
           </div>
         </div>
@@ -502,13 +616,88 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
           </h3>
           
           <div className="space-y-4">
-            <Button 
-              variant="outline" 
-              className="w-full justify-start py-2 sm:py-3 text-xs sm:text-sm"
-              aria-label="Change password"
-            >
-              Change My Password
-            </Button>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Current Password</label>
+                  <div className="relative">
+                    <input
+                      type={showCurrentPassword ? 'text' : 'password'}
+                      name="currentPassword"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D6BA69] focus:border-transparent pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword((v) => !v)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      aria-label={showCurrentPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700">New Password</label>
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      name="newPassword"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D6BA69] focus:border-transparent pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword((v) => !v)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Confirm New Password</label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      name="confirmNewPassword"
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D6BA69] focus:border-transparent pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((v) => !v)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  onClick={handleChangePassword}
+                  disabled={passwordChangeLoading}
+                  className="bg-[#D6BA69] hover:bg-[#C5A952] text-black py-2 sm:py-3 text-xs sm:text-sm"
+                  aria-label="Change password"
+                >
+                  {passwordChangeLoading ? 'Changing...' : 'Change Password'}
+                </Button>
+              </div>
+              {passwordChangeSuccess && (
+                <p className="text-xs sm:text-sm text-green-600">{passwordChangeSuccess}</p>
+              )}
+              {passwordChangeError && (
+                <p className="text-xs sm:text-sm text-red-600">{passwordChangeError}</p>
+              )}
+            </div>
             
             <div className="border-t border-gray-200 pt-4">
               <h4 className="text-xs sm:text-sm font-medium text-red-600 mb-2">Danger Zone</h4>

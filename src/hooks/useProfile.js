@@ -202,7 +202,7 @@ export const useProfile = () => {
 
       // Mettre à jour aussi dans le contexte d'authentification
       updateAuthUser(processedUser);
-      return { success: true };
+      return { success: true, user: processedUser };
     } catch (error) {
       console.error('Erreur lors de la mise à jour du profil:', error);
       throw error;

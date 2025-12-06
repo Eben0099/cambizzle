@@ -1,6 +1,7 @@
 import { User, Package, Heart, Store, Settings } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
 
-const ProfileTabs = ({ activeTab, setActiveTab, sellerProfile }) => {
+const ProfileTabs = ({ sellerProfile }) => {
   const tabs = [
     { id: 'overview', label: 'Overview', icon: User },
     { id: 'ads', label: 'My Ads', icon: Package },
@@ -16,11 +17,11 @@ const ProfileTabs = ({ activeTab, setActiveTab, sellerProfile }) => {
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
-              <button
+              <NavLink
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center py-3 sm:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors ${
-                  activeTab === tab.id
+                to={`/profile/${tab.id}`}
+                className={({ isActive }) => `flex items-center py-3 sm:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors ${
+                  isActive
                     ? 'border-[#D6BA69] text-[#D6BA69]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
@@ -28,7 +29,7 @@ const ProfileTabs = ({ activeTab, setActiveTab, sellerProfile }) => {
               >
                 <Icon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 {tab.label}
-              </button>
+              </NavLink>
             );
           })}
         </nav>

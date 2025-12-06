@@ -6,8 +6,24 @@ import { formatFilterLabel, hasFilterValue } from '../../utils/filterHelpers';
  * Composant pour afficher les badges des filtres actifs
  */
 const ActiveFilterBadges = ({ filters = [], selectedFilters = {}, onRemoveFilter }) => {
+  // Vérifier que filters est un tableau
+  const filtersArray = Array.isArray(filters) ? filters : [];
+  
+  // Créer une liste complète incluant les filtres spéciaux (location et price)
+  const allFilters = [...filtersArray];
+  
+  // Ajouter le filtre location si sélectionné
+  if (selectedFilters.location) {
+    allFilters.push({ id: 'location', name: 'Location', type: 'select' });
+  }
+  
+  // Ajouter le filtre price si sélectionné
+  if (selectedFilters.price && hasFilterValue(selectedFilters.price)) {
+    allFilters.push({ id: 'price', name: 'Price', type: 'range' });
+  }
+  
   // Filtrer les filtres qui ont une valeur
-  const activeFilters = filters.filter(filter => 
+  const activeFilters = allFilters.filter(filter => 
     hasFilterValue(selectedFilters[filter.id])
   );
 

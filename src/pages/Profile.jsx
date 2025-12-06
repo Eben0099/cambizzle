@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useProfile } from '../hooks/useProfile';
 import { useAuth } from '../contexts/AuthContext';
 import ProfileHeader from '../components/profile/ProfileHeader';
@@ -22,6 +22,14 @@ const Profile = () => {
 
   const { isAuthenticated, isLoading: authLoading } = useAuth();
 
+  const location = useLocation();
+  // Sync activeTab with URL (e.g., /profile/overview, /profile/settings)
+  useEffect(() => {
+    const parts = location.pathname.split('/').filter(Boolean);
+    const tab = parts[1] || 'overview';
+    setActiveTab(tab);
+  }, [location]);
+
   const {
     user,
     sellerProfile,
@@ -33,12 +41,7 @@ const Profile = () => {
     reloadUserData
   } = useProfile();
 
-
-
   // Vérifier si l'utilisateur est connecté
-  if (authLoading || isLoading) {
-    return <Loader text="Loading profile..." />;
-  }
   if (!authLoading && !isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -63,7 +66,7 @@ const Profile = () => {
   }
 
   const handleEditProfile = () => {
-    setActiveTab('settings');
+    navigate('/profile/settings');
   };
 
   const handleUpdateProfile = async (profileData) => {
@@ -96,7 +99,7 @@ const Profile = () => {
   };
 
   const handleVerifyIdentity = () => {
-    setActiveTab('settings');
+    navigate('/profile/settings');
   };
 
   const handleCreateAd = () => {
@@ -236,8 +239,6 @@ return (
       />
 
       <ProfileTabs
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
         sellerProfile={sellerProfile}
         className="mb-6"
       />

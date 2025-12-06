@@ -1,5 +1,6 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import ToastProvider from './components/toast/ToastProvider';
 import { AuthProvider } from './contexts/AuthContext';
 import { AdsProvider } from './contexts/AdsContext';
 import { Toaster } from './components/ui/toaster';
@@ -54,6 +55,7 @@ const PublicLayout = ({ children }) => (
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <ToastProvider>
       <Router>
         <WeglotProvider>
           <TooltipProvider>
@@ -70,7 +72,8 @@ function App() {
                 <Route path="/category/:categoryId" element={<PublicLayout><CategoryAds /></PublicLayout>} />
                 <Route path="/subcategory" element={<PublicLayout><SubcategoryAds /></PublicLayout>} />
                 <Route path="/create-ad" element={<PublicLayout><CreateAd /></PublicLayout>} />
-                <Route path="/profile" element={<PublicLayout><Profile /></PublicLayout>} />
+                <Route path="/profile" element={<Navigate to="/profile/overview" replace />} />
+                <Route path="/profile/*" element={<PublicLayout><Profile /></PublicLayout>} />
                 <Route path="/test/promotion-packs" element={<PublicLayout><TestPromotionPacks /></PublicLayout>} />
                 <Route path="/ads/:slug" element={<PublicLayout><AdDetail /></PublicLayout>} />
                 <Route path="/edit-ad/:slug" element={<PublicLayout><UpdateAd /></PublicLayout>} />
@@ -101,6 +104,7 @@ function App() {
         </TooltipProvider>
         </WeglotProvider>
       </Router>
+      </ToastProvider>
     </QueryClientProvider>
   );
 }

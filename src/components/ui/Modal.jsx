@@ -59,7 +59,11 @@ const Modal = ({
       <div className={`bg-white rounded-lg shadow-xl w-full ${sizes[size]} ${className}`}>
         {(title || showCloseButton) && (
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            {title && <h2 className="text-lg font-semibold text-gray-900">{title}</h2>}
+            {title ? (
+              <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+            ) : (
+              <div className="flex-1" aria-hidden="true" />
+            )}
             {showCloseButton && (
               <Button
                 variant="ghost"

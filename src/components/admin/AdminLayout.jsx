@@ -35,7 +35,7 @@ const AdminLayout = ({ children }) => {
 
   useEffect(() => {
     verifyAdminAccess();
-  }, []);
+  }, [user]);
 
   const verifyAdminAccess = async () => {
     try {
@@ -44,6 +44,15 @@ const AdminLayout = ({ children }) => {
         setIsVerifying(false);
         return;
       }
+      
+      // Vérifier que l'utilisateur a roleId === "1" (admin)
+      if (user?.roleId !== "1") {
+        console.warn('Access denied: User is not an admin (roleId !== "1")');
+        setIsAuthorized(false);
+        setIsVerifying(false);
+        return;
+      }
+      
       setIsAuthorized(true);
     } catch (error) {
       console.error('Admin verification error:', error);
@@ -71,7 +80,7 @@ const AdminLayout = ({ children }) => {
   }
 
   if (!isAuthorized) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return (

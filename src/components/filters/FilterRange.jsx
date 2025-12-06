@@ -9,8 +9,16 @@ const FilterRange = ({ filter, value = {}, onChange }) => {
 
   // Synchroniser la valeur locale avec la prop value
   useEffect(() => {
-    setLocalValue(value || {});
-  }, [value]);
+    // Comparer les valeurs pour éviter les boucles infinies
+    const currentMin = localValue?.min || '';
+    const currentMax = localValue?.max || '';
+    const newMin = value?.min || '';
+    const newMax = value?.max || '';
+    
+    if (currentMin !== newMin || currentMax !== newMax) {
+      setLocalValue(value || {});
+    }
+  }, [value?.min, value?.max]);
 
   // Fonction debouncée pour appeler onChange
   const debouncedOnChange = useDebounce((newValue) => {

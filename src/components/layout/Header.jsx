@@ -64,54 +64,31 @@ return (
                   <span>Post an ad</span>
                 </Button>
               </Link>
-              
-              <Link 
-                to="/favorites" 
-                className="p-2 text-gray-400 hover:text-[#D6BA69] rounded-lg hover:bg-black/10 transition-colors"
-                title="Favorites"
-              >
-                <Heart className="w-5 h-5" />
-              </Link>
 
-              <Link 
-                to="/admin" 
-                className="group relative p-2 text-gray-400 hover:text-[#D6BA69] rounded-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-amber-50 hover:to-yellow-50 hover:shadow-md border border-transparent hover:border-amber-200"
-                title="Administration"
-              >
-                {/* Badge admin subtil */}
-                <div className="absolute -top-1 -right-1 w-2 h-2 bg-amber-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                
-                {/* Icône bouclier avec effet */}
-                <Shield className="w-5 h-5 transform group-hover:scale-110 transition-transform duration-200" />
-                
-                {/* Tooltip amélioré */}
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-900 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                  Administration
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
-                </div>
-              </Link>
-              
-              <Link 
-                to="/notifications" 
-                className="p-2 text-gray-400 hover:text-[#D6BA69] rounded-lg hover:bg-black/10 relative transition-colors"
-                title="Notifications"
-              >
-                <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-              </Link>
-
-              {/* Language Switcher */}
-
-              {/* Admin Link - Visible only for admin */}
-              {user?.role === 'admin' && (
+              {/* Admin Link - Visible only for roleId === "1" */}
+              {isAuthenticated && String(user?.roleId) == "1" && (
                 <Link 
                   to="/admin" 
-                  className="p-2 text-gray-400 hover:text-[#D6BA69] rounded-lg hover:bg-black/10 transition-colors"
-                  title="Admin Panel"
+                  className="group relative p-2 text-gray-400 hover:text-[#D6BA69] rounded-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-amber-50 hover:to-yellow-50 hover:shadow-md border border-transparent hover:border-amber-200"
+                  title="Administration"
                 >
-                  <Shield className="w-5 h-5" />
+                  {/* Badge admin subtil */}
+                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-amber-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  
+                  {/* Icône bouclier avec effet */}
+                  <Shield className="w-5 h-5 transform group-hover:scale-110 transition-transform duration-200" />
+                  
+                  {/* Tooltip amélioré */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-900 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                    Administration
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                  </div>
                 </Link>
               )}
+              
+              
+
+              {/* Language Switcher */}
               
               <div className="relative group">
                 <button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-black/10 transition-colors">
@@ -144,13 +121,20 @@ return (
                       <span>My profile</span>
                     </Link>
                     <Link 
-                      to="/profile#my-ads" 
+                      to="/profile/ads" 
                       className="flex items-center px-4 py-3 text-sm text-gray-300 hover:bg-black/20 hover:text-white transition-colors"
                     >
                       <Plus className="w-4 h-4 mr-3" />
                       <span>My ads</span>
                     </Link>
-                    {user?.role === 'admin' && (
+                     <Link 
+                       to="/profile/favorites" 
+                       className="flex items-center px-4 py-3 text-sm text-gray-300 hover:bg-black/20 hover:text-white transition-colors"
+                     >
+                       <Heart className="w-4 h-4 mr-3" />
+                       <span>My favorites</span>
+                     </Link>
+                    {isAuthenticated && String(user?.roleId) === "1" && (
                       <Link 
                         to="/admin" 
                         className="flex items-center px-4 py-3 text-sm text-gray-300 hover:bg-black/20 hover:text-white transition-colors"
@@ -230,13 +214,31 @@ return (
                 <span className="font-medium">My profile</span>
               </Link>
               <Link
-                to="/profile#my-ads"
+                 to="/profile/ads"
                 className="flex items-center space-x-3 p-3 rounded-lg hover:bg-black/10 text-gray-300 hover:text-white transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 <Plus className="w-5 h-5" />
                 <span className="font-medium">My ads</span>
               </Link>
+               <Link
+                 to="/profile/favorites"
+                 className="flex items-center space-x-3 p-3 rounded-lg hover:bg-black/10 text-gray-300 hover:text-white transition-colors"
+                 onClick={() => setIsMenuOpen(false)}
+               >
+                 <Heart className="w-5 h-5" />
+                 <span className="font-medium">My favorites</span>
+               </Link>
+              {isAuthenticated && String(user?.roleId) == "1" && (
+                <Link
+                  to="/admin"
+                  className="flex items-center space-x-3 p-3 rounded-lg hover:bg-black/10 text-gray-300 hover:text-white transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Shield className="w-5 h-5" />
+                  <span className="font-medium">Admin Panel</span>
+                </Link>
+              )}
               <button
                 onClick={() => {
                   handleLogout();

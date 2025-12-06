@@ -15,6 +15,7 @@ const SubcategoryAds = () => {
   const navigate = useNavigate();
   const [subcategoryAds, setSubcategoryAds] = useState(null);
   const [filters, setFilters] = useState([]);
+  const [filterMetadata, setFilterMetadata] = useState({ locations: [], priceRange: null });
   const [selectedFilters, setSelectedFilters] = useState({});
   const [creationData, setCreationData] = useState({ categories: [], locations: [] });
   const [loading, setLoading] = useState(false);
@@ -51,11 +52,40 @@ const SubcategoryAds = () => {
         setFiltersLoading(true);
         console.log('🔧 Récupération des filtres pour:', subcategoryParam);
         const filtersData = await adsService.getFiltersBySubcategory(subcategoryParam);
-        setFilters(filtersData || []);
-        console.log('✅ Filtres chargés:', filtersData);
+        console.log('📦 Données filtres reçues:', filtersData);
+        
+        // Support du nouveau format avec metadata
+        if (filtersData && typeof filtersData === 'object') {
+          if (Array.isArray(filtersData)) {
+            // Ancien format : tableau direct
+            setFilters(filtersData);
+            setFilterMetadata({ locations: [], priceRange: null });
+            console.log('✅ Filtres chargés (ancien format):', filtersData.length, 'filtres');
+          } else if (filtersData.filters && Array.isArray(filtersData.filters)) {
+            // Nouveau format : objet avec filters et metadata
+            const newFilters = filtersData.filters;
+            const newMetadata = {
+              locations: filtersData.metadata?.locations || [],
+              priceRange: filtersData.metadata?.priceRange || null
+            };
+            setFilters(newFilters);
+            setFilterMetadata(newMetadata);
+            console.log('✅ Filtres chargés (nouveau format):', newFilters.length, 'filtres');
+            console.log('✅ Métadonnées:', newMetadata);
+          } else {
+            setFilters([]);
+            setFilterMetadata({ locations: [], priceRange: null });
+            console.log('⚠️ Format de filtres non reconnu');
+          }
+        } else {
+          setFilters([]);
+          setFilterMetadata({ locations: [], priceRange: null });
+          console.log('⚠️ Aucune donnée de filtres reçue');
+        }
       } catch (e) {
         console.error('❌ Erreur lors du chargement des filtres:', e);
         setFilters([]);
+        setFilterMetadata({ locations: [], priceRange: null });
       } finally {
         setFiltersLoading(false);
       }
@@ -269,6 +299,7 @@ const SubcategoryAds = () => {
             <div className="sticky top-4">
               <FilterSidebar
                 filters={filters}
+                filterMetadata={filterMetadata}
                 selectedFilters={selectedFilters}
                 onChange={handleFilterChange}
                 onReset={handleResetFilters}
@@ -407,9 +438,10 @@ const SubcategoryAds = () => {
       {/* Modal filtres mobile */}
       {showMobileFilters && (
         <div className="fixed inset-0 bg-black/50 z-50 lg:hidden">
-          <div className="fixed inset-y-0 right-0 w-full sm:w-96 bg-white overflow-y-auto">
+          <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
             <FilterSidebar
               filters={filters}
+              filterMetadata={filterMetadata}
               selectedFilters={selectedFilters}
               onChange={handleFilterChange}
               onReset={handleResetFilters}

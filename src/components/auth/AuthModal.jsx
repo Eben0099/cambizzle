@@ -21,6 +21,23 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
       setErrors(prev => ({ ...prev, phone: '' }));
     }
   };
+
+  // Validation en temps réel pour Email
+  const handleEmailChange = (e) => {
+    const email = e.target.value;
+    setFormData(prev => ({ ...prev, email }));
+    
+    if (email && email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
+      if (!emailRegex.test(email.trim())) {
+        setErrors(prev => ({ ...prev, email: 'Please enter a valid email address (e.g., example@domain.com)' }));
+      } else {
+        setErrors(prev => ({ ...prev, email: '' }));
+      }
+    } else {
+      setErrors(prev => ({ ...prev, email: '' }));
+    }
+  };
   const [step, setStep] = useState('choice'); // 'choice', 'form', 'seller'
   const [mode, setMode] = useState(initialMode);
   const [showPassword, setShowPassword] = useState(false);
@@ -136,6 +153,17 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
     setMessage("");
 
     try {
+      // Optional email validation: if provided, must be a valid email with any TLD (x@y.z)
+      if (formData.email && formData.email.trim()) {
+        const email = formData.email.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
+        if (!emailRegex.test(email)) {
+          setErrors({ email: 'Please enter a valid email address (e.g., example@domain.com)' });
+          setIsLoading(false);
+          return;
+        }
+      }
+
       const result = await login({
         email: formData.email,
         phone: formData.phone,
@@ -623,7 +651,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 type="email"
                 name="email"
                 value={formData.email}
-                onChange={handleInputChange}
+                onChange={handleEmailChange}
                 error={errors.email}
               />
             </div>
@@ -756,7 +784,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 type="email"
                 name="email"
                 value={formData.email}
-                onChange={handleInputChange}
+                onChange={handleEmailChange}
                 error={errors.email}
               />
             </div>
