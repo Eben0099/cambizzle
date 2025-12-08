@@ -35,84 +35,191 @@ const CategorySidebar = ({ className = '' }) => {
   // Base fallback icon
   const BaseIcon = Package;
 
-  // Get category icon
-  const getCategoryIcon = (category) => {
-    if (category.iconUrl) {
-      return () => <img src={category.iconUrl} alt={category.name} className="w-6 h-6 object-contain" />;
+  // Configuration de l'API
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+  // Composant pour afficher l'icône de catégorie avec fallback
+  const CategoryIcon = ({ category, size = "w-6 h-6" }) => {
+    const [imageError, setImageError] = useState(false);
+
+    console.log('🎨 CategoryIcon - Catégorie:', category.name, {
+      slug: category.slug,
+      iconPath: category.iconPath,
+      iconUrl: category.iconUrl,
+      hasIconPath: !!category.iconPath,
+      hasIconUrl: !!category.iconUrl
+    });
+
+    // Si l'image a échoué ou n'existe pas, utiliser l'icône par défaut
+    if (imageError || (!category.iconPath && !category.iconUrl)) {
+      console.log('⚠️ CategoryIcon - Utilisation icône par défaut pour:', category.name, { imageError });
+      const iconMap = {
+        'electronics': Smartphone,
+        'vehicles': Car,
+        'real-estate': Home,
+        'jobs': Briefcase,
+        'services': Wrench,
+        'fashion': Shirt,
+        'home': Sofa,
+        'sports': Dumbbell,
+        'animals': Package,
+        'agriculture': Package
+      };
+      const IconComponent = iconMap[category.slug] || BaseIcon;
+      return <IconComponent className={size} />;
     }
-    const iconMap = {
-      'electronics': Smartphone,
-      'vehicles': Car,
-      'real-estate': Home,
-      'jobs': Briefcase,
-      'services': Wrench,
-      'fashion': Shirt,
-      'home': Sofa,
-      'sports': Dumbbell,
-      'animals': Package,
-      'agriculture': Package
-    };
-    return iconMap[category.slug] || BaseIcon;
+
+    // Construire l'URL de l'icône
+    const iconPath = category.iconPath || category.iconUrl;
+    const iconUrl = iconPath.startsWith('http') 
+      ? iconPath 
+      : `${API_BASE_URL}${iconPath}`;
+
+    console.log('✅ CategoryIcon - URL image construite:', {
+      category: category.name,
+      iconPath,
+      iconUrl,
+      API_BASE_URL
+    });
+
+    return (
+      <img 
+        src={iconUrl} 
+        alt={category.name} 
+        className={`${size} object-contain`}
+        onError={(e) => {
+          console.error('❌ CategoryIcon - Erreur chargement image:', {
+            category: category.name,
+            url: iconUrl,
+            error: e
+          });
+          setImageError(true);
+        }}
+      />
+    );
   };
 
-  // Get subcategory icon
-  const getSubcategoryIcon = (subcategory) => {
-    if (subcategory.iconUrl) {
-      return () => <img src={subcategory.iconUrl} alt={subcategory.name} className="w-4 h-4 object-contain" />;
+  // Composant pour afficher l'icône de sous-catégorie avec fallback
+  const SubcategoryIcon = ({ subcategory, size = "w-4 h-4" }) => {
+    const [imageError, setImageError] = useState(false);
+
+    console.log('🎨 SubcategoryIcon - Sous-catégorie:', subcategory.name, {
+      slug: subcategory.slug,
+      iconPath: subcategory.iconPath,
+      iconUrl: subcategory.iconUrl,
+      hasIconPath: !!subcategory.iconPath,
+      hasIconUrl: !!subcategory.iconUrl
+    });
+
+    // Si l'image a échoué ou n'existe pas, utiliser l'icône par défaut
+    if (imageError || (!subcategory.iconPath && !subcategory.iconUrl)) {
+      console.log('⚠️ SubcategoryIcon - Utilisation icône par défaut pour:', subcategory.name, { imageError });
+      const iconMap = {
+        'smartphones': Smartphone,
+        'computers': Package,
+        'tablets': Package,
+        'tv-video': Package,
+        'photo-camera': Package,
+        'cars': Car,
+        'motorcycles': Car,
+        'bikes': Package,
+        'auto-parts': Package,
+        'trucks': Car,
+        'apartments': Home,
+        'houses': Home,
+        'lands': Home,
+        'offices': Home,
+        'rentals': Home,
+        'it': Package,
+        'commerce': Package,
+        'restoration': Package,
+        'building': Package,
+        'health': Package,
+        'repair': Wrench,
+        'cleaning': Package,
+        'courses': Book,
+        'transport': Car,
+        'beauty': Package,
+        'mens-clothing': Shirt,
+        'womens-clothing': Shirt,
+        'shoes': Shirt,
+        'bags': Package,
+        'jewelry': Package,
+        'furniture': Sofa,
+        'appliances': Sofa,
+        'decoration': Sofa,
+        'gardening': Package,
+        'diy': Wrench,
+        'fitness': Dumbbell,
+        'football': Dumbbell,
+        'basketball': Dumbbell,
+        'tennis': Dumbbell,
+        'swimming': Dumbbell,
+        'dogs': Package,
+        'cats': Package,
+        'birds': Package,
+        'fish': Package,
+        'pet-accessories': Package,
+        'agricultural-products': Package,
+        'agricultural-machinery': Package,
+        'fertilizers': Package,
+        'seeds': Package,
+        'livestock': Package
+      };
+      const IconComponent = iconMap[subcategory.slug] || BaseIcon;
+      return <IconComponent className={size} />;
     }
-    const iconMap = {
-      'smartphones': Smartphone,
-      'computers': Package,
-      'tablets': Package,
-      'tv-video': Package,
-      'photo-camera': Package,
-      'cars': Car,
-      'motorcycles': Car,
-      'bikes': Package,
-      'auto-parts': Package,
-      'trucks': Car,
-      'apartments': Home,
-      'houses': Home,
-      'lands': Home,
-      'offices': Home,
-      'rentals': Home,
-      'it': Package,
-      'commerce': Package,
-      'restoration': Package,
-      'building': Package,
-      'health': Package,
-      'repair': Wrench,
-      'cleaning': Package,
-      'courses': Book,
-      'transport': Car,
-      'beauty': Package,
-      'mens-clothing': Shirt,
-      'womens-clothing': Shirt,
-      'shoes': Shirt,
-      'bags': Package,
-      'jewelry': Package,
-      'furniture': Sofa,
-      'appliances': Sofa,
-      'decoration': Sofa,
-      'gardening': Package,
-      'diy': Wrench,
-      'fitness': Dumbbell,
-      'football': Dumbbell,
-      'basketball': Dumbbell,
-      'tennis': Dumbbell,
-      'swimming': Dumbbell,
-      'dogs': Package,
-      'cats': Package,
-      'birds': Package,
-      'fish': Package,
-      'pet-accessories': Package,
-      'agricultural-products': Package,
-      'agricultural-machinery': Package,
-      'fertilizers': Package,
-      'seeds': Package,
-      'livestock': Package
-    };
-    return iconMap[subcategory.slug] || BaseIcon;
+
+    // Construire l'URL de l'icône
+    const iconPath = subcategory.iconPath || subcategory.iconUrl;
+    const iconUrl = iconPath.startsWith('http') 
+      ? iconPath 
+      : `${API_BASE_URL}${iconPath}`;
+
+    console.log('✅ SubcategoryIcon - URL image construite:', {
+      subcategory: subcategory.name,
+      iconPath,
+      iconUrl,
+      API_BASE_URL
+    });
+
+    return (
+      <img 
+        src={iconUrl} 
+        alt={subcategory.name} 
+        className={`${size} object-contain`}
+        onError={(e) => {
+          console.error('❌ SubcategoryIcon - Erreur chargement image:', {
+            subcategory: subcategory.name,
+            url: iconUrl,
+            error: e
+          });
+          setImageError(true);
+        }}
+      />
+    );
+  };
+
+  // Get category icon (pour compatibilité avec le code existant)
+  const getCategoryIcon = (category) => {
+    return () => <CategoryIcon category={category} />;
+  };
+
+  // Get subcategory icon (pour compatibilité avec le code existant)
+  const getSubcategoryIcon = (subcategory) => {
+    return () => <SubcategoryIcon subcategory={subcategory} />;
+  };
+
+  // Trier les catégories et sous-catégories par ordre alphabétique
+  const sortedCategories = categories ? [...categories].sort((a, b) => 
+    a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' })
+  ) : [];
+
+  const getSortedSubcategories = (category) => {
+    if (!category.subcategories) return [];
+    return [...category.subcategories].sort((a, b) => 
+      a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' })
+    );
   };
 
   // Get counts
@@ -235,10 +342,11 @@ const CategorySidebar = ({ className = '' }) => {
       >
         <div className="p-4 pb-6">
           <div className="grid grid-cols-3 gap-3">
-            {categories.map((category, index) => {
+            {sortedCategories.map((category, index) => {
               const IconComponent = getCategoryIcon(category);
               const totalCount = getCategoryCount(category.slug);
               const hasSub = category.subcategories?.length > 0;
+              const sortedSubs = getSortedSubcategories(category);
 
               return (
                 <div
@@ -271,7 +379,7 @@ const CategorySidebar = ({ className = '' }) => {
                   {/* Expanded Subcategories */}
                   {expandedCategory === category.slug && hasSub && (
                     <div className="col-span-3 bg-gray-50 rounded-xl p-4 space-y-2 animate-fadeIn">
-                      {category.subcategories.map((sub, i) => {
+                      {sortedSubs.map((sub, i) => {
                         const SubIcon = getSubcategoryIcon(sub);
                         const count = getSubcategoryCount(category.slug, sub.slug);
 
@@ -340,10 +448,11 @@ const CategorySidebar = ({ className = '' }) => {
           }}
         >
           <div className="py-3">
-            {categories.map((category) => {
+            {sortedCategories.map((category) => {
               const Icon = getCategoryIcon(category);
               const count = getCategoryCount(category.slug);
               const isHovered = hoveredCategory === category.slug;
+              const sortedSubs = getSortedSubcategories(category);
 
               return (
                 <div
@@ -407,7 +516,7 @@ const CategorySidebar = ({ className = '' }) => {
                       </h3>
                     </div>
                     <div className="flex-1 overflow-y-auto py-2">
-                      {cat.subcategories.map((sub, i) => {
+                      {getSortedSubcategories(cat).map((sub, i) => {
                         const SubIcon = getSubcategoryIcon(sub);
                         const count = getSubcategoryCount(cat.slug, sub.slug);
                         return (
