@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Button from "../../components/ui/Button";
 import Loader from "../../components/ui/Loader";
 import { API_BASE_URL } from "../../config/api";
+import { useToast } from "../../components/toast/useToast";
 import {
   LineChart,
   Line,
@@ -21,11 +22,11 @@ const COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6"];
 
 export default function Payments() {
   /* ---------- STATE ---------- */
+  const { showToast } = useToast();
   const [stats, setStats] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
 
   // Stats filters
@@ -85,10 +86,10 @@ export default function Payments() {
 
         setStats(normalise(json.data));
       } else {
-        setError(json.message ?? "Failed to load stats");
+        showToast({ type: 'error', message: json.message ?? 'Failed to load stats' });
       }
     } catch (e) {
-      setError(e.message ?? "Network error");
+      showToast({ type: 'error', message: e.message ?? 'Network error' });
     } finally {
       setLoading(false);
     }
@@ -118,10 +119,10 @@ export default function Payments() {
         setTransactions(json.data.transactions);
         setPagination(json.data.pagination);
       } else {
-        setError(json.message ?? "Failed to load transactions");
+        showToast({ type: 'error', message: json.message ?? 'Failed to load transactions' });
       }
     } catch (e) {
-      setError(e.message ?? "Network error");
+      showToast({ type: 'error', message: e.message ?? 'Network error' });
     } finally {
       setLoading(false);
     }

@@ -27,9 +27,11 @@ import Loader from "../../components/ui/Loader";
 import adminService from "../../services/adminService";
 import { API_CONFIG } from "../../utils/constants";
 import { SERVER_BASE_URL } from "../../config/api";
+import { useToast } from "../../components/toast/useToast";
 
 const Users = () => {
   // States
+  const { showToast } = useToast();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -87,7 +89,7 @@ const Users = () => {
       }
     } catch (err) {
       console.error('User details error:', err);
-      alert(err.message || 'Error loading details');
+      showToast({ type: 'error', message: err.message || 'Error loading details' });
     } finally {
       setActionLoading(false);
     }
@@ -96,7 +98,7 @@ const Users = () => {
   // Actions
   const handleSuspendUser = async () => {
     if (!selectedUser || !suspendReason.trim()) {
-      alert('Please fill in the suspension reason');
+      showToast({ type: 'error', message: 'Please fill in the suspension reason' });
       return;
     }
     try {
@@ -106,13 +108,13 @@ const Users = () => {
         setSuspendModalOpen(false);
         resetSuspendForm();
         fetchUsers();
-        alert('User suspended successfully');
+        showToast({ type: 'success', message: 'User suspended successfully' });
       } else {
         throw new Error(response.message || 'Error during suspension');
       }
     } catch (err) {
       console.error('Suspension error:', err);
-      alert(err.message || 'Error during suspension');
+      showToast({ type: 'error', message: err.message || 'Error during suspension' });
     } finally {
       setActionLoading(false);
     }
@@ -127,13 +129,13 @@ const Users = () => {
         setUnsuspendModalOpen(false);
         resetUnsuspendForm();
         fetchUsers();
-        alert('User reactivated successfully');
+        showToast({ type: 'success', message: 'User reactivated successfully' });
       } else {
         throw new Error(response.message || 'Error during reactivation');
       }
     } catch (err) {
       console.error('Reactivation error:', err);
-      alert(err.message || 'Error during reactivation');
+      showToast({ type: 'error', message: err.message || 'Error during reactivation' });
     } finally {
       setActionLoading(false);
     }
@@ -148,13 +150,13 @@ const Users = () => {
         setVerifyModalOpen(false);
         resetVerifyForm();
         fetchUsers();
-        alert('Identity verified successfully');
+        showToast({ type: 'success', message: 'Identity verified successfully' });
       } else {
         throw new Error(response.message || 'Error during verification');
       }
     } catch (err) {
       console.error('Verification error:', err);
-      alert(err.message || 'Error during verification');
+      showToast({ type: 'error', message: err.message || 'Error during verification' });
     } finally {
       setActionLoading(false);
     }
@@ -205,11 +207,11 @@ const Users = () => {
 
   // Frontend filtering
   const filteredUsers = users.filter(user => {
-    const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+    const fullName = `${user.firstName || ''} ${user.lastName || ''}`.toLowerCase();
     const matchesSearch = searchTerm === "" || 
       fullName.includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.phone?.toLowerCase().includes(searchTerm.toLowerCase());
+      (user.email?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (user.phone?.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesStatus = statusFilter === "all" || 
       (statusFilter === "active" && user.isSuspended === "0" && !user.deleted) ||

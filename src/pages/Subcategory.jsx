@@ -24,6 +24,7 @@ const Subcategory = () => {
   });
 
   const {
+    ads: contextAds,
     searchResults,
     isLoading,
     searchAds,
@@ -42,19 +43,31 @@ const Subcategory = () => {
   const subcategory = category?.subcategories?.find(sub => sub.id === subcategoryId);
 
   useEffect(() => {
-    const filters = {
+    // Synchroniser les filtres locaux avec l'URL
+    setLocalFilters({
+      category: searchParams.get('category') || '',
+      subcategory: searchParams.get('subcategory') || '',
+      priceMin: searchParams.get('priceMin') || '',
+      priceMax: searchParams.get('priceMax') || '',
+      location: searchParams.get('location') || '',
+      type: searchParams.get('type') || '',
+      condition: searchParams.get('condition') || ''
+    });
+  }, [searchParams]);
+
+  // Effet séparé pour le chargement des données (seulement pour les filtres backend)
+  useEffect(() => {
+    // Seulement les filtres backend (type, condition, category, subcategory)
+    const backendFilters = {
       category: searchParams.get('category'),
       subcategory: searchParams.get('subcategory'),
-      priceMin: searchParams.get('priceMin'),
-      priceMax: searchParams.get('priceMax'),
-      location: searchParams.get('location'),
       type: searchParams.get('type'),
       condition: searchParams.get('condition')
     };
 
     // Remove null values
     const cleanFilters = Object.fromEntries(
-      Object.entries(filters).filter(([_, value]) => value !== null)
+      Object.entries(backendFilters).filter(([_, value]) => value !== null)
     );
 
     if (query) {
@@ -62,7 +75,13 @@ const Subcategory = () => {
     } else {
       fetchAds(1, cleanFilters);
     }
-  }, [searchParams]);
+  }, [
+    searchParams.get('category'),
+    searchParams.get('subcategory'),
+    searchParams.get('type'),
+    searchParams.get('condition'),
+    query
+  ]);
 
   const handleFilterChange = (name, value) => {
     setLocalFilters(prev => ({
@@ -73,6 +92,10 @@ const Subcategory = () => {
 
   const applyFilters = () => {
     const newSearchParams = new URLSearchParams(searchParams);
+
+    // Séparer les filtres backend et frontend
+    const backendFilterKeys = ['category', 'subcategory', 'type', 'condition'];
+    const frontendFilterKeys = ['priceMin', 'priceMax', 'location'];
 
     Object.entries(localFilters).forEach(([key, value]) => {
       if (value) {
@@ -104,6 +127,52 @@ const Subcategory = () => {
     setSearchParams(newSearchParams);
   };
 
+  // Filtrage côté frontend pour prix et localisation
+  const filterAds = (adsArray) => {
+    if (!adsArray || adsArray.length === 0) return [];
+
+    return adsArray.filter(ad => {
+      // Filtre prix minimum
+      if (localFilters.priceMin && ad.price) {
+        const minPrice = parseFloat(localFilters.priceMin);
+        const adPrice = parseFloat(ad.price);
+        if (adPrice < minPrice) {
+          return false;
+        }
+      }
+
+      // Filtre prix maximum
+      if (localFilters.priceMax && ad.price) {
+        const maxPrice = parseFloat(localFilters.priceMax);
+        const adPrice = parseFloat(ad.price);
+        if (adPrice > maxPrice) {
+          return false;
+        }
+      }
+
+      // Filtre localisation (recherche insensible à la casse)
+      if (localFilters.location) {
+        const locationQuery = localFilters.location.toLowerCase().trim();
+        const adLocation = (ad.location || '').toLowerCase();
+        const adCity = (ad.city || '').toLowerCase();
+        const adRegion = (ad.region || '').toLowerCase();
+        const adCountry = (ad.country || '').toLowerCase();
+        
+        // Cherche dans tous les champs de localisation
+        const matchesLocation = adLocation.includes(locationQuery) || 
+                               adCity.includes(locationQuery) || 
+                               adRegion.includes(locationQuery) ||
+                               adCountry.includes(locationQuery);
+        
+        if (!matchesLocation) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  };
+
   const sortOptions = [
     { value: 'recent', label: 'Plus récent' },
     { value: 'price-asc', label: 'Prix croissant' },
@@ -125,8 +194,12 @@ const Subcategory = () => {
     { value: 'service', label: 'Service' }
   ];
 
-  const ads = query ? searchResults : searchResults;
+  // Utiliser searchResults si on fait une recherche, sinon contextAds
+  const ads = query ? searchResults : contextAds;
   const hasActiveFilters = Object.values(localFilters).some(value => value !== '');
+
+  // Appliquer le filtrage côté frontend
+  const filteredAds = filterAds(ads);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -335,14 +408,14 @@ const Subcategory = () => {
               </div>
             ))}
           </div>
-        ) : ads.length > 0 ? (
+        ) : filteredAds.length > 0 ? (
           <>
             <div className={`grid gap-6 ${
               viewMode === 'grid'
                 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'
                 : 'grid-cols-1'
             }`}>
-              {ads.map((ad) => (
+              {filteredAds.map((ad) => (
                 <AdCard key={ad.id} ad={ad} />
               ))}
             </div>
@@ -376,14 +449,14 @@ const Subcategory = () => {
               Aucune annonce trouvée
             </h3>
             <p className="text-gray-600 mb-6">
-              Il n'y a pas encore d'annonces dans cette sous-catégorie.
+              Aucune annonce ne correspond à vos critères de recherche.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button variant="primary" onClick={() => navigate('/create-ad')}>
-                Créer la première annonce
+                Créer une annonce
               </Button>
-              <Button variant="ghost" onClick={() => navigate('/search')}>
-                Voir toutes les annonces
+              <Button variant="ghost" onClick={clearFilters}>
+                Effacer les filtres
               </Button>
             </div>
           </div>

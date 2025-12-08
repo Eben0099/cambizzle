@@ -160,10 +160,19 @@ const SubcategoryAds = () => {
     // Mettre à jour l'URL
     updateURLWithFilters(newSelectedFilters);
     
-    // Récupérer les annonces avec les nouveaux filtres
-    if (subcategoryParam) {
-      fetchSubcategoryAds(subcategoryParam, newSelectedFilters);
+    // Filtres frontend (location, price) - pas d'appel API
+    const frontendFilters = ['location', 'price'];
+    const isBackendFilter = !frontendFilters.includes(filterId);
+    
+    // Récupérer les annonces avec les nouveaux filtres SEULEMENT si c'est un filtre backend
+    if (isBackendFilter && subcategoryParam) {
+      // Ne passer que les filtres backend à l'API
+      const backendFilters = Object.fromEntries(
+        Object.entries(newSelectedFilters).filter(([key]) => !frontendFilters.includes(key))
+      );
+      fetchSubcategoryAds(subcategoryParam, backendFilters);
     }
+    // Sinon, le filtrage frontend se fera automatiquement via le re-render
   };
 
   // Réinitialise tous les filtres
@@ -178,9 +187,9 @@ const SubcategoryAds = () => {
     if (categoryParam) newParams.set('category', categoryParam);
     setSearchParams(newParams);
     
-    // Récupérer les annonces sans filtres
+    // Récupérer les annonces sans filtres (même pas besoin car emptyFilters est vide)
     if (subcategoryParam) {
-      fetchSubcategoryAds(subcategoryParam, emptyFilters);
+      fetchSubcategoryAds(subcategoryParam, {});
     }
   };
 
@@ -194,9 +203,16 @@ const SubcategoryAds = () => {
     // Mettre à jour l'URL
     updateURLWithFilters(newSelectedFilters);
     
-    // Récupérer les annonces
-    if (subcategoryParam) {
-      fetchSubcategoryAds(subcategoryParam, newSelectedFilters);
+    // Filtres frontend (location, price) - pas d'appel API
+    const frontendFilters = ['location', 'price'];
+    const isBackendFilter = !frontendFilters.includes(filterId);
+    
+    // Récupérer les annonces SEULEMENT si c'est un filtre backend
+    if (isBackendFilter && subcategoryParam) {
+      const backendFilters = Object.fromEntries(
+        Object.entries(newSelectedFilters).filter(([key]) => !frontendFilters.includes(key))
+      );
+      fetchSubcategoryAds(subcategoryParam, backendFilters);
     }
   };
 
@@ -234,6 +250,68 @@ const SubcategoryAds = () => {
     fetchSubcategoryAds(subcategoryParam, selectedFilters);
   }, [subcategoryParam]); // Ne recharger que si la sous-catégorie change, pas les filtres
 
+  // Fonction de filtrage côté frontend pour location et price
+  const filterAds = (adsArray, filters) => {
+    if (!adsArray || adsArray.length === 0) return [];
+    if (!filters || Object.keys(filters).length === 0) return adsArray;
+
+    console.log('🔍 FILTRAGE FRONTEND - Filtres actifs:', filters);
+    console.log('📦 FILTRAGE FRONTEND - Nombre d\'annonces avant filtrage:', adsArray.length);
+
+    const filtered = adsArray.filter(ad => {
+      // Filtre localisation
+      if (filters.location) {
+        const locationQuery = filters.location.toLowerCase().trim();
+        
+        // Logs pour debug
+        console.log('🏙️ Recherche location:', locationQuery);
+        console.log('📍 Annonce #' + ad.id + ' - Données location:', {
+          locationName: ad.locationName,
+          locationId: ad.locationId
+        });
+        
+        // Le backend retourne "locationName" qui contient "Ville, Région" (ex: "Yaoundé, Centre")
+        const adLocationName = (ad.locationName || '').toLowerCase();
+        
+        // Vérifier si la recherche matche dans locationName
+        const matchesLocation = adLocationName.includes(locationQuery);
+        
+        console.log('✅ Match?', matchesLocation, '- Comparaison:', {
+          locationName: adLocationName,
+          recherche: locationQuery,
+          resultat: adLocationName + ' includes ' + locationQuery + '? => ' + matchesLocation
+        });
+        
+        if (!matchesLocation) {
+          return false;
+        }
+      }
+
+      // Filtre prix (si c'est un objet avec min/max)
+      if (filters.price) {
+        if (filters.price.min && ad.price) {
+          const minPrice = parseFloat(filters.price.min);
+          const adPrice = parseFloat(ad.price);
+          if (adPrice < minPrice) {
+            return false;
+          }
+        }
+        if (filters.price.max && ad.price) {
+          const maxPrice = parseFloat(filters.price.max);
+          const adPrice = parseFloat(ad.price);
+          if (adPrice > maxPrice) {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    });
+
+    console.log('✅ FILTRAGE FRONTEND - Nombre d\'annonces après filtrage:', filtered.length);
+    return filtered;
+  };
+
   // Fonction de tri côté frontend
   const sortAds = (adsArray, sortBy) => {
     if (!adsArray || adsArray.length === 0) return adsArray;
@@ -254,7 +332,8 @@ const SubcategoryAds = () => {
   };
 
   const rawAds = subcategoryAds?.ads || [];
-  const displayedAds = sortAds(rawAds, sortBy);
+  const filteredAds = filterAds(rawAds, selectedFilters);
+  const displayedAds = sortAds(filteredAds, sortBy);
 
   const displayInfo = {
     title: subcategoryAds?.subcategory?.name || `Ads in "${subcategoryParam}"`,

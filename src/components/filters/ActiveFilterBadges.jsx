@@ -32,7 +32,7 @@ const ActiveFilterBadges = ({ filters = [], selectedFilters = {}, onRemoveFilter
   }
 
   return (
-    <div className="flex flex-wrap gap-2 mb-4">
+    <div className="flex flex-wrap gap-2 mb-4" translate="no">
       {activeFilters.map(filter => {
         const value = selectedFilters[filter.id];
         const label = formatFilterLabel(filter, value);
@@ -41,8 +41,9 @@ const ActiveFilterBadges = ({ filters = [], selectedFilters = {}, onRemoveFilter
           <div
             key={filter.id}
             className="inline-flex items-center space-x-2 bg-[#D6BA69]/10 text-gray-800 px-3 py-1 rounded-full text-sm border border-[#D6BA69]/20"
+            suppressHydrationWarning
           >
-            <span>{label}</span>
+            <span suppressHydrationWarning>{label}</span>
             <button
               onClick={() => onRemoveFilter(filter.id)}
               className="hover:bg-[#D6BA69]/20 rounded-full p-0.5 transition-colors"

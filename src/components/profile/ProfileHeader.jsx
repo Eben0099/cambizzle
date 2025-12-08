@@ -1,9 +1,20 @@
 import { Shield, Store, Mail, Phone, Calendar, Edit3 } from 'lucide-react';
 import Button from '../ui/Button';
 import { getPhotoUrl } from '../../utils/helpers';
+import { useToast } from '../toast/useToast';
 
 const ProfileHeader = ({ user, sellerProfile, onEdit, onBecomeSeller }) => {
+  const { showToast } = useToast();
+  
   if (!user) return null;
+
+  const handleCopyReferralCode = () => {
+    navigator.clipboard.writeText(user.referralCode);
+    showToast({
+      type: 'success',
+      message: 'Referral code copied to clipboard!'
+    });
+  };
 
   return (
     <div className="mb-6 sm:mb-8">
@@ -79,8 +90,8 @@ const ProfileHeader = ({ user, sellerProfile, onEdit, onBecomeSeller }) => {
                       <span className="text-gray-900 select-all text-base font-mono tracking-wider">{user.referralCode}</span>
                       <button
                         type="button"
-                        className="ml-2 px-2 py-1 text-xs bg-[#D6BA69] text-white rounded hover:bg-[#C5A952]"
-                        onClick={() => navigator.clipboard.writeText(user.referralCode)}
+                        className="ml-2 px-2 py-1 text-xs bg-[#D6BA69] text-white rounded hover:bg-[#C5A952] transition-colors"
+                        onClick={handleCopyReferralCode}
                       >
                         Copy
                       </button>

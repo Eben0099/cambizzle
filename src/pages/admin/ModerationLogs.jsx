@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/badge";
 import Input from "../../components/ui/Input";
+import { useToast } from "../../components/toast/useToast";
 import {
   Search, 
   Calendar, 
@@ -19,9 +20,9 @@ import adminService from "../../services/adminService";
 import { Button } from "../../components/ui/Button";
 
 const ModerationLogs = () => {
+  const { showToast } = useToast();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalLogs, setTotalLogs] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
@@ -37,7 +38,6 @@ const ModerationLogs = () => {
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      setError(null);
       const response = await adminService.getModerationLogs(currentPage, logsPerPage);
       if (response.status === 'success') {
         setLogs(response.data.logs);
@@ -47,7 +47,7 @@ const ModerationLogs = () => {
       }
     } catch (err) {
       console.error('Logs error:', err);
-      setError(err.message || 'Error loading logs');
+      showToast({ type: 'error', message: err.message || 'Error loading logs' });
     } finally {
       setLoading(false);
     }

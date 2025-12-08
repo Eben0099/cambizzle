@@ -5,6 +5,7 @@ import { ArrowLeft, Tag, Camera, Loader2, MapPin, Zap } from 'lucide-react';
 import { FaWallet } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { useAds } from '../contexts/AdsContext';
+import { useToast } from '../components/toast/useToast';
 import { CATEGORIES, AD_TYPES } from '../utils/constants';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -16,6 +17,7 @@ import StepBoostPlan from '../components/StepBoostPlan';
 import PaymentModal from '../components/PaymentModal';
 
 const CreateAd = () => {
+  const { showToast } = useToast();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -1076,7 +1078,10 @@ const CreateAd = () => {
             onClose={() => setPaymentModal({ show: false, paymentInfo: null, adId: null })}
             onSuccess={() => {
               setPaymentModal({ show: false, paymentInfo: null, adId: null });
-              navigate('/profile');
+              showToast({ type: 'success', message: 'Payment successful! Your ad is now active.' });
+              setTimeout(() => {
+                navigate('/profile/ads');
+              }, 1500);
             }}
             onFailure={() => {
               // Keep modal open for retry

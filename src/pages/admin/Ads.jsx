@@ -41,6 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useToast } from '../../components/toast/useToast';
 
 /**
  * Ads management screen (single-file)
@@ -53,6 +54,7 @@ import {
 
 const Ads = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   // Data
   const [ads, setAds] = useState([]);
@@ -60,7 +62,6 @@ const Ads = () => {
 
   // UI state
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   // Pagination / filters
   const [currentPage, setCurrentPage] = useState(1);
@@ -90,11 +91,10 @@ const Ads = () => {
   const fetchAllAds = async () => {
     try {
       setLoading(true);
-      setError(null);
       const data = await adminService.getAds(); // expects { ads: [...] } or similar
       setAds(data?.ads || []);
     } catch (err) {
-      setError(err?.message || 'Error loading ads');
+      showToast({ type: 'error', message: err?.message || 'Error loading ads' });
       console.error('Error fetching all ads:', err);
     } finally {
       setLoading(false);
@@ -104,11 +104,10 @@ const Ads = () => {
   const fetchPendingAds = async () => {
     try {
       setLoading(true);
-      setError(null);
       const response = await adminService.getPendingAds(); // expects { data: [...] } or similar
       setPendingAds(response?.data || []);
     } catch (err) {
-      setError(err?.message || 'Error loading pending ads');
+      showToast({ type: 'error', message: err?.message || 'Error loading pending ads' });
       console.error('Error fetching pending ads:', err);
     } finally {
       setLoading(false);
@@ -130,7 +129,7 @@ const Ads = () => {
         await fetchAllAds();
       }
     } catch (err) {
-      setError(err?.message || 'Error approving ad');
+      showToast({ type: 'error', message: err?.message || 'Error approving ad' });
       console.error('Error approving ad:', err);
     } finally {
       setLoading(false);
@@ -170,7 +169,7 @@ const Ads = () => {
         await fetchAllAds();
       }
     } catch (err) {
-      setError(err?.message || 'Error rejecting ad');
+      showToast({ type: 'error', message: err?.message || 'Error rejecting ad' });
       console.error('Error rejecting ad:', err);
     } finally {
       setLoading(false);
@@ -298,17 +297,6 @@ const Ads = () => {
           <span className="text-xs text-gray-600">{filteredAds.length} total</span>
         </div>
       </div>
-
-      {/* Error message */}
-      {error && (
-        <div role="alert" className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start">
-          <AlertCircle className="h-5 w-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" />
-          <div>
-            <h3 className="text-red-800 text-sm font-medium">Error</h3>
-            <p className="text-red-600 text-xs">{error}</p>
-          </div>
-        </div>
-      )}
 
       {/* Filters */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">

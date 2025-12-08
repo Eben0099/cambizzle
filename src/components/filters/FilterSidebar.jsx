@@ -54,13 +54,13 @@ const FilterSidebar = ({
   console.log('🏙️ Villes filtrées:', cities);
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden" translate="no">
       {/* Header */}
       <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
         <div className="flex items-center space-x-2">
           <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
           {activeFiltersCount > 0 && (
-            <span className="bg-[#D6BA69] text-black text-xs font-medium px-2 py-1 rounded-full">
+            <span className="bg-[#D6BA69] text-black text-xs font-medium px-2 py-1 rounded-full" suppressHydrationWarning>
               {activeFiltersCount}
             </span>
           )}

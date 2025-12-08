@@ -4,6 +4,7 @@ import Input from "../../components/ui/Input";
 import Loader from "../../components/ui/Loader";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/Button";
+import { useToast } from "../../components/toast/useToast";
 import { 
   Users, 
   Search as SearchIcon, 
@@ -19,9 +20,9 @@ import {
 import adminService from "../../services/adminService";
 
 const ReferralCodes = () => {
+  const { showToast } = useToast();
   const [codes, setCodes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedCode, setExpandedCode] = useState(null);
 
@@ -32,7 +33,6 @@ const ReferralCodes = () => {
   const fetchCodes = async () => {
     try {
       setLoading(true);
-      setError(null);
       const response = await adminService.getReferralCodes();
       if (Array.isArray(response)) {
         setCodes(response);
@@ -42,7 +42,7 @@ const ReferralCodes = () => {
         throw new Error(response.message || "Error loading referral codes");
       }
     } catch (err) {
-      setError(err.message || "Error loading referral codes");
+      showToast({ type: 'error', message: err.message || 'Error loading referral codes' });
     } finally {
       setLoading(false);
     }

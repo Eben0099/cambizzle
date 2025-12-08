@@ -1,27 +1,58 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, Clock, CheckCircle, XCircle, Phone } from 'lucide-react';
 import { adsService } from '../services/adsService';
 
 const PaymentModal = ({ paymentInfo, adId, onClose, onSuccess, onFailure }) => {
   const [status, setStatus] = useState('waiting'); // waiting, success, failed, timeout
   const [timeLeft, setTimeLeft] = useState(120); // 2 minutes in seconds
-  const [intervalId, setIntervalId] = useState(null);
+  const pollingIntervalIdRef = useRef(null);
+  const timerIntervalIdRef = useRef(null);
 
   useEffect(() => {
     console.log('🔄 PaymentModal useEffect - adId:', adId, 'paymentInfo:', paymentInfo);
     if (paymentInfo && Object.keys(paymentInfo).length > 0) {
-      console.log('🚀 Starting payment polling...');
+      console.log('🚀 Starting payment polling and timer...');
       startPolling();
+      startTimer();
     } else {
       console.log('❌ No paymentInfo provided, skipping polling');
     }
     return () => {
-      if (intervalId) {
+      if (pollingIntervalIdRef.current) {
         console.log('🛑 Clearing polling interval');
-        clearInterval(intervalId);
+        clearInterval(pollingIntervalIdRef.current);
+      }
+      if (timerIntervalIdRef.current) {
+        console.log('🛑 Clearing timer interval');
+        clearInterval(timerIntervalIdRef.current);
       }
     };
   }, [paymentInfo]);
+
+  const startTimer = () => {
+    console.log('⏱️ Starting real-time countdown timer');
+    // Clear any existing timer
+    if (timerIntervalIdRef.current) {
+      clearInterval(timerIntervalIdRef.current);
+    }
+    const id = setInterval(() => {
+      setTimeLeft(prev => {
+        const newTime = prev - 1;
+        console.log('⏱️ Countdown:', formatTime(newTime));
+        if (newTime <= 0) {
+          console.log('⏰ Timeout reached!');
+          setStatus('timeout');
+          if (timerIntervalIdRef.current) {
+            clearInterval(timerIntervalIdRef.current);
+            timerIntervalIdRef.current = null;
+          }
+          return 0;
+        }
+        return newTime;
+      });
+    }, 1000); // Update every second
+    timerIntervalIdRef.current = id;
+  };
 
   const startPolling = () => {
     console.log('🎯 startPolling called with paymentInfo:', paymentInfo);
@@ -40,28 +71,54 @@ const PaymentModal = ({ paymentInfo, adId, onClose, onSuccess, onFailure }) => {
 
     console.log('✅ Using paymentId for API call:', paymentId);
     console.log('⏰ Starting polling every 15 seconds for paymentId:', paymentId);
+    
+    // Clear any existing polling
+    if (pollingIntervalIdRef.current) {
+      clearInterval(pollingIntervalIdRef.current);
+    }
+    
     const id = setInterval(async () => {
-      console.log('🔄 Polling iteration - timeLeft:', timeLeft, 'status:', status);
       try {
         const response = await adsService.checkPaymentStatus(paymentId);
         console.log('📡 Backend response:', response);
 
-        if (response.status === 'payment_success' || response.status === 'success') {
+        if (response.status === 'payment_success' || response.status === 'success' || response.status === 'paid') {
           console.log('✅ Payment successful!');
           setStatus('success');
-          clearInterval(id);
+          if (pollingIntervalIdRef.current) {
+            clearInterval(pollingIntervalIdRef.current);
+            pollingIntervalIdRef.current = null;
+          }
+          if (timerIntervalIdRef.current) {
+            clearInterval(timerIntervalIdRef.current);
+            timerIntervalIdRef.current = null;
+          }
           setTimeout(() => {
             onSuccess && onSuccess();
           }, 2000);
         } else if (response.status === 'payment_failed' || response.status === 'failed') {
           console.log('❌ Payment failed!');
           setStatus('failed');
-          clearInterval(id);
+          if (pollingIntervalIdRef.current) {
+            clearInterval(pollingIntervalIdRef.current);
+            pollingIntervalIdRef.current = null;
+          }
+          if (timerIntervalIdRef.current) {
+            clearInterval(timerIntervalIdRef.current);
+            timerIntervalIdRef.current = null;
+          }
           onFailure && onFailure();
         } else if (response.status === 'published') {
           console.log('📝 Ad published!');
           setStatus('success');
-          clearInterval(id);
+          if (pollingIntervalIdRef.current) {
+            clearInterval(pollingIntervalIdRef.current);
+            pollingIntervalIdRef.current = null;
+          }
+          if (timerIntervalIdRef.current) {
+            clearInterval(timerIntervalIdRef.current);
+            timerIntervalIdRef.current = null;
+          }
           setTimeout(() => {
             onSuccess && onSuccess();
           }, 2000);
@@ -72,21 +129,9 @@ const PaymentModal = ({ paymentInfo, adId, onClose, onSuccess, onFailure }) => {
       } catch (error) {
         console.error('❌ Error during payment check:', error);
       }
-
-      setTimeLeft(prev => {
-        const newTime = prev - 15;
-        console.log('⏱️ TimeLeft updated:', prev, '->', newTime);
-        if (newTime <= 1) {
-          console.log('⏰ Timeout reached!');
-          setStatus('timeout');
-          clearInterval(id);
-          return 0;
-        }
-        return newTime;
-      });
     }, 15000); // 15 seconds interval
 
-    setIntervalId(id);
+    pollingIntervalIdRef.current = id;
     console.log('✅ Polling started with interval ID:', id);
   };
 

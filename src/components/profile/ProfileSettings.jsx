@@ -6,14 +6,15 @@ import Input from '../ui/Input';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import { getPhotoUrl } from '../../utils/helpers';
+import { useToast } from '../toast/useToast';
 
 const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
+  const { showToast } = useToast();
   const [editFormData, setEditFormData] = useState({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
     email: user?.email || '',
     phone: user?.phone || '',
-    slug: user?.slug || '',
     photoUrl: user?.photoUrl || '',
     identityDocumentType: user?.identityDocumentType || '',
     identityDocumentNumber: user?.identityDocumentNumber || '',
@@ -156,9 +157,12 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
           }));
         }
         setPhotoUploadSuccess('Profile photo updated successfully');
+        showToast({ type: 'success', message: 'Profile photo updated successfully' });
       } catch (uploadErr) {
         console.error('❌ Failed to upload profile photo:', uploadErr);
-        setPhotoUploadError(uploadErr?.message || 'Failed to upload profile photo');
+        const errMsg = uploadErr?.message || 'Failed to upload profile photo';
+        setPhotoUploadError(errMsg);
+        showToast({ type: 'error', message: errMsg });
       }
     } catch (error) {
       console.error('Error processing image:', error);
@@ -183,9 +187,12 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
         setEditFormData(prev => ({ ...prev, photoUrl: '', photoBase64: null }));
       }
       setPhotoUploadSuccess('Profile photo removed successfully');
+      showToast({ type: 'success', message: 'Profile photo removed successfully' });
     } catch (error) {
       console.error('Error during removal:', error);
-      setPhotoUploadError(error?.message || 'Failed to remove profile photo');
+      const errMsg = error?.message || 'Failed to remove profile photo';
+      setPhotoUploadError(errMsg);
+      showToast({ type: 'error', message: errMsg });
     } finally {
       setUploadingPhoto(false);
     }
@@ -284,16 +291,16 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
         return;
       }
 
-      // Some backends (yours) use the same /users/me update endpoint to change password.
-      // Send a FormData so it is passed through as-is to the API (and not transformed).
+      // Use the PUT /api/users/me endpoint with current_password and password
       const formData = new FormData();
       formData.append('current_password', curr);
-      formData.append('new_password', next);
+      formData.append('password', next);
 
       const result = await onUpdateProfile(formData);
 
       // If update succeeded, clear fields and show success
       setPasswordChangeSuccess('Password changed successfully');
+      showToast({ type: 'success', message: 'Password changed successfully' });
       setCurrentPassword('');
       setNewPassword('');
       setConfirmNewPassword('');
@@ -302,13 +309,15 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
         // nothing special here — parent hook already updates auth context
       }
     } catch (err) {
-      setPasswordChangeError(err?.message || 'Failed to change password');
+      const errMsg = err?.message || 'Failed to change password';
+      setPasswordChangeError(errMsg);
+      showToast({ type: 'error', message: errMsg });
     } finally {
       setPasswordChangeLoading(false);
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     console.log('💾 handleSave called');
     console.log('📊 Current editFormData:', editFormData);
 
@@ -319,12 +328,10 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
     const firstName = (editFormData.firstName || '').trim();
     const lastName = (editFormData.lastName || '').trim();
     const email = (editFormData.email || '').trim();
-    const slug = (editFormData.slug || '').trim();
 
     if (firstName) formData.append('first_name', firstName);
     if (lastName) formData.append('last_name', lastName);
     if (email) formData.append('email', email);
-    if (slug) formData.append('slug', slug);
 
     // Add phone only if it has changed
     if (editFormData.phone && editFormData.phone !== user?.phone) {
@@ -351,7 +358,13 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
     console.log('🔍 FormData fields:', [...formData.entries()].map(([key, value]) => `${key}: ${value instanceof Blob ? 'Blob(' + value.size + ' bytes)' : value}`));
 
     // No required-field validation; submit partial updates as provided
-    onUpdateProfile(formData);
+    try {
+      await onUpdateProfile(formData);
+      showToast({ type: 'success', message: 'Profile updated successfully' });
+    } catch (err) {
+      const errMsg = err?.message || 'Failed to update profile';
+      showToast({ type: 'error', message: errMsg });
+    }
   };
 
   return (
@@ -474,14 +487,6 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
               containerClass="focus-within:ring-2 focus-within:ring-[#D6BA69]"
               enableSearch
               placeholder="Phone number"
-            />
-
-            <Input
-              label="Username (slug)"
-              name="slug"
-              value={editFormData.slug}
-              onChange={handleFormInputChange}
-              placeholder="john-doe"
             />
           </div>
         </div>
