@@ -35,8 +35,9 @@ const CategorySidebar = ({ className = '' }) => {
   // Base fallback icon
   const BaseIcon = Package;
 
-  // Configuration de l'API
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  // Configuration pour les URLs des images
+  // Les uploads sont à la racine du serveur, pas sous /api
+  const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:8080';
 
   // Composant pour afficher l'icône de catégorie avec fallback
   const CategoryIcon = ({ category, size = "w-6 h-6" }) => {
@@ -73,13 +74,13 @@ const CategorySidebar = ({ className = '' }) => {
     const iconPath = category.iconPath || category.iconUrl;
     const iconUrl = iconPath.startsWith('http') 
       ? iconPath 
-      : `${API_BASE_URL}${iconPath}`;
+      : `${SERVER_URL}${iconPath}`;
 
     console.log('✅ CategoryIcon - URL image construite:', {
       category: category.name,
       iconPath,
       iconUrl,
-      API_BASE_URL
+      SERVER_URL
     });
 
     return (
@@ -174,13 +175,13 @@ const CategorySidebar = ({ className = '' }) => {
     const iconPath = subcategory.iconPath || subcategory.iconUrl;
     const iconUrl = iconPath.startsWith('http') 
       ? iconPath 
-      : `${API_BASE_URL}${iconPath}`;
+      : `${SERVER_URL}${iconPath}`;
 
     console.log('✅ SubcategoryIcon - URL image construite:', {
       subcategory: subcategory.name,
       iconPath,
       iconUrl,
-      API_BASE_URL
+      SERVER_URL
     });
 
     return (
