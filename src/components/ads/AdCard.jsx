@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, MapPin, Eye, Star, ShieldCheck, Zap } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { formatPrice, formatRelativeDate, getPhotoUrl } from '../../utils/helpers';
 import Card from '../ui/Card';
 import useFavorites from '../../hooks/useFavorites';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFavoriteStatus } from '../../hooks/useFavoriteStatus';
+import logger from '../../utils/logger';
 
 const AdCard = ({ ad }) => {
+  const { t } = useTranslation();
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const { isAuthenticated } = useAuth();
@@ -39,7 +42,7 @@ const AdCard = ({ ad }) => {
 
   // Debug temporaire pour vérifier les données
   if (ad.originalPrice && ad.originalPrice !== ad.price) {
-    console.log('💰 AdCard debug remise:', {
+    logger.debug('AdCard debug remise:', {
       title: ad.title,
       price: ad.price,
       originalPrice: ad.originalPrice,
@@ -51,7 +54,7 @@ const AdCard = ({ ad }) => {
   }
 
   // Debug vérification vendeur
-  console.log('🛡️ AdCard userVerified:', { title: ad.title, userVerified: ad.userVerified });
+  logger.debug('AdCard userVerified:', { title: ad.title, userVerified: ad.userVerified });
 
   return (
     <Card hover className="overflow-hidden h-full">
@@ -80,26 +83,26 @@ const AdCard = ({ ad }) => {
             </>
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gray-100">
-              <span className="text-gray-400 text-xs">Pas d'image</span>
+              <span className="text-gray-400 text-xs">{t('ads.noImages')}</span>
             </div>
           )}
 
           {/* Negotiable Badge */}
           {ad.isNegotiable && (
             <div className="absolute top-2 left-2 bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-              Négociable
+              {t('ads.negotiable')}
             </div>
           )}
 
           {/* Favorite Button */}
           <button
             onClick={handleFavoriteClick}
-            className={`absolute top-2 right-2 p-1.5 rounded-full transition-all duration-300 transform hover:scale-110 ${
+            className={`absolute top-2 right-2 p-1.5 rounded-full transition-all duration-300 transform hover:scale-110 cursor-pointer ${
               isFavorite
                 ? 'bg-red-500 text-white hover:bg-red-600'
                 : 'bg-white/90 text-gray-600 hover:bg-white hover:text-red-500'
             }`}
-            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+            aria-label={isFavorite ? t('ads.removeFromFavorites') : t('ads.addToFavorites')}
           >
             <Heart 
               className={`w-3.5 h-3.5 transition-all duration-300 ${
