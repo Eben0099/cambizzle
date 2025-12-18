@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { isValidPhoneNumber } from 'react-phone-number-input';
 import { useGoogleLogin } from '@react-oauth/google';
 import { Mail, Eye, EyeOff, ArrowLeft, Store, Clock, Globe, Facebook, Instagram } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/authService';
 import { API_BASE_URL } from '../../config/api';
+import storageService from '../../services/storageService';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import 'react-phone-number-input/style.css';
@@ -13,11 +15,13 @@ import Modal from '../ui/Modal';
 import Loader from '../ui/Loader';
 
 const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
+  const { t } = useTranslation();
+
   // Validation en temps réel pour PhoneInput
   const handlePhoneChange = (value) => {
     setFormData(prev => ({ ...prev, phone: value }));
     if (value && !isValidPhoneNumber(value)) {
-      setErrors(prev => ({ ...prev, phone: 'Invalid phone number for selected country' }));
+      setErrors(prev => ({ ...prev, phone: t('auth.invalidPhone') }));
     } else {
       setErrors(prev => ({ ...prev, phone: '' }));
     }
@@ -27,11 +31,11 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
   const handleEmailChange = (e) => {
     const email = e.target.value;
     setFormData(prev => ({ ...prev, email }));
-    
+
     if (email && email.trim()) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
       if (!emailRegex.test(email.trim())) {
-        setErrors(prev => ({ ...prev, email: 'Please enter a valid email address (e.g., example@domain.com)' }));
+        setErrors(prev => ({ ...prev, email: t('auth.invalidEmail') }));
       } else {
         setErrors(prev => ({ ...prev, email: '' }));
       }
@@ -69,23 +73,22 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         const data = await response.json();
 
         if (data.success || data.token) {
-           localStorage.setItem('token', data.token);
-           localStorage.setItem('user', JSON.stringify(data.user));
-           setMessage("Login successful!");
+           storageService.setAuth(data.token, data.user);
+           setMessage(t('auth.loginSuccess'));
            setTimeout(() => {
              window.location.reload();
            }, 1000);
         } else {
-          setErrors({ submit: data.message || 'Google login failed' });
+          setErrors({ submit: data.message || t('auth.googleLoginFailed') });
         }
       } catch (error) {
-        setErrors({ submit: 'Error connecting to Google' });
+        setErrors({ submit: t('auth.errorConnectingGoogle') });
       } finally {
         setIsLoading(false);
       }
     },
     onError: () => {
-      setErrors({ submit: 'Google login failed' });
+      setErrors({ submit: t('auth.googleLoginFailed') });
       setIsLoading(false);
     }
   });
@@ -205,7 +208,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         const email = formData.email.trim();
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
         if (!emailRegex.test(email)) {
-          setErrors({ email: 'Please enter a valid email address (e.g., example@domain.com)' });
+          setErrors({ email: t('auth.invalidEmail') });
           setIsLoading(false);
           return;
         }
@@ -218,7 +221,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
       });
 
       if (result.success) {
-        setMessage("Login successful!");
+        setMessage(t('auth.loginSuccess'));
         setTimeout(() => {
           handleClose();
         }, 1500);
@@ -226,7 +229,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         setErrors({ submit: result.error });
       }
     } catch (error) {
-      setErrors({ submit: 'Error during login' });
+      setErrors({ submit: t('auth.errorDuringLogin') });
     } finally {
       setIsLoading(false);
     }
@@ -240,25 +243,25 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
 
     try {
       if (!formData.phone) {
-        setErrors({ phone: 'Phone number is required' });
+        setErrors({ phone: t('auth.phoneRequired') });
         setIsLoading(false);
         return;
       }
 
       if (!formData.password) {
-        setErrors({ password: 'New password is required' });
+        setErrors({ password: t('auth.passwordRequired') });
         setIsLoading(false);
         return;
       }
 
       if (formData.password.length < 8) {
-        setErrors({ password: 'Password must be at least 8 characters' });
+        setErrors({ password: t('auth.passwordMinLength') });
         setIsLoading(false);
         return;
       }
 
       if (formData.password !== formData.confirmPassword) {
-        setErrors({ confirmPassword: 'Passwords do not match' });
+        setErrors({ confirmPassword: t('auth.passwordsDontMatch') });
         setIsLoading(false);
         return;
       }
@@ -277,7 +280,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
       const data = await response.json();
 
       if (data.success) {
-        setMessage("Password reset successful! Redirecting to login...");
+        setMessage(t('auth.passwordResetSuccess'));
         setTimeout(() => {
           setIsResetMode(false);
           setFormData({
@@ -289,10 +292,10 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
           setStep('choice');
         }, 1500);
       } else {
-        setErrors({ submit: data.message || 'Failed to reset password' });
+        setErrors({ submit: data.message || t('auth.errorDuringPasswordReset') });
       }
     } catch (error) {
-      setErrors({ submit: 'Error during password reset' });
+      setErrors({ submit: t('auth.errorDuringPasswordReset') });
     } finally {
       setIsLoading(false);
     }
@@ -306,15 +309,15 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
 
     // --- Validation côté frontend ---
     const newErrors = {};
-    if (!formData.firstName.trim()) newErrors.firstName = "First name required";
-    if (!formData.lastName.trim()) newErrors.lastName = "Last name required";
+    if (!formData.firstName.trim()) newErrors.firstName = t('auth.firstNameRequired');
+    if (!formData.lastName.trim()) newErrors.lastName = t('auth.lastNameRequired');
     // Email is optional on registration — do not require it here
-  if (!formData.phone.trim()) newErrors.phone = "Phone required";
-  else if (!isValidPhoneNumber(formData.phone)) newErrors.phone = "Please enter a valid phone number for the selected country";
-    if (!formData.password) newErrors.password = "Password required";
-    if (formData.password.length < 6) newErrors.password = "Password must be at least 6 characters";
-    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Passwords do not match";
-    if (!formData.acceptTerms) newErrors.acceptTerms = "You must accept the terms of use";
+  if (!formData.phone.trim()) newErrors.phone = t('auth.phoneRequired');
+  else if (!isValidPhoneNumber(formData.phone)) newErrors.phone = t('auth.invalidPhone');
+    if (!formData.password) newErrors.password = t('auth.passwordRequired');
+    if (formData.password.length < 6) newErrors.password = t('auth.passwordMin6');
+    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = t('auth.passwordsDontMatch');
+    if (!formData.acceptTerms) newErrors.acceptTerms = t('auth.acceptTermsRequired');
     if (!formData.referralCode) delete formData.referralCode;
     
 
@@ -332,7 +335,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         // Stocker temporairement les données utilisateur pour la création du profil vendeur
         setTempUser(result.data?.user);
 
-        setMessage("Registration successful!");
+        setMessage(t('auth.registerSuccess'));
         // Si l'utilisateur veut être vendeur, passe à l'étape suivante
         if (formData.wantsToBeSeller) {
           setTimeout(() => {
@@ -347,7 +350,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         setErrors({ submit: result.error });
       }
     } catch (err) {
-      setErrors({ submit: "Error during registration" });
+      setErrors({ submit: t('auth.errorDuringRegistration') });
     } finally {
       setIsLoading(false);
     }
@@ -360,11 +363,11 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
     setErrors({});
 
     const newErrors = {};
-    if (!sellerData.businessName.trim()) newErrors.businessName = 'Business name required';
-    if (!sellerData.businessDescription.trim()) newErrors.businessDescription = 'Business description required';
-    if (!sellerData.businessAddress.trim()) newErrors.businessAddress = 'Business address required';
-    if (!sellerData.businessPhone.trim()) newErrors.businessPhone = 'Business phone required';
-    if (!sellerData.businessEmail.trim()) newErrors.businessEmail = 'Business email required';
+    if (!sellerData.businessName.trim()) newErrors.businessName = t('errors.required');
+    if (!sellerData.businessDescription.trim()) newErrors.businessDescription = t('errors.required');
+    if (!sellerData.businessAddress.trim()) newErrors.businessAddress = t('errors.required');
+    if (!sellerData.businessPhone.trim()) newErrors.businessPhone = t('errors.required');
+    if (!sellerData.businessEmail.trim()) newErrors.businessEmail = t('errors.required');
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -377,7 +380,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
       const currentUser = user || tempUser;
 
       if (!currentUser) {
-        throw new Error('You must first create an account or log in to create a seller profile. Go back to the previous step.');
+        throw new Error(t('auth.mustCreateAccount'));
       }
 
       // Préparer les données avec l'userId et formater correctement
@@ -395,22 +398,22 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         updateUser(result.user);
       }
 
-      setMessage("Seller profile created successfully!");
+      setMessage(t('auth.sellerProfileCreated'));
       setTimeout(() => {
         handleClose();
       }, 1500);
     } catch (error) {
 
-      let errorMessage = 'Error creating seller profile';
+      let errorMessage = t('auth.errorCreatingSellerProfile');
 
       if (error.message.includes('Token') || error.message.includes('reconnecter')) {
-        errorMessage = 'You must be logged in to create a seller profile. Please log in again.';
+        errorMessage = t('auth.mustBeLoggedIn');
       } else if (error.message.includes('compte') || error.message.includes('connecter')) {
-        errorMessage = 'You must first create an account or log in to create a seller profile.';
+        errorMessage = t('auth.mustCreateAccount');
       } else if (error.message.includes('400') || error.message.includes('422') || error.message.includes('invalides')) {
-        errorMessage = 'Invalid data. Please check that all required fields are filled.';
+        errorMessage = t('auth.invalidData');
       } else if (error.message.includes('409') || error.message.includes('existe déjà')) {
-        errorMessage = 'A seller profile already exists for this account.';
+        errorMessage = t('auth.sellerProfileExists');
       }
 
       setErrors({ submit: errorMessage });
@@ -482,20 +485,20 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
   const weekOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
   const renderResetPasswordForm = () => (
-    <div className="px-4 py-6 sm:px-6 lg:px-8">
+    <div className="px-4 py-6 sm:px-6 lg:px-8" data-wg-notranslate="true">
       <div className="space-y-6 sm:space-y-8">
         {/* Header with Back Button */}
         <div className="flex items-start space-x-3">
           <button
             onClick={() => setIsResetMode(false)}
-            className="mt-1 p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="mt-1 p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1">
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Reset Password</h2>
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{t('auth.resetPassword')}</h2>
             <p className="text-sm sm:text-base text-gray-600 mt-1">
-              Enter your phone and new password
+              {t('auth.resetPasswordSubtitle')}
             </p>
           </div>
         </div>
@@ -504,7 +507,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         <form onSubmit={handleResetPasswordSubmit} className="space-y-4 sm:space-y-6">
           <div className="space-y-4">
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Phone <span className="text-red-600">*</span></label>
+              <label className="block text-sm font-medium text-gray-700">{t('auth.phone')} <span className="text-red-600">*</span></label>
               <PhoneInput
                 defaultCountry="CM"
                 value={formData.phone}
@@ -518,7 +521,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
 
             <div className="relative">
               <Input
-                label="New Password"
+                label={t('auth.newPassword')}
                 type={showPassword ? 'text' : 'password'}
                 name="password"
                 value={formData.password}
@@ -526,11 +529,11 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 error={errors.password}
                 required
               />
-              <div className="text-xs text-gray-500 mt-1">Password must be at least 8 characters.</div>
+              <div className="text-xs text-gray-500 mt-1">{t('auth.passwordMinLength')}</div>
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -538,7 +541,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
 
             <div className="relative">
               <Input
-                label="Confirm Password"
+                label={t('auth.confirmPassword')}
                 type={showConfirmPassword ? 'text' : 'password'}
                 name="confirmPassword"
                 value={formData.confirmPassword}
@@ -549,7 +552,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
               >
                 {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -575,7 +578,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
             loading={isLoading}
             disabled={isLoading}
           >
-            Reset Password
+            {t('auth.resetPassword')}
           </Button>
         </form>
       </div>
@@ -583,15 +586,15 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
   );
 
   const renderChoice = () => (
-    <div className="px-4 py-6 sm:px-6 lg:px-8">
+    <div className="px-4 py-6 sm:px-6 lg:px-8" data-wg-notranslate="true">
       <div className="space-y-6 sm:space-y-8">
         {/* Header */}
         <div className="text-center space-y-2">
           <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
-            {mode === 'login' ? 'Log in' : "Sign up"}
+            {mode === 'login' ? t('auth.login') : t('auth.signup')}
           </h2>
           <p className="text-sm sm:text-base text-gray-600">
-            Choose your {mode === 'login' ? 'login' : 'sign up'} method
+            {mode === 'login' ? t('auth.chooseMethod') : t('auth.chooseSignupMethod')}
           </p>
         </div>
 
@@ -600,7 +603,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
           <button
             onClick={() => handleSocialAuth('google')}
             disabled={isLoading}
-            className="w-full flex items-center justify-center px-4 py-3 sm:py-4 border border-gray-300 rounded-lg shadow-sm bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#D6BA69] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base"
+            className="w-full flex items-center justify-center px-4 py-3 sm:py-4 border border-gray-300 rounded-lg shadow-sm bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#D6BA69] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base cursor-pointer"
           >
             <svg className="w-5 h-5 mr-3 flex-shrink-0" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -608,7 +611,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            <span className="truncate">Continue with Google</span>
+            <span className="truncate">{t('auth.continueWithGoogle')}</span>
           </button>
 
           {/* Facebook Login/Register Button - Commented Out */}
@@ -626,10 +629,10 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
           <button
             onClick={() => setStep('form')}
             disabled={isLoading}
-            className="w-full flex items-center justify-center px-4 py-3 sm:py-4 border border-gray-300 rounded-lg shadow-sm bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#D6BA69] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base"
+            className="w-full flex items-center justify-center px-4 py-3 sm:py-4 border border-gray-300 rounded-lg shadow-sm bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#D6BA69] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base cursor-pointer"
           >
             <Mail className="w-5 h-5 mr-3 flex-shrink-0" />
-            <span className="truncate">Continue with Email or Phone Number</span>
+            <span className="truncate">{t('auth.continueWithEmailOrPhone')}</span>
           </button>
         </div>
 
@@ -637,12 +640,9 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         <div className="text-center pt-4 border-t border-gray-200">
           <button
             onClick={handleSwitchMode}
-            className="text-sm sm:text-base text-[#D6BA69] hover:text-[#C5A952] font-medium transition-colors"
+            className="text-sm sm:text-base text-[#D6BA69] hover:text-[#C5A952] font-medium transition-colors cursor-pointer"
           >
-            {mode === 'login'
-              ? "Don't have an account? Sign up"
-              : 'Already have an account? Log in'
-            }
+            {mode === 'login' ? t('auth.noAccount') : t('auth.hasAccount')}
           </button>
         </div>
       </div>
@@ -650,23 +650,18 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
   );
 
   const renderLoginForm = () => (
-    <div className="px-4 py-6 sm:px-6 lg:px-8">
+    <div className="px-4 py-6 sm:px-6 lg:px-8" data-wg-notranslate="true">
       <div className="space-y-6 sm:space-y-8">
         {/* Header with Back Button */}
         <div className="flex items-start space-x-3">
           <button
             onClick={() => setStep('choice')}
-            className="mt-1 p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="mt-1 p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1">
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Log in</h2>
-            {/*
-            <p className="text-sm sm:text-base text-gray-600 mt-1">
-              Log in with your email and phone
-            </p>
-            */}
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{t('auth.login')}</h2>
           </div>
         </div>
 
@@ -674,7 +669,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         <form onSubmit={handleLoginSubmit} className="space-y-4 sm:space-y-6">
           <div className="space-y-4">
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Email <span className="text-gray-500">(optional)</span></label>
+              <label className="block text-sm font-medium text-gray-700">{t('auth.emailOptional')}</label>
               <Input
                 type="email"
                 name="email"
@@ -685,7 +680,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
             </div>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Phone <span className="text-red-600">*</span></label>
+              <label className="block text-sm font-medium text-gray-700">{t('auth.phone')} <span className="text-red-600">*</span></label>
               <PhoneInput
                 defaultCountry="CM"
                 value={formData.phone}
@@ -699,7 +694,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
 
             <div className="relative">
               <Input
-                label="Password"
+                label={t('auth.password')}
                 type={showPassword ? 'text' : 'password'}
                 name="password"
                 value={formData.password}
@@ -707,11 +702,11 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 error={errors.password}
                 required
               />
-              <div className="text-xs text-gray-500 mt-1">Password must be at least 8 characters.</div>
+              <div className="text-xs text-gray-500 mt-1">{t('auth.passwordMinLength')}</div>
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -721,9 +716,9 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
               <button
                 type="button"
                 onClick={() => setIsResetMode(true)}
-                className="text-sm text-[#D6BA69] hover:text-[#C5A952] font-medium transition-colors"
+                className="text-sm text-[#D6BA69] hover:text-[#C5A952] font-medium transition-colors cursor-pointer"
               >
-                Forgot password?
+                {t('auth.forgotPassword')}
               </button>
             </div>
           </div>
@@ -747,7 +742,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
             loading={isLoading}
             disabled={isLoading}
           >
-            Log in
+            {t('auth.login')}
           </Button>
         </form>
 
@@ -755,31 +750,28 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         <div className="text-center pt-4 border-t border-gray-200">
           <button
             onClick={handleSwitchMode}
-            className="text-sm sm:text-base text-[#D6BA69] hover:text-[#C5A952] font-medium transition-colors"
+            className="text-sm sm:text-base text-[#D6BA69] hover:text-[#C5A952] font-medium transition-colors cursor-pointer"
           >
-            Don't have an account? Sign up
+            {t('auth.noAccount')}
           </button>
         </div>
-
-        
       </div>
     </div>
   );
 
   const renderRegisterForm = () => (
-    <div className="px-4 py-6 sm:px-6 lg:px-8">
+    <div className="px-4 py-6 sm:px-6 lg:px-8" data-wg-notranslate="true">
       <div className="space-y-6 sm:space-y-8">
         {/* Header with Back Button */}
         <div className="flex items-start space-x-3">
           <button
             onClick={() => setStep('choice')}
-            className="mt-1 p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="mt-1 p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1">
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Sign up</h2>
-            {/* Removed registration subtitle as requested */}
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{t('auth.signup')}</h2>
           </div>
         </div>
 
@@ -789,7 +781,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
-                label="First Name"
+                label={t('auth.firstName')}
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleInputChange}
@@ -797,7 +789,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 required
               />
               <Input
-                label="Last Name"
+                label={t('auth.lastName')}
                 name="lastName"
                 value={formData.lastName}
                 onChange={handleInputChange}
@@ -807,7 +799,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
             </div>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Email <span className="text-gray-500">(optional)</span></label>
+              <label className="block text-sm font-medium text-gray-700">{t('auth.emailOptional')}</label>
               <Input
                 type="email"
                 name="email"
@@ -818,7 +810,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
             </div>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Phone <span className="text-red-600">*</span></label>
+              <label className="block text-sm font-medium text-gray-700">{t('auth.phone')} <span className="text-red-600">*</span></label>
               <PhoneInput
                 defaultCountry="CM"
                 value={formData.phone}
@@ -835,7 +827,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
           <div className="space-y-4">
             <div className="relative">
               <Input
-                label="Password"
+                label={t('auth.password')}
                 type={showPassword ? 'text' : 'password'}
                 name="password"
                 value={formData.password}
@@ -843,11 +835,11 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 error={errors.password}
                 required
               />
-              <div className="text-xs text-gray-500 mt-1">Password must be at least 8 characters.</div>
+              <div className="text-xs text-gray-500 mt-1">{t('auth.passwordMinLength')}</div>
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -855,7 +847,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
 
             <div className="relative">
               <Input
-                label="Confirm Password"
+                label={t('auth.confirmPassword')}
                 type={showPassword ? 'text' : 'password'}
                 name="confirmPassword"
                 value={formData.confirmPassword}
@@ -866,7 +858,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -874,7 +866,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
           </div>
 
           <Input
-            label="Referral Code (optional)"
+            label={t('auth.referralCode')}
             name="referralCode"
             value={formData.referralCode}
             onChange={handleInputChange}
@@ -896,11 +888,11 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 <label htmlFor="wantsToBeSeller" className="block text-sm font-medium text-gray-900">
                   <div className="flex items-center">
                     <Store className="w-4 h-4 mr-2 text-[#D6BA69] flex-shrink-0" />
-                    <span>Become a seller</span>
+                    <span>{t('auth.becomeSeller')}</span>
                   </div>
                 </label>
                 <p className="text-sm text-gray-600 mt-1">
-                  Create a seller profile to post ads and manage your business activity
+                  {t('auth.becomeSellerDescription')}
                 </p>
               </div>
             </div>
@@ -918,13 +910,13 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                 className="h-4 w-4 text-[#D6BA69] focus:ring-[#D6BA69] border-gray-300 rounded mt-1 flex-shrink-0"
               />
               <label htmlFor="acceptTerms" className="text-sm text-gray-700 flex-1">
-                I accept the{' '}
+                {t('auth.agreeTerms')}{' '}
                 <a href="#" className="text-[#D6BA69] hover:text-[#C5A952] font-medium transition-colors">
-                  terms of use
+                  {t('auth.termsOfService')}
                 </a>{' '}
-                and the{' '}
+                {t('auth.and')}{' '}
                 <a href="#" className="text-[#D6BA69] hover:text-[#C5A952] font-medium transition-colors">
-                  privacy policy
+                  {t('auth.privacyPolicy')}
                 </a>
               </label>
             </div>
@@ -952,7 +944,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
             loading={isLoading}
             disabled={isLoading}
           >
-            {formData.wantsToBeSeller ? 'Continue to seller profile' : 'Sign up'}
+            {formData.wantsToBeSeller ? t('auth.continueToSellerProfile') : t('auth.signup')}
           </Button>
         </form>
 
@@ -960,9 +952,9 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         <div className="text-center pt-4 border-t border-gray-200">
           <button
             onClick={handleSwitchMode}
-            className="text-sm sm:text-base text-[#D6BA69] hover:text-[#C5A952] font-medium transition-colors"
+            className="text-sm sm:text-base text-[#D6BA69] hover:text-[#C5A952] font-medium transition-colors cursor-pointer"
           >
-            Already have an account? Log in
+            {t('auth.hasAccount')}
           </button>
         </div>
       </div>
@@ -970,20 +962,20 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
   );
 
   const renderSellerForm = () => (
-    <div className="px-4 py-6 sm:px-6 lg:px-8">
+    <div className="px-4 py-6 sm:px-6 lg:px-8" data-wg-notranslate="true">
       <div className="space-y-6 sm:space-y-8">
         {/* Header with Back Button */}
         <div className="flex items-start space-x-3">
           <button
             onClick={() => setStep('form')}
-            className="mt-1 p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="mt-1 p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1">
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Seller Profile</h2>
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{t('auth.sellerProfile')}</h2>
             <p className="text-sm sm:text-base text-gray-600 mt-1">
-              Complete your business information
+              {t('auth.completeBusinessInfo')}
             </p>
           </div>
         </div>
@@ -993,12 +985,12 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
           <div className="bg-gray-50 rounded-lg p-4 sm:p-6 space-y-4 sm:space-y-6">
             <div className="flex items-center space-x-2">
               <Store className="w-5 h-5 text-[#D6BA69]" />
-              <h3 className="text-lg font-medium text-gray-900">Business Information</h3>
+              <h3 className="text-lg font-medium text-gray-900">{t('auth.businessInfo')}</h3>
             </div>
-            
+
             <div className="space-y-4">
               <Input
-                label="Business Name"
+                label={t('auth.businessName')}
                 name="businessName"
                 value={sellerData.businessName}
                 onChange={handleSellerInputChange}
@@ -1008,7 +1000,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
 
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  Business Description
+                  {t('auth.businessDescription')}
                 </label>
                 <textarea
                   name="businessDescription"
@@ -1212,7 +1204,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
   };
 
   if (isLoading) {
-    return <Loader text="Authenticating..." />;
+    return <Loader text={t('auth.authenticating')} />;
   }
   return (
     <Modal isOpen={isOpen} onClose={handleClose} size="lg">

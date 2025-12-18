@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Search, ArrowRight, TrendingUp, Shield, Users, Star, Plus, Car, Home as HomeIcon, Briefcase, Shirt, Smartphone, Sofa, Baby, Book, Dumbbell, Wrench, Truck, HeadphonesIcon } from 'lucide-react';
 import { useAds } from '../contexts/AdsContext';
 import { CATEGORIES } from '../utils/constants';
@@ -18,6 +19,7 @@ import useHomeAds from '../hooks/useHomeAds';
 import Pagination from '../components/ui/Pagination';
 
 const Home = () => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [keywordFilter, setKeywordFilter] = useState('');
   const { ads: contextAds, fetchAds, isLoading: contextLoading } = useAds();
@@ -86,17 +88,17 @@ const Home = () => {
       />
       <OrganizationSchema />
       <WebsiteSchema />
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50" data-wg-notranslate="true">
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-black via-gray-900 to-black text-white py-16 sm:py-20 lg:py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center space-y-6">
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                Discover Everything You Need on{' '}
+                {t('home.heroTitle')}{' '}
                 <span className="text-[#D6BA69] drop-shadow-md">Cambizzle</span>
               </h1>
               <p className="text-lg sm:text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto">
-                Your trusted platform for buying and selling across Cameroon
+                {t('home.heroSubtitle')}
               </p>
               
               {/* Search Bar */}
@@ -146,19 +148,19 @@ const Home = () => {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 sm:mb-12">
                   <div className="space-y-2">
                     <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
-                      Recent Listings
+                      {t('home.recentListings')}
                     </h2>
                     {/* <p className="text-base sm:text-lg text-gray-600">
                       Explore the latest offers
                     </p> */}
                   </div>
                   <Link to="/search">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="flex items-center space-x-2 mt-4 sm:mt-0 border-[#D6BA69] text-[#D6BA69] hover:bg-[#D6BA69]/10 hover:text-[#C5A952] transition-colors duration-200"
                     >
-                      <span className="hidden sm:inline">View All Listings</span>
-                      <span className="sm:hidden">View All</span>
+                      <span className="hidden sm:inline">{t('home.viewAllListings')}</span>
+                      <span className="sm:hidden">{t('common.viewAll')}</span>
                       <ArrowRight className="w-4 h-4" />
                     </Button>
                   </Link>
@@ -172,30 +174,30 @@ const Home = () => {
                       </svg>
                     </div>
                     <h3 className="text-lg font-semibold text-red-800 mb-2">
-                      Loading Error
+                      {t('home.loadingError')}
                     </h3>
                     <p className="text-red-600">
                       {adsError}
                     </p>
                   </div>
                 ) : adsLoading ? (
-                  <Loader text="Loading ads..." />
+                  <Loader text={t('common.loading')} />
                 ) : (
                   <>
                     {filteredAds.length === 0 && keywordFilter ? (
                       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-8 text-center">
                         <Search className="w-12 h-12 mx-auto mb-4 text-yellow-600" />
                         <h3 className="text-lg font-semibold text-yellow-800 mb-2">
-                          No ads found
+                          {t('home.noAdsFound')}
                         </h3>
                         <p className="text-yellow-600 mb-4">
-                          No ads match your search "{keywordFilter}"
+                          {t('home.noAdsMatchSearch')} "{keywordFilter}"
                         </p>
                         <Button
                           onClick={() => setKeywordFilter('')}
                           className="bg-[#D6BA69] hover:bg-[#C5A952] text-black"
                         >
-                          Clear filter
+                          {t('home.clearFilter')}
                         </Button>
                       </div>
                     ) : (
