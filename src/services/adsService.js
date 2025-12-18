@@ -16,12 +16,9 @@ class AdsService {
     try {
       this.token = localStorage.getItem('token');
       this.setAuthHeader();
-      console.log('🔎 Appel API pour récupérer l\'annonce par slug:', slug);
       const response = await axios.get(`${API_BASE_URL}/ads/${slug}`);
-      console.log('✅ Annonce récupérée par slug:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Erreur lors de la récupération de l\'annonce par slug:', error);
       const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Erreur lors de la récupération de l\'annonce';
       throw new Error(errorMessage);
     }
@@ -31,10 +28,8 @@ class AdsService {
       this.token = localStorage.getItem('token');
       this.setAuthHeader();
       const response = await axios.get(`${API_BASE_URL}/categories/${categoryId}/subcategories`);
-      console.log('✅ Sous-catégories récupérées:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Erreur récupération sous-catégories:', error);
       const errorMessage = error.response?.data?.message || error.message || 'Erreur lors de la récupération des sous-catégories';
       throw new Error(errorMessage);
     }
@@ -51,7 +46,6 @@ class AdsService {
 
   async getAdsFromAPI(page = 1, perPage = 8) {
     try {
-      console.log('📊 Récupération des annonces depuis l\'API:', { page, perPage });
       this.token = localStorage.getItem('token');
       this.setAuthHeader();
 
@@ -63,12 +57,8 @@ class AdsService {
         }
       });
 
-      console.log('✅ Annonces récupérées:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Erreur récupération annonces:', error);
-      console.error('📄 Status code:', error.response?.status);
-      console.error('📋 Response data:', error.response?.data);
 
       const errorMessage = error.response?.data?.message ||
                           error.response?.data?.error ||
@@ -81,18 +71,13 @@ class AdsService {
 
   async getAdCreationData() {
     try {
-      console.log('📋 Récupération des données de création d\'annonce...');
       this.token = localStorage.getItem('token');
       this.setAuthHeader();
 
       const response = await axios.get(`${API_BASE_URL}/ads/creation-data`);
 
-      console.log('✅ Données de création récupérées:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Erreur récupération données création:', error);
-      console.error('📄 Status code:', error.response?.status);
-      console.error('📋 Response data:', error.response?.data);
 
       const errorMessage = error.response?.data?.message ||
                           error.response?.data?.error ||
@@ -105,18 +90,13 @@ class AdsService {
 
   async getSubcategoryFields(subcategorySlug) {
     try {
-      console.log('🔧 Récupération des champs pour la sous-catégorie:', subcategorySlug);
       this.token = localStorage.getItem('token');
       this.setAuthHeader();
 
       const response = await axios.get(`${API_BASE_URL}/subcategories/${subcategorySlug}/fields`);
 
-      console.log('✅ Champs sous-catégorie récupérés:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Erreur récupération champs sous-catégorie:', error);
-      console.error('📄 Status code:', error.response?.status);
-      console.error('📋 Response data:', error.response?.data);
 
       const errorMessage = error.response?.data?.message ||
                           error.response?.data?.error ||
@@ -129,37 +109,8 @@ class AdsService {
 
   async createAd(adData) {
     try {
-      console.log('📝 Création d\'annonce - Service appelé depuis CreateAd ✅');
-      console.log('🔍 Type des données reçues:', adData instanceof FormData ? 'FormData' : typeof adData);
-
-      if (adData instanceof FormData) {
-        console.log('📤 Contenu FormData envoyé:');
-        for (let [key, value] of adData.entries()) {
-          if (value instanceof File) {
-            console.log(`  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
-          } else {
-            console.log(`  ${key}: ${value}`);
-          }
-        }
-      }
-
       this.token = localStorage.getItem('token');
       this.setAuthHeader();
-
-      console.log('🚀 Envoi vers l\'API:', `${API_BASE_URL}/ads`);
-
-      // Log final du contenu envoyé juste avant l'appel
-      console.log('📤 === CONTENU FINAL ENVOYÉ À L\'API ===');
-      if (adData instanceof FormData) {
-        for (let [key, value] of adData.entries()) {
-          if (value instanceof File) {
-            console.log(`  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
-          } else {
-            console.log(`  ${key}: "${value}"`);
-          }
-        }
-      }
-      console.log('📤 === FIN CONTENU ===');
 
       const response = await axios.post(`${API_BASE_URL}/ads`, adData, {
         headers: {
@@ -167,20 +118,8 @@ class AdsService {
         }
       });
 
-      console.log('✅ Annonce créée avec succès:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Erreur création annonce:', error);
-      console.error('📄 Status code:', error.response?.status);
-      console.error('📋 Response data complète:', error.response?.data);
-
-      // Log détaillé des messages d'erreur
-      if (error.response?.data?.messages) {
-        console.error('📋 Messages d\'erreur détaillés:');
-        Object.entries(error.response.data.messages).forEach(([field, messages]) => {
-          console.error(`  ${field}:`, Array.isArray(messages) ? messages.join(', ') : messages);
-        });
-      }
 
       // Essayer d'extraire le message d'erreur le plus spécifique
       let errorMessage = error.message || 'Erreur lors de la création de l\'annonce';

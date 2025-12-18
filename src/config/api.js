@@ -51,5 +51,3 @@ axios.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-console.log(`🌐 API configurée en mode ${SERVER_ENV.toUpperCase()}: ${API_BASE_URL}`);

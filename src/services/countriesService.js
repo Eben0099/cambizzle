@@ -58,7 +58,6 @@ class CountriesService {
 
       return processedCountries;
     } catch (error) {
-      console.error('Error fetching countries:', error);
       // Return fallback data
       return this.getFallbackCountries();
     }
@@ -161,12 +160,6 @@ class CountriesService {
 // Singleton instance
 const countriesService = new CountriesService();
 
-// Test flag conversion function (for development)
-if (process.env.NODE_ENV === 'development') {
-  window.testFlagEmoji = (countryCode) => {
-    console.log(`${countryCode}: ${countriesService.getFlagEmoji(countryCode)}`);
-    return countriesService.getFlagEmoji(countryCode);
-  };
-}
+
 
 export default countriesService;

@@ -27,7 +27,6 @@ const favoriteService = {
       }
       return false;
     } catch (error) {
-      console.error('Error checking favorite status:', error);
       return false;
     }
   },
@@ -40,7 +39,6 @@ const favoriteService = {
       }
       throw new Error('Invalid response format');
     } catch (error) {
-      console.error('Error in getFavorites:', error);
       throw error;
     }
   }

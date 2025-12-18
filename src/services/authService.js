@@ -60,22 +60,17 @@ class AuthService {
 
   async getCurrentUser() {
     try {
-      console.log('🔐 getCurrentUser - Début récupération utilisateur');
       // Récupérer le token actuel du localStorage
       this.token = localStorage.getItem('token');
-      console.log('🔑 Token utilisé:', this.token ? 'présent' : 'absent');
 
       if (!this.token) {
         throw new Error('Token not found');
       }
 
       this.setAuthHeader();
-      console.log('📡 Appel GET /auth/me');
       const response = await axios.get(`${API_BASE_URL}/auth/me`);
-      console.log('✅ Réponse brute /auth/me:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Erreur getCurrentUser:', error);
       throw new Error(error.response?.data?.message || 'Erreur lors de la récupération du profil');
     }
   }
@@ -159,15 +154,9 @@ class AuthService {
 
       this.setAuthHeader();
 
-      console.log('📤 Envoi des données vendeur:', sellerData);
       const response = await axios.post(`${API_BASE_URL}/seller-profiles`, sellerData);
-      console.log('✅ Réponse API vendeur:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Erreur détaillée API:', error);
-      console.error('🔍 Status code:', error.response?.status);
-      console.error('📄 Response data:', error.response?.data);
-      console.error('📡 Request data:', sellerData);
       throw new Error(error.response?.data?.message || error.message || 'Erreur lors de la création du profil vendeur');
     }
   }
@@ -183,24 +172,8 @@ class AuthService {
 
       this.setAuthHeader();
 
-      console.log('👤 Mise à jour profil utilisateur - Données reçues:', userData);
-
       // Déterminer si c'est un FormData ou un objet JSON
       const isFormData = userData instanceof FormData;
-
-      if (isFormData) {
-        console.log('📋 Type: FormData');
-        console.log('🔍 Champs FormData:', [...userData.entries()].map(([key, value]) =>
-          `${key}: ${value instanceof Blob ? 'Blob(' + value.size + ' bytes, ' + value.type + ')' : value}`
-        ));
-      } else {
-        console.log('📋 Type: JSON');
-        console.log('🔍 Clés des données:', Object.keys(userData));
-        console.log('📝 Valeurs des données:');
-        Object.entries(userData).forEach(([key, value]) => {
-          console.log(`  ${key}: ${typeof value} (${value ? value.length || 'non-string' : 'null'})`);
-        });
-      }
 
       const response = await axios.post(`${API_BASE_URL}/users/me`, userData, {
         headers: isFormData ? {
@@ -209,14 +182,8 @@ class AuthService {
           'Content-Type': 'application/json'
         }
       });
-      console.log('✅ Réponse API mise à jour:', response.data);
-      console.log('✅ Profil utilisateur mis à jour:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Erreur mise à jour profil utilisateur:', error);
-      console.error('📄 Status code:', error.response?.status);
-      console.error('📋 Response data:', error.response?.data);
-      console.error('🔍 Validation errors:', error.response?.data?.errors);
 
       const errorMessage = error.response?.data?.message ||
                           error.response?.data?.error ||
@@ -239,12 +206,9 @@ class AuthService {
 
       this.setAuthHeader();
 
-      console.log('📤 Mise à jour profil vendeur:', sellerData);
       const response = await axios.put(`${API_BASE_URL}/seller-profiles/me`, sellerData);
-      console.log('✅ Profil vendeur mis à jour:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Erreur mise à jour profil vendeur:', error);
       throw new Error(error.response?.data?.message || error.message || 'Erreur lors de la mise à jour du profil vendeur');
     }
   }

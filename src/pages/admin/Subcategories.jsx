@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { API_BASE_URL } from "../../config/api";
+import { API_BASE_URL, SERVER_BASE_URL } from "../../config/api";
 import Input from "@/components/ui/Input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -113,7 +113,7 @@ const Subcategories = () => {
         description: message,
         variant: "destructive",
       });
-      console.error("Error fetching categories:", err);
+
     } finally {
       setLoading(false);
     }
@@ -170,7 +170,6 @@ const Subcategories = () => {
     } catch (err) {
       const message = err.message || "Error creating subcategory";
       toast({ description: message, variant: "destructive" });
-      console.error("Error creating subcategory:", err);
     } finally {
       setSubmitting(false);
     }
@@ -226,7 +225,6 @@ const Subcategories = () => {
     } catch (err) {
       const message = err.message || "Error updating subcategory";
       toast({ description: message, variant: "destructive" });
-      console.error("Error updating subcategory:", err);
     } finally {
       setSubmitting(false);
     }
@@ -266,14 +264,18 @@ const Subcategories = () => {
       const message =
         err.response?.data?.message || err.message || "Error deleting subcategory";
       toast({ description: message, variant: "destructive" });
-      console.error("Error deleting subcategory:", err);
     } finally {
       setSubmitting(false);
     }
   };
 
+  // Tri alphabétique des catégories
+  const sortedCategories = [...categories].sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+  );
+
   // Filtering
-  const filteredCategories = categories.filter((category) => {
+  const filteredCategories = sortedCategories.filter((category) => {
     if (selectedCategoryId !== "all" && category.id.toString() !== selectedCategoryId) {
       return false;
     }
@@ -378,12 +380,10 @@ const Subcategories = () => {
             </Label>
             <Input
               type="text"
-              placeholder="Search by name or slug..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
+              className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
             />
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
           </div>
         </div>
       </div>
@@ -410,7 +410,10 @@ const Subcategories = () => {
                 <div className="flex items-center gap-3">
                   {category.iconPath ? (
                     <img
-                      src={category.iconPath}
+                      src={(() => {
+                        if (category.iconPath.startsWith('http')) return category.iconPath;
+                        return SERVER_BASE_URL.replace(/\/$/, '') + '/' + category.iconPath.replace(/^\//, '');
+                      })()}
                       alt={category.name}
                       className="w-10 h-10 object-cover rounded-md"
                     />
@@ -487,7 +490,10 @@ const Subcategories = () => {
                             <div className="flex items-center gap-3">
                               {sub.iconPath ? (
                                 <img
-                                  src={sub.iconPath}
+                                  src={(() => {
+                                    if (sub.iconPath.startsWith('http')) return sub.iconPath;
+                                    return SERVER_BASE_URL.replace(/\/$/, '') + '/' + sub.iconPath.replace(/^\//, '');
+                                  })()}
                                   alt={sub.name}
                                   className="w-8 h-8 object-cover rounded-md"
                                 />
@@ -686,7 +692,7 @@ const Subcategories = () => {
                 <span className="text-xs text-gray-600">Enable this subcategory</span>
                 <Switch
                   checked={formData.is_active}
-                  onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, is_active: checked }))}
+                  onChange={(checked) => setFormData((prev) => ({ ...prev, is_active: checked }))}
                   className="data-[state=checked]:bg-[#D6BA69]"
                 />
               </div>

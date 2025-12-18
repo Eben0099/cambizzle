@@ -28,6 +28,7 @@ export default function Payments() {
   const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+  const [error, setError] = useState(null);
 
   // Stats filters
   const [statsStart, setStatsStart] = useState("");

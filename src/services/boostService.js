@@ -18,12 +18,9 @@ class BoostService {
   async getPromotionPacks() {
     try {
       this.setAuthHeader();
-      console.log('📦 Fetching promotion packs...');
       const response = await axios.get(`${API_BASE_URL}/promotion-packs`);
-      console.log('✅ Promotion packs retrieved:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Error fetching promotion packs:', error);
       const errorMessage = error.response?.data?.message || error.message || 'Error fetching promotion packs';
       throw new Error(errorMessage);
     }
@@ -38,12 +35,9 @@ class BoostService {
   async boostExistingAd(adSlug, boostData) {
     try {
       this.setAuthHeader();
-      console.log('🚀 Boosting ad:', adSlug, boostData);
       const response = await axios.post(`${API_BASE_URL}/boost/boost-existing-ad/${adSlug}`, boostData);
-      console.log('✅ Boost initiated:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Error boosting ad:', error);
       const errorMessage = error.response?.data?.message || error.message || 'Error boosting ad';
       throw new Error(errorMessage);
     }
@@ -58,10 +52,8 @@ class BoostService {
     try {
       this.setAuthHeader();
       const response = await axios.get(`${API_BASE_URL}/boost/check-payment/${paymentId}`);
-      console.log('💳 Payment status:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Error checking payment status:', error);
       const errorMessage = error.response?.data?.message || error.message || 'Error checking payment status';
       throw new Error(errorMessage);
     }
@@ -104,7 +96,7 @@ class BoostService {
             reject(new Error(result.message || 'Payment failed'));
           }
         } catch (error) {
-          console.error('Polling error:', error);
+
           // Continue polling on error (network issues, etc)
         }
       };

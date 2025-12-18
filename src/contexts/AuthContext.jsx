@@ -7,9 +7,14 @@ const AuthContext = createContext();
 const getInitialUser = () => {
   try {
     const savedUser = localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
+    // Vérifier si savedUser est "undefined" (chaîne de caractères) ou null/undefined
+    if (!savedUser || savedUser === "undefined") {
+      return null;
+    }
+    return JSON.parse(savedUser);
   } catch (error) {
-    console.error('Erreur lors de la lecture de l\'utilisateur depuis localStorage:', error);
+    // Nettoyer le localStorage si les données sont corrompues
+    localStorage.removeItem('user');
     return null;
   }
 };
@@ -85,13 +90,10 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAuthStatus = async () => {
-    console.log('🔐 checkAuthStatus - Vérification du statut d\'authentification...');
     const token = localStorage.getItem('token');
-    console.log('🔑 Token trouvé:', token ? 'oui' : 'non');
 
     // Si pas de token, pas besoin de vérifier
     if (!token) {
-      console.log('❌ Aucun token, arrêt de la vérification');
       // Nettoyer l'utilisateur si pas de token
       localStorage.removeItem('user');
       dispatch({ type: 'LOGOUT' });
@@ -100,17 +102,12 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      console.log('📡 Appel API /auth/me pour récupérer l\'utilisateur...');
       const user = await authService.getCurrentUser();
-      console.log('✅ Utilisateur récupéré de l\'API:', user);
 
       // Convertir les données snake_case vers camelCase si nécessaire
       // L'API peut retourner directement les données ou dans une propriété 'data'
       // Parfois data contient {user: {...}}, parfois directement l'utilisateur
       const userData = user.data?.user || user.data || user;
-
-      console.log('📦 Données utilisateur extraites:', userData);
-      console.log('🔍 Propriétés disponibles dans userData:', Object.keys(userData));
 
       const processedUser = {
         idUser: userData.id_user || userData.idUser || userData.id,
@@ -127,24 +124,19 @@ export const AuthProvider = ({ children }) => {
         referralCode: userData.referralCode || userData.referral_code,
       };
 
-      console.log('🔄 Données après conversion:', processedUser);
-      console.log('🔍 Vérifications individuelles:');
-      console.log('- idUser:', processedUser.idUser, '(', typeof processedUser.idUser, ')');
-      console.log('- email:', processedUser.email, '(', typeof processedUser.email, ')');
-      console.log('- phone:', processedUser.phone, '(', typeof processedUser.phone, ')');
-
       // Vérifier que les données essentielles sont présentes
-      // L'email peut être null, mais le téléphone est obligatoire
-      if (!processedUser.idUser || !processedUser.phone) {
-        console.error('❌ Données utilisateur incomplètes:', processedUser);
-        throw new Error('Données utilisateur invalides reçues de l\'API (idUser ou phone manquant)');
+      // Pour un login Google, le téléphone peut être null initialement
+      if (!processedUser.idUser) {
+        throw new Error('Données utilisateur invalides reçues de l\'API (idUser manquant)');
       }
 
-      console.log('🔄 Utilisateur traité pour le contexte:', processedUser);
+      // Si ni email ni téléphone, c'est un problème
+      if (!processedUser.email && !processedUser.phone) {
+         throw new Error('Données utilisateur invalides reçues de l\'API (Ni email ni téléphone)');
+      }
+
       dispatch({ type: 'LOGIN_SUCCESS', payload: processedUser });
-      console.log('✅ Contexte d\'authentification mis à jour');
     } catch (error) {
-      console.error('❌ Erreur lors de la récupération de l\'utilisateur:', error);
       // Token invalide ou expiré - nettoyer complètement
       localStorage.removeItem('token');
       localStorage.removeItem('user');

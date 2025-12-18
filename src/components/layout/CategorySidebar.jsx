@@ -17,9 +17,11 @@ import {
   LayoutGrid,
   X
 } from 'lucide-react';
+
 import { useAds } from '../../contexts/AdsContext';
 import Loader from '../ui/Loader';
 import useCategories from '../../hooks/useCategories';
+import { SERVER_BASE_URL } from '../../config/api';
 
 const CategorySidebar = ({ className = '' }) => {
   const [hoveredCategory, setHoveredCategory] = useState(null);
@@ -35,25 +37,14 @@ const CategorySidebar = ({ className = '' }) => {
   // Base fallback icon
   const BaseIcon = Package;
 
-  // Configuration pour les URLs des images
-  // Les uploads sont à la racine du serveur, pas sous /api
-  const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:8080';
+
 
   // Composant pour afficher l'icône de catégorie avec fallback
   const CategoryIcon = ({ category, size = "w-6 h-6" }) => {
     const [imageError, setImageError] = useState(false);
 
-    console.log('🎨 CategoryIcon - Catégorie:', category.name, {
-      slug: category.slug,
-      iconPath: category.iconPath,
-      iconUrl: category.iconUrl,
-      hasIconPath: !!category.iconPath,
-      hasIconUrl: !!category.iconUrl
-    });
-
     // Si l'image a échoué ou n'existe pas, utiliser l'icône par défaut
     if (imageError || (!category.iconPath && !category.iconUrl)) {
-      console.log('⚠️ CategoryIcon - Utilisation icône par défaut pour:', category.name, { imageError });
       const iconMap = {
         'electronics': Smartphone,
         'vehicles': Car,
@@ -72,16 +63,12 @@ const CategorySidebar = ({ className = '' }) => {
 
     // Construire l'URL de l'icône
     const iconPath = category.iconPath || category.iconUrl;
-    const iconUrl = iconPath.startsWith('http') 
-      ? iconPath 
-      : `${SERVER_URL}${iconPath}`;
 
-    console.log('✅ CategoryIcon - URL image construite:', {
-      category: category.name,
-      iconPath,
-      iconUrl,
-      SERVER_URL
-    });
+    // Toujours préfixer SERVER_BASE_URL (qui inclut /api en prod)
+    const iconUrl = iconPath.startsWith('http')
+      ? iconPath
+      : SERVER_BASE_URL.replace(/\/$/, '') + '/' + iconPath.replace(/^\//, '');
+
 
     return (
       <img 
@@ -89,11 +76,6 @@ const CategorySidebar = ({ className = '' }) => {
         alt={category.name} 
         className={`${size} object-contain`}
         onError={(e) => {
-          console.error('❌ CategoryIcon - Erreur chargement image:', {
-            category: category.name,
-            url: iconUrl,
-            error: e
-          });
           setImageError(true);
         }}
       />
@@ -104,17 +86,8 @@ const CategorySidebar = ({ className = '' }) => {
   const SubcategoryIcon = ({ subcategory, size = "w-4 h-4" }) => {
     const [imageError, setImageError] = useState(false);
 
-    console.log('🎨 SubcategoryIcon - Sous-catégorie:', subcategory.name, {
-      slug: subcategory.slug,
-      iconPath: subcategory.iconPath,
-      iconUrl: subcategory.iconUrl,
-      hasIconPath: !!subcategory.iconPath,
-      hasIconUrl: !!subcategory.iconUrl
-    });
-
     // Si l'image a échoué ou n'existe pas, utiliser l'icône par défaut
     if (imageError || (!subcategory.iconPath && !subcategory.iconUrl)) {
-      console.log('⚠️ SubcategoryIcon - Utilisation icône par défaut pour:', subcategory.name, { imageError });
       const iconMap = {
         'smartphones': Smartphone,
         'computers': Package,
@@ -173,16 +146,12 @@ const CategorySidebar = ({ className = '' }) => {
 
     // Construire l'URL de l'icône
     const iconPath = subcategory.iconPath || subcategory.iconUrl;
-    const iconUrl = iconPath.startsWith('http') 
-      ? iconPath 
-      : `${SERVER_URL}${iconPath}`;
 
-    console.log('✅ SubcategoryIcon - URL image construite:', {
-      subcategory: subcategory.name,
-      iconPath,
-      iconUrl,
-      SERVER_URL
-    });
+    // Toujours préfixer SERVER_BASE_URL (qui inclut /api en prod)
+    const iconUrl = iconPath.startsWith('http')
+      ? iconPath
+      : SERVER_BASE_URL.replace(/\/$/, '') + '/' + iconPath.replace(/^\//, '');
+
 
     return (
       <img 
@@ -190,11 +159,6 @@ const CategorySidebar = ({ className = '' }) => {
         alt={subcategory.name} 
         className={`${size} object-contain`}
         onError={(e) => {
-          console.error('❌ SubcategoryIcon - Erreur chargement image:', {
-            subcategory: subcategory.name,
-            url: iconUrl,
-            error: e
-          });
           setImageError(true);
         }}
       />
@@ -565,7 +529,7 @@ const CategorySidebar = ({ className = '' }) => {
         <DesktopSidebar />
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }

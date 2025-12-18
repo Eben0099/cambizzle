@@ -28,6 +28,7 @@ const ModerationLogs = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterAction, setFilterAction] = useState("");
   const [filterTarget, setFilterTarget] = useState("");
+  const [error, setError] = useState(null);
   
   const logsPerPage = 20;
 
@@ -46,7 +47,6 @@ const ModerationLogs = () => {
         throw new Error(response.message || 'Error loading logs');
       }
     } catch (err) {
-      console.error('Logs error:', err);
       showToast({ type: 'error', message: err.message || 'Error loading logs' });
     } finally {
       setLoading(false);

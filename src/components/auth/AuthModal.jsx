@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { isValidPhoneNumber } from 'react-phone-number-input';
+import { useGoogleLogin } from '@react-oauth/google';
 import { Mail, Eye, EyeOff, ArrowLeft, Store, Clock, Globe, Facebook, Instagram } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/authService';
@@ -48,6 +49,52 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
   const [isResetMode, setIsResetMode] = useState(false);
 
   const { user, login, register, updateUser } = useAuth();
+
+  const loginWithGoogle = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setIsLoading(true);
+      try {
+        const payload = { 
+          access_token: tokenResponse.access_token 
+        };
+
+        const response = await fetch(`${API_BASE_URL}/auth/google`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+
+        if (data.success || data.token) {
+           localStorage.setItem('token', data.token);
+           localStorage.setItem('user', JSON.stringify(data.user));
+           setMessage("Login successful!");
+           setTimeout(() => {
+             window.location.reload();
+           }, 1000);
+        } else {
+          setErrors({ submit: data.message || 'Google login failed' });
+        }
+      } catch (error) {
+        setErrors({ submit: 'Error connecting to Google' });
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    onError: () => {
+      setErrors({ submit: 'Google login failed' });
+      setIsLoading(false);
+    }
+  });
+
+  const handleSocialAuth = (provider) => {
+    if (provider === 'google') {
+      loginWithGoogle();
+    }
+  };
 
   // Stocker temporairement les données utilisateur après inscription
   const [tempUser, setTempUser] = useState(null);
@@ -282,10 +329,8 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
       const result = await register(formData);
 
       if (result.success) {
-        console.log('🎉 Registration successful, data received:', result);
         // Stocker temporairement les données utilisateur pour la création du profil vendeur
         setTempUser(result.data?.user);
-        console.log('👤 tempUser set:', result.data?.user);
 
         setMessage("Registration successful!");
         // Si l'utilisateur veut être vendeur, passe à l'étape suivante
@@ -328,25 +373,12 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
     }
 
     try {
-      console.log('🔍 Starting seller profile creation');
-      console.log('👤 user (logged in):', user);
-      console.log('👤 tempUser (newly created):', tempUser);
-      console.log('📊 Step state:', step);
-
       // Utiliser l'utilisateur connecté ou celui qui vient d'être créé
       const currentUser = user || tempUser;
 
-      console.log('🎯 Selected currentUser:', currentUser);
-
       if (!currentUser) {
-        console.error('❌ ERROR: No user available');
-        console.error('- user (logged in):', user);
-        console.error('- tempUser (new):', tempUser);
         throw new Error('You must first create an account or log in to create a seller profile. Go back to the previous step.');
       }
-
-      console.log('👤 User for seller profile:', currentUser);
-      console.log('📋 Raw sellerData:', sellerData);
 
       // Préparer les données avec l'userId et formater correctement
       const sellerProfileData = {
@@ -355,8 +387,6 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         openingHours: JSON.stringify(sellerData.openingHours),
         deliveryOptions: JSON.stringify(sellerData.deliveryOptions)
       };
-
-      console.log('📦 Prepared seller profile data:', sellerProfileData);
 
       const result = await authService.createSellerProfile(sellerProfileData);
 
@@ -370,8 +400,6 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         handleClose();
       }, 1500);
     } catch (error) {
-      console.error('❌ Error creating seller profile:', error);
-      console.error('🔍 Error details:', error.message);
 
       let errorMessage = 'Error creating seller profile';
 

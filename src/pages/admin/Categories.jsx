@@ -162,10 +162,7 @@ const Categories = () => {
       form.append('is_active', formData.is_active ? '1' : '0');
       form.append('display_order', formData.display_order);
       if (iconFile) form.append('icon', iconFile);
-      // Log FormData content
-      for (let pair of form.entries()) {
-        console.log('FormData:', pair[0], pair[1]);
-      }
+
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE_URL}/admin/referentials/categories/${selectedCategory.id}`, {
         method: 'POST',
@@ -332,7 +329,11 @@ const Categories = () => {
                     <TableCell className="px-4 py-3">
                       {category.iconPath ? (
                         <img
-                          src={category.iconPath.startsWith('http') ? category.iconPath : `${SERVER_BASE_URL}${category.iconPath}`.replace(/\/+/g, '/')}
+                          src={(() => {
+                            if (category.iconPath.startsWith('http')) return category.iconPath;
+                            // Toujours préfixer SERVER_BASE_URL (qui inclut /api en prod)
+                            return SERVER_BASE_URL.replace(/\/$/, '') + '/' + category.iconPath.replace(/^\//, '');
+                          })()}
                           alt={category.name}
                           className="w-10 h-10 object-cover rounded-md border"
                           style={{ background: '#f9fafb' }}

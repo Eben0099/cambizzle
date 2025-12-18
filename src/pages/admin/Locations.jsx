@@ -179,9 +179,7 @@ const Locations = () => {
                 <MapPin className="h-6 w-6 text-[#D6BA69]" />
                 <div>
                   <CardTitle className="text-xl font-semibold">{location.region}</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    {location.adsCount} ads • {location.cities.length} cities
-                  </p>
+                  {/* Nombre de villes retiré */}
                 </div>
               </div>
               <div className="flex gap-2 mt-3 md:mt-0">

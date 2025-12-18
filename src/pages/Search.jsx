@@ -38,9 +38,7 @@ const Search = () => {
     subcategory: searchParams.get('subcategory') || '',
     priceMin: searchParams.get('priceMin') || '',
     priceMax: searchParams.get('priceMax') || '',
-    location: searchParams.get('location') || 'all',
-    type: searchParams.get('type') || 'all',
-    condition: searchParams.get('condition') || 'all'
+    location: searchParams.get('location') || 'all'
   });
 
   const { 
@@ -61,9 +59,19 @@ const Search = () => {
     async function fetchCreationData() {
       try {
         const data = await adsService.getAdCreationData();
+        
+        // Sort categories alphabetically
+        if (data.categories) {
+          data.categories.sort((a, b) => a.name.localeCompare(b.name));
+        }
+        
+        // Sort locations alphabetically
+        if (data.locations) {
+          data.locations.sort((a, b) => a.city.localeCompare(b.city));
+        }
+
         setCreationData(data);
       } catch (e) {
-        console.error('Error loading creation data:', e);
       }
     }
     fetchCreationData();
@@ -84,7 +92,6 @@ const Search = () => {
       const response = await adsService.getAdsByCategory(categoryId, { page: 1, ...filters });
       setCategoryAds(response);
     } catch (error) {
-      console.error('Error loading category ads:', error);
       setCategoryAds(null);
     } finally {
       setCategoryLoading(false);
@@ -106,7 +113,6 @@ const Search = () => {
       const response = await adsService.getAdsBySubcategory(subcategorySlug, { page: 1, ...filters });
       setSubcategoryAds(response);
     } catch (error) {
-      console.error('Error loading subcategory ads:', error);
       setSubcategoryAds(null);
     } finally {
       setSubcategoryLoading(false);
@@ -182,8 +188,6 @@ const Search = () => {
       priceMin: searchParams.get('priceMin'),
       priceMax: searchParams.get('priceMax'),
       location: searchParams.get('location'),
-      type: searchParams.get('type'),
-      condition: searchParams.get('condition'),
       sort: sortParam
     };
 
@@ -250,9 +254,7 @@ const Search = () => {
       subcategory: '',
       priceMin: '',
       priceMax: '',
-      location: '',
-      type: '',
-      condition: ''
+      location: ''
     });
     setSortBy('recent');
 
@@ -270,18 +272,9 @@ const Search = () => {
     { value: 'popular', label: 'Most popular' }
   ];
 
-  const conditionOptions = [
-    { value: 'new', label: 'New' },
-    { value: 'like_new', label: 'Like new' },
-    { value: 'good', label: 'Good condition' },
-    { value: 'fair', label: 'Fair condition' },
-    { value: 'poor', label: 'Needs renovation' }
-  ];
 
-  const typeOptions = [
-    { value: 'sell', label: 'Sale' },
-    { value: 'rent', label: 'Rent' }
-  ];
+
+
 
   // Frontend sorting function (new API format)
   const sortAds = (adsArray, sortBy) => {
@@ -377,8 +370,29 @@ const Search = () => {
     });
   };
 
+  // Fonction de filtrage frontend supplémentaire (Location, Price)
+  const filterAdsFrontend = (adsArray) => {
+    let result = adsArray;
+    
+    // Filter by Location
+    if (localFilters.location && localFilters.location !== 'all') {
+      result = result.filter(ad => ad.locationName === localFilters.location);
+    }
+    
+    // Filter by Price
+    if (localFilters.priceMin) {
+      result = result.filter(ad => parseFloat(ad.price) >= parseFloat(localFilters.priceMin));
+    }
+    if (localFilters.priceMax) {
+      result = result.filter(ad => parseFloat(ad.price) <= parseFloat(localFilters.priceMax));
+    }
+    
+    return result;
+  };
+
   const filteredAds = filterByKeywords(rawAds);
-  const displayedAds = sortAds(filteredAds, sortBy);
+  const frontendFilteredAds = filterAdsFrontend(filteredAds);
+  const displayedAds = sortAds(frontendFilteredAds, sortBy);
   const hasActiveFilters = Object.values(localFilters).some(value => value !== '');
 
   const searchTitle = query ? `Search results for "${query}"` : 
@@ -444,11 +458,6 @@ const Search = () => {
             >
               <SlidersHorizontal className="w-4 h-4" />
               <span>Filters</span>
-              {hasActiveFilters && (
-                <span className="bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
-                  !
-                </span>
-              )}
             </Button>
 
             <Select value={sortBy} onValueChange={handleSortChange}>
@@ -506,43 +515,9 @@ const Search = () => {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="type">Type</Label>
-                <Select
-                  value={localFilters.type}
-                  onValueChange={(value) => handleFilterChange('type', value)}
-                >
-                  <SelectTrigger id="type">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {typeOptions.map(type => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="condition">Condition</Label>
-                <Select
-                  value={localFilters.condition}
-                  onValueChange={(value) => handleFilterChange('condition', value)}
-                >
-                  <SelectTrigger id="condition">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {conditionOptions.map(condition => (
-                      <SelectItem key={condition.value} value={condition.value}>
-                        {condition.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+
+
 
               <div className="space-y-2">
                 <Label htmlFor="priceMin">Minimum price</Label>
@@ -578,7 +553,7 @@ const Search = () => {
                   <SelectContent>
                     {creationData.locations.map(loc => (
                       <SelectItem key={loc.id} value={loc.city}>
-                        {loc.city} ({loc.region})
+                        {loc.city}
                       </SelectItem>
                     ))}
                   </SelectContent>

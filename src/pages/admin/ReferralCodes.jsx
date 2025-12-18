@@ -25,6 +25,7 @@ const ReferralCodes = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedCode, setExpandedCode] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchCodes();
