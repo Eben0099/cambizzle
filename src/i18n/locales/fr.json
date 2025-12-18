@@ -21,7 +21,10 @@
     "noResults": "Aucun resultat trouve",
     "language": "Langue",
     "english": "Anglais",
-    "french": "Francais"
+    "french": "Francais",
+    "home": "Accueil",
+    "yes": "Oui",
+    "no": "Non"
   },
   "header": {
     "postAd": "Publier une annonce",
@@ -164,8 +167,10 @@
     "location": "Localisation",
     "category": "Categorie",
     "subcategory": "Sous-categorie",
+    "brand": "Marque",
     "description": "Description",
     "specifications": "Caracteristiques",
+    "tags": "Tags",
     "contactSeller": "Contacter le vendeur",
     "addToFavorites": "Ajouter aux favoris",
     "removeFromFavorites": "Retirer des favoris",
@@ -184,7 +189,8 @@
     "relatedAds": "Annonces similaires",
     "backToResults": "Retour aux resultats",
     "allAds": "Toutes les annonces",
-    "noImages": "Aucune image disponible"
+    "noImages": "Aucune image disponible",
+    "off": "de reduction"
   },
   "createAd": {
     "title": "Publier une annonce",

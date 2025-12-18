@@ -21,7 +21,10 @@
     "noResults": "No results found",
     "language": "Language",
     "english": "English",
-    "french": "French"
+    "french": "French",
+    "home": "Home",
+    "yes": "Yes",
+    "no": "No"
   },
   "header": {
     "postAd": "Post an ad",
@@ -164,8 +167,10 @@
     "location": "Location",
     "category": "Category",
     "subcategory": "Subcategory",
+    "brand": "Brand",
     "description": "Description",
     "specifications": "Specifications",
+    "tags": "Tags",
     "contactSeller": "Contact Seller",
     "addToFavorites": "Add to favorites",
     "removeFromFavorites": "Remove from favorites",
@@ -184,7 +189,8 @@
     "relatedAds": "Related Ads",
     "backToResults": "Back to Results",
     "allAds": "All Ads",
-    "noImages": "No images available"
+    "noImages": "No images available",
+    "off": "off"
   },
   "createAd": {
     "title": "Post an Ad",
