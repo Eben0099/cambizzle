@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useProfileQuery } from '../hooks/useProfileQuery';
+import logger from '../utils/logger';
 import { useAuth } from '../contexts/AuthContext';
 import ProfileHeader from '../components/profile/ProfileHeader';
 import ProfileStats from '../components/profile/ProfileStats';
@@ -15,6 +17,7 @@ import SellerModal from '../components/seller/SellerModal';
 import BusinessEditModal from '../components/seller/BusinessEditModal';
 
 const Profile = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('overview');
   const [isSellerModalOpen, setIsSellerModalOpen] = useState(false);
   const [isBusinessEditModalOpen, setIsBusinessEditModalOpen] = useState(false);
@@ -44,21 +47,21 @@ const Profile = () => {
   // Vérifier si l'utilisateur est connecté
   if (!authLoading && !isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center" data-wg-notranslate="true">
         <div className="w-full max-w-md bg-white rounded-xl shadow-sm p-6 text-center">
-          <h2 className="text-xl font-semibold mb-2 text-gray-900">Connexion requise</h2>
-          <p className="text-gray-600 mb-4">Vous devez être connecté pour accéder à votre profil</p>
+          <h2 className="text-xl font-semibold mb-2 text-gray-900">{t('profile.loginRequired')}</h2>
+          <p className="text-gray-600 mb-4">{t('profile.loginRequiredMessage')}</p>
           <button
             onClick={() => navigate('/')}
             className="bg-[#D6BA69] hover:bg-[#C5A952] text-black px-4 py-2 rounded-lg transition-colors mr-2"
           >
-            Retour à l'accueil
+            {t('profile.backToHome')}
           </button>
           <button
             onClick={() => navigate('/login')}
             className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg transition-colors"
           >
-            Se connecter
+            {t('auth.login')}
           </button>
         </div>
       </div>
@@ -111,10 +114,10 @@ const Profile = () => {
   const handleDeleteAd = async (ad) => {
     try {
       await deleteAd(ad.id);
-      console.log('Annonce supprimée:', ad);
+      logger.log('Annonce supprimée:', ad);
       // TODO: Afficher un message de succès
     } catch (error) {
-      console.error('Erreur lors de la suppression de l\'annonce:', error);
+      logger.error('Erreur lors de la suppression de l\'annonce:', error);
       // TODO: Afficher un message d'erreur
     }
   };
@@ -135,10 +138,10 @@ const Profile = () => {
 
       await updateSellerProfile(updatedSellerProfile);
       setIsBusinessEditModalOpen(false);
-      console.log('Profil business mis à jour:', businessData);
+      logger.log('Profil business mis à jour:', businessData);
       // TODO: Afficher un message de succès
     } catch (error) {
-      console.error('Erreur lors de la mise à jour du profil business:', error);
+      logger.error('Erreur lors de la mise à jour du profil business:', error);
       // TODO: Afficher un message d'erreur
     }
   };
@@ -146,10 +149,10 @@ const Profile = () => {
   const handleDeleteBusiness = async () => {
     try {
       // TODO: Implémenter la suppression du profil business via API
-      console.log('Supprimer profil business');
+      logger.log('Supprimer profil business');
       // TODO: Afficher un message de succès
     } catch (error) {
-      console.error('Erreur lors de la suppression du profil business:', error);
+      logger.error('Erreur lors de la suppression du profil business:', error);
       // TODO: Afficher un message d'erreur
     }
   };
@@ -157,20 +160,20 @@ const Profile = () => {
   const handleDeleteAccount = async () => {
     try {
       // TODO: Implémenter la suppression du compte via API
-      console.log('Supprimer le compte');
+      logger.log('Supprimer le compte');
       // TODO: Afficher un message de succès et rediriger
     } catch (error) {
-      console.error('Erreur lors de la suppression du compte:', error);
+      logger.error('Erreur lors de la suppression du compte:', error);
       // TODO: Afficher un message d'erreur
     }
   };
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center" data-wg-notranslate="true">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#D6BA69] mx-auto"></div>
-          <p className="mt-4 text-gray-600">Chargement du profil...</p>
+          <p className="mt-4 text-gray-600">{t('profile.loadingProfile')}</p>
         </div>
       </div>
     );
@@ -178,21 +181,21 @@ const Profile = () => {
 
   if (!user && !isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center" data-wg-notranslate="true">
         <div className="w-full max-w-md bg-white rounded-xl shadow-sm p-6 text-center">
-          <h2 className="text-xl font-semibold mb-2 text-gray-900">Erreur de chargement</h2>
-          <p className="text-gray-600 mb-4">Impossible de charger les informations de votre profil. Veuillez réessayer.</p>
+          <h2 className="text-xl font-semibold mb-2 text-gray-900">{t('profile.loadingError')}</h2>
+          <p className="text-gray-600 mb-4">{t('profile.loadingErrorMessage')}</p>
           <button
             onClick={() => window.location.reload()}
             className="bg-[#D6BA69] hover:bg-[#C5A952] text-black px-4 py-2 rounded-lg transition-colors mr-2"
           >
-            Réessayer
+            {t('profile.retry')}
           </button>
           <button
             onClick={() => navigate('/')}
             className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg transition-colors"
           >
-            Retour à l'accueil
+            {t('profile.backToHome')}
           </button>
         </div>
       </div>
@@ -200,7 +203,7 @@ const Profile = () => {
   }
 
 return (
-  <div className="min-h-screen bg-gray-50">
+  <div className="min-h-screen bg-gray-50" data-wg-notranslate="true">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       {/* Development notice */}
       <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4 sm:p-6">
@@ -212,11 +215,10 @@ return (
           </div>
           <div className="ml-3 flex-1">
             <h3 className="text-sm font-medium text-blue-800 mb-1">
-              Features under development
+              {t('profile.featuresUnderDevelopment')}
             </h3>
             <p className="text-sm text-blue-700 leading-relaxed">
-              Ads and favorites are not yet available on the backend. 
-              User and seller profile information is now available.
+              {t('profile.developmentNotice')}
             </p>
           </div>
         </div>

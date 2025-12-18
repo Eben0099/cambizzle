@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, RotateCcw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import FilterSelect from './FilterSelect';
 import FilterRadio from './FilterRadio';
 import FilterCheckbox from './FilterCheckbox';
@@ -8,24 +9,26 @@ import FilterNumber from './FilterNumber';
 import FilterRange from './FilterRange';
 import Button from '../ui/Button';
 import { countActiveFilters } from '../../utils/filterHelpers';
+import logger from '../../utils/logger';
 
 /**
  * Composant sidebar pour afficher et gérer les filtres
  */
-const FilterSidebar = ({ 
-  filters = [], 
+const FilterSidebar = ({
+  filters = [],
   filterMetadata = { locations: [], priceRange: null },
-  selectedFilters = {}, 
-  onChange, 
-  onReset, 
+  selectedFilters = {},
+  onChange,
+  onReset,
   onClose,
-  loading = false 
+  loading = false
 }) => {
-  
+  const { t } = useTranslation();
+
   // Rendu d'un filtre selon son type
   const renderFilter = (filter) => {
     const value = selectedFilters[filter.id];
-    
+
     switch (filter.type) {
       case 'select':
         return <FilterSelect filter={filter} value={value} onChange={onChange} />;
@@ -40,7 +43,7 @@ const FilterSidebar = ({
       case 'range':
         return <FilterRange filter={filter} value={value} onChange={onChange} />;
       default:
-        console.warn(`Type de filtre non supporté: ${filter.type}`);
+        logger.warn(`Type de filtre non supporté: ${filter.type}`);
         return null;
     }
   };
@@ -48,41 +51,41 @@ const FilterSidebar = ({
   const activeFiltersCount = countActiveFilters(selectedFilters);
 
   // Debug locations
-  console.log('🗺️ FilterSidebar - filterMetadata:', filterMetadata);
-  console.log('🏙️ Locations disponibles:', filterMetadata?.locations);
+  logger.log('🗺️ FilterSidebar - filterMetadata:', filterMetadata);
+  logger.log('🏙️ Locations disponibles:', filterMetadata?.locations);
   const cities = filterMetadata?.locations?.filter(loc => loc.type === 'city') || [];
-  console.log('🏙️ Villes filtrées:', cities);
+  logger.log('🏙️ Villes filtrées:', cities);
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden" translate="no">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden" data-wg-notranslate="true">
       {/* Header */}
       <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
         <div className="flex items-center space-x-2">
-          <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('filters.filters')}</h3>
           {activeFiltersCount > 0 && (
             <span className="bg-[#D6BA69] text-black text-xs font-medium px-2 py-1 rounded-full" suppressHydrationWarning>
               {activeFiltersCount}
             </span>
           )}
         </div>
-        
+
         <div className="flex items-center space-x-2">
           {activeFiltersCount > 0 && (
             <button
               onClick={onReset}
-              className="text-sm text-gray-600 hover:text-gray-900 flex items-center space-x-1"
-              title="Reset all filters"
+              className="text-sm text-gray-600 hover:text-gray-900 flex items-center space-x-1 cursor-pointer"
+              title={t('filters.resetFilters')}
             >
               <RotateCcw className="w-4 h-4" />
-              <span>Reset</span>
+              <span>{t('filters.clearFilters')}</span>
             </button>
           )}
-          
+
           {onClose && (
             <button
               onClick={onClose}
-              className="lg:hidden text-gray-600 hover:text-gray-900"
-              title="Close filters"
+              className="lg:hidden text-gray-600 hover:text-gray-900 cursor-pointer"
+              title={t('common.close')}
             >
               <X className="w-5 h-5" />
             </button>
@@ -109,7 +112,7 @@ const FilterSidebar = ({
                 <FilterSelect
                   filter={{
                     id: 'location',
-                    name: 'Location',
+                    name: t('filters.location'),
                     type: 'select',
                     options: filterMetadata.locations
                       .map((loc, index) => ({
@@ -130,7 +133,7 @@ const FilterSidebar = ({
                 <FilterRange
                   filter={{
                     id: 'price',
-                    name: 'Price Range',
+                    name: t('filters.priceRange'),
                     type: 'range'
                   }}
                   value={selectedFilters.price}
@@ -150,7 +153,7 @@ const FilterSidebar = ({
                 ))
             ) : (
               <div className="text-center py-4 text-gray-500">
-                <p className="text-sm">No additional filters available</p>
+                <p className="text-sm">{t('filters.noAdditionalFilters')}</p>
               </div>
             )}
           </div>
@@ -166,7 +169,7 @@ const FilterSidebar = ({
             onClick={onClose}
             className="w-full"
           >
-            Apply Filters
+            {t('filters.applyFilters')}
           </Button>
         </div>
       )}

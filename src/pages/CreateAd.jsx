@@ -1,6 +1,7 @@
 import Select from 'react-select';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Tag, Camera, Loader2, MapPin, Zap } from 'lucide-react';
 import { FaWallet } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
@@ -15,8 +16,10 @@ import useAdCreation from '../hooks/useAdCreation';
 import { adsService } from '../services/adsService';
 import StepBoostPlan from '../components/StepBoostPlan';
 import PaymentModal from '../components/PaymentModal';
+import logger from '../utils/logger';
 
 const CreateAd = () => {
+  const { t } = useTranslation();
   const { showToast } = useToast();
   const [formData, setFormData] = useState({
     title: '',
@@ -90,7 +93,7 @@ const CreateAd = () => {
   }, [formData, images, currentStep]);
 
   const handleImagesChange = (newImages) => {
-    console.log('📸 CreateAd: Changement d\'images', {
+    logger.debug('CreateAd: Changement d\'images', {
       previous: images.length,
       new: newImages.length,
       images: newImages.map((img, idx) => ({
@@ -145,7 +148,7 @@ const CreateAd = () => {
           }
         } catch (err) {
           setSubcategories([]);
-          console.error('Erreur chargement sous-catégories:', err);
+          logger.error('Erreur chargement sous-catégories:', err);
         }
       }
       return;
@@ -343,22 +346,22 @@ const CreateAd = () => {
 
     if (isLoading || !canSubmit) return;
 
-    console.log('🚀 Début soumission formulaire');
-    
+    logger.log('Début soumission formulaire');
+
     const allErrors = {
       ...validateStep(1),
       ...validateStep(2),
       ...validateStep(3),
       ...validateStep(4)
     };
-    
+
     if (Object.keys(allErrors).length > 0) {
-      console.log('❌ Validation échouée - Arrêt soumission');
+      logger.log('Validation échouée - Arrêt soumission');
       setErrors(allErrors);
       return;
     }
 
-    console.log('✅ Validation réussie - Lancement création annonce');
+    logger.log('Validation réussie - Lancement création annonce');
 
     setIsLoading(true);
 
@@ -425,9 +428,9 @@ const CreateAd = () => {
         }
       }
 
-      console.log('📤 Envoi des données...');
+      logger.log('Envoi des données...');
       const result = await adsService.createAd(formDataToSend);
-      console.log('📡 Réponse API reçue:', result);
+      logger.log('Réponse API reçue:', result);
 
       if (result.status === 'success') {
         // Ad created successfully without payment
@@ -437,7 +440,7 @@ const CreateAd = () => {
         const adId = result.adId || result.ad_id || result.id || result.ad?.id;
         const paymentInfo = result.payment_info || result.paymentInfo;
 
-        console.log('💳 Payment pending - extracted data:', { adId, paymentInfo, fullResult: result });
+        logger.log('Payment pending - extracted data:', { adId, paymentInfo, fullResult: result });
 
         // Show payment modal even if adId is missing (we mainly need paymentInfo)
         setPaymentModal({
@@ -450,7 +453,7 @@ const CreateAd = () => {
         setErrors({ submit: result.message || 'Unexpected response from server' });
       }
     } catch (err) {
-      console.error('Erreur création annonce:', err);
+      logger.error('Erreur création annonce:', err);
       setErrors({ submit: err.message || 'Erreur lors de la création de l\'annonce' });
     } finally {
       setIsLoading(false);
@@ -458,11 +461,11 @@ const CreateAd = () => {
   };
 
   const steps = [
-    { number: 1, title: 'General Information', icon: Tag },
-    { number: 2, title: 'Price and Location', icon: FaWallet },
-    { number: 3, title: 'Specific Characteristics', icon: MapPin },
-    { number: 4, title: 'Photos', icon: Camera },
-    { number: 5, title: 'Boost Plan', icon: Zap }
+    { number: 1, title: t('createAd.step1'), icon: Tag },
+    { number: 2, title: t('createAd.step2'), icon: FaWallet },
+    { number: 3, title: t('createAd.step3'), icon: MapPin },
+    { number: 4, title: t('createAd.step4'), icon: Camera },
+    { number: 5, title: t('createAd.step5'), icon: Zap }
   ];
 
   if (!isAuthenticated) {
@@ -470,7 +473,7 @@ const CreateAd = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" data-wg-notranslate="true">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Header */}
         <div className="flex items-center mb-8">
@@ -483,7 +486,7 @@ const CreateAd = () => {
           </Button>
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-              Create an Ad
+              {t('createAd.title')}
             </h1>
           </div>
         </div>
@@ -512,7 +515,7 @@ const CreateAd = () => {
                     <p className={`text-sm font-medium ${
                       isActive ? 'text-[#D6BA69]' : 'text-gray-500'
                     }`}>
-                      Step {step.number}
+                      {t('createAd.step')} {step.number}
                     </p>
                     <p className={`text-xs ${
                       isActive ? 'text-gray-900' : 'text-gray-500'
@@ -539,7 +542,7 @@ const CreateAd = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Ad Type
+                      {t('createAd.adType')}
                     </label>
                     <select
                       name="type"
@@ -547,8 +550,8 @@ const CreateAd = () => {
                       onChange={handleChange}
                       className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                     >
-                      <option value="sell">Sell</option>
-                      <option value="rent">Rent</option>
+                      <option value="sell">{t('createAd.sell')}</option>
+                      <option value="rent">{t('createAd.rent')}</option>
                     </select>
                     {errors.type && (
                       <p className="text-sm text-red-600 mt-1">{errors.type}</p>
@@ -556,12 +559,12 @@ const CreateAd = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Category <span className="text-red-500">*</span>
+                      {t('createAd.category')} <span className="text-red-500">*</span>
                     </label>
                     {creationLoading ? (
                       <div className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 flex items-center">
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                        Loading categories...
+                        {t('createAd.loadingCategories')}
                       </div>
                     ) : (
                       <select
@@ -585,7 +588,7 @@ const CreateAd = () => {
                   {/* Subcategory */}
                   <div className="lg:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Subcategory <span className="text-red-500">*</span>
+                      {t('createAd.subcategory')} <span className="text-red-500">*</span>
                     </label>
                     <select
                       name="subcategory"
@@ -609,40 +612,41 @@ const CreateAd = () => {
                   </div>
                   <div className="lg:col-span-2">
                     <Input
-                      label={<span>Ad Title <span className="text-red-500">*</span></span>}
+                      label={<span>{t('createAd.adTitle')} <span className="text-red-500">*</span></span>}
                       name="title"
                       value={formData.title}
                       onChange={handleChange}
                       error={errors.title}
-                      helperText="Be precise and attractive (min. 10 characters)"
+                      placeholder={t('createAd.adTitlePlaceholder')}
                       className="w-full"
                     />
                   </div>
                   <div className="lg:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Description <span className="text-red-500">*</span>
+                      {t('createAd.description')} <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       name="description"
                       value={formData.description}
                       onChange={handleChange}
                       rows={6}
+                      placeholder={t('createAd.descriptionPlaceholder')}
                       className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] resize-vertical transition-all bg-white"
                     />
                     {errors.description && (
                       <p className="text-sm text-red-600 mt-1">{errors.description}</p>
                     )}
                     <p className="text-sm text-gray-500 mt-1">
-                      {formData.description.length} characters (min. 20)
+                      {formData.description.length} {t('createAd.characters')} (min. 20)
                     </p>
                   </div>
                   <div className="lg:col-span-2">
                     <Input
-                      label="Keywords (optional)"
+                      label={t('createAd.tags')}
                       name="tags"
                       value={formData.tags}
                       onChange={handleChange}
-                      helperText="Add keywords to improve visibility"
+                      placeholder={t('createAd.tagsPlaceholder')}
                       className="w-full"
                     />
                   </div>
@@ -657,7 +661,7 @@ const CreateAd = () => {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Input
-                    label={<span>Selling Price <span className="text-red-500">*</span></span>}
+                    label={<span>{t('createAd.price')} <span className="text-red-500">*</span></span>}
                     type="text"
                     name="price"
                     value={formData.price}
@@ -671,15 +675,16 @@ const CreateAd = () => {
                         }));
                       }
                     }}
+                    placeholder={t('createAd.pricePlaceholder')}
                     error={errors.price}
                   />
                   <Input
                     label={
                       <span>
-                        Original Price (optional)
+                        {t('createAd.originalPrice')}
                         {formData.price && (
                           <span className="text-red-500 text-xs ml-2">
-                            (must be higher than selling price)
+                            ({t('createAd.mustBeHigher')})
                           </span>
                         )}
                       </span>
@@ -701,7 +706,7 @@ const CreateAd = () => {
                     error={errors.originalPrice}
                   />
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Negotiable price</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('createAd.isNegotiable')}</label>
                     <select
                       name="isNegotiable"
                       value={formData.isNegotiable ? '1' : '0'}
@@ -713,26 +718,26 @@ const CreateAd = () => {
                       }}
                       className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                     >
-                      <option value="0">No</option>
-                      <option value="1">Yes</option>
+                      <option value="0">{t('common.no')}</option>
+                      <option value="1">{t('common.yes')}</option>
                     </select>
                   </div>
                 </div>
                 {formData.discountPercent > 0 && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                     <p className="text-green-800 font-medium">
-                      {formData.discountPercent}% discount displayed!
+                      {formData.discountPercent}% {t('createAd.discountDisplayed')}
                     </p>
                   </div>
                 )}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Location <span className="text-red-500">*</span>
+                    {t('createAd.location')} <span className="text-red-500">*</span>
                   </label>
                   {creationLoading ? (
                     <div className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 flex items-center">
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      Loading locations...
+                      {t('createAd.loadingLocations')}
                     </div>
                   ) : (
                     <select
@@ -765,12 +770,12 @@ const CreateAd = () => {
                 {subcategoryFields.brands && subcategoryFields.brands.length > 0 && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Brand <span className="text-red-500">*</span>
+                      {t('createAd.brand')} <span className="text-red-500">*</span>
                     </label>
                     {fieldsLoading ? (
                       <div className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 flex items-center">
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                        Loading brands...
+                        {t('createAd.loadingBrands')}
                       </div>
                   ) : (
                       <select
@@ -797,11 +802,11 @@ const CreateAd = () => {
                 {/* Dynamic Filters */}
                 {subcategoryFields.filters && subcategoryFields.filters.length > 0 && (
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-gray-900">Technical Characteristics</h3>
+                    <h3 className="text-lg font-medium text-gray-900">{t('createAd.technicalCharacteristics')}</h3>
                     {fieldsLoading ? (
                       <div className="flex items-center justify-center py-8">
                         <Loader2 className="w-6 h-6 animate-spin mr-2" />
-                        Loading characteristics...
+                        {t('createAd.loadingFilters')}
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -971,7 +976,7 @@ const CreateAd = () => {
                 )}
                 {!formData.subcategory && (
                   <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
-                    <p>Select a category and subcategory first to see specific characteristics.</p>
+                    <p>{t('createAd.selectCategoryFirst')}</p>
                   </div>
                 )}
               </div>
@@ -984,10 +989,10 @@ const CreateAd = () => {
               <div className="space-y-6">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                    Ad Photos
+                    {t('createAd.uploadPhotos')}
                   </h2>
                   <p className="text-gray-600">
-                    Add quality photos to attract more buyers
+                    {t('createAd.uploadPhotosHint')}
                   </p>
                 </div>
                 <ImageUpload
@@ -999,16 +1004,16 @@ const CreateAd = () => {
                   <p className="text-sm text-red-600">{errors.images}</p>
                 )}
                 <div className={`p-4 rounded-lg ${
-                  images.length >= 3 
-                    ? 'bg-green-50 border border-green-200' 
+                  images.length >= 3
+                    ? 'bg-green-50 border border-green-200'
                     : 'bg-yellow-50 border border-yellow-200'
                 }`}>
                   <p className={`text-sm font-medium ${
                     images.length >= 3 ? 'text-green-800' : 'text-yellow-800'
                   }`}>
-                    {images.length >= 3 
-                      ? 'Minimum 3 photos requirement met!' 
-                      : `${3 - images.length} more photo(s) needed (minimum 3 required)`
+                    {images.length >= 3
+                      ? t('createAd.photosRequirementMet')
+                      : t('createAd.morePhotosNeeded', { count: 3 - images.length })
                     }
                   </p>
                 </div>
@@ -1035,7 +1040,7 @@ const CreateAd = () => {
                 onClick={handlePrevious}
                 className="bg-white border-black text-black hover:bg-gray-50 hover:border-gray-300 px-6 py-3 rounded-lg font-medium transition-colors"
               >
-                Previous
+                {t('createAd.previous')}
               </Button>
             )}
             {currentStep === 1 && (
@@ -1048,7 +1053,7 @@ const CreateAd = () => {
                 onClick={handleNext}
                 className="bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
               >
-                Next
+                {t('createAd.next')}
               </Button>
             ) : (
               <Button
@@ -1058,7 +1063,7 @@ const CreateAd = () => {
                 disabled={!canSubmit || isLoading}
                 className="bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] px-6 py-3 rounded-lg font-medium transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Publishing...' : 'Publish'}
+                {isLoading ? t('createAd.publishing') : t('createAd.publish')}
               </Button>
             )}
           </div>
