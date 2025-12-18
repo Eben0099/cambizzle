@@ -3,27 +3,22 @@ import { SERVER_BASE_URL } from '../config/api';
 // Construction de l'URL complète pour les photos
 export const getPhotoUrl = (photoPath) => {
   if (!photoPath) return null;
-  
   // Si l'URL est déjà complète (commence par http), la retourner telle quelle
   if (photoPath.startsWith('http')) {
-    // Nettoyer les URLs malformées du backend
     let cleanUrl = photoPath;
-    
-    // Corriger le protocole
-    cleanUrl = cleanUrl.replace(/^http:\/\//, 'https://');
-    
+    // En prod, forcer https, en local garder http
+    if (process.env.NODE_ENV === 'production' || SERVER_BASE_URL.startsWith('https://')) {
+      cleanUrl = cleanUrl.replace(/^http:\/\//, 'https://');
+    }
     // Supprimer www.
     cleanUrl = cleanUrl.replace('www.cambizzle.seed-innov.com', 'cambizzle.seed-innov.com');
-    
     // Nettoyer les chemins redondants/exposés
     cleanUrl = cleanUrl.replace(/\/api\/home\/[^\/]+\/public_html\/cambizzle\/api\//, '/api/');
-    
     // S'assurer que l'URL commence bien par le bon domaine
     if (cleanUrl.includes('cambizzle.seed-innov.com') && !cleanUrl.startsWith('https://cambizzle.seed-innov.com/')) {
       const pathPart = cleanUrl.split('cambizzle.seed-innov.com')[1] || '';
       cleanUrl = `https://cambizzle.seed-innov.com${pathPart}`;
     }
-    
     return cleanUrl;
   }
   

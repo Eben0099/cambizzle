@@ -42,9 +42,7 @@ return (
       <div className="flex items-center justify-between h-16">
         {/* Logo */}
         <Link to="/" className="flex items-center space-x-2">
-          <div className="w-9 h-9 bg-[#D6BA69] rounded-lg flex items-center justify-center shadow-sm">
-            <span className="text-black font-bold text-xl">C</span>
-          </div>
+          <img src="/cambizzle.png" alt="Cambizzle" className="w-18 h-9 rounded-lg shadow-sm" />
           {/* <span className="text-xl font-bold text-[#D6BA69] hidden sm:block">
             Cambizzle
           </span> */}

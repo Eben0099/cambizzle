@@ -43,10 +43,11 @@ const Dashboard = () => {
       const response = await adminService.getRecentModerationLogs(5);
       
       if (response.status === 'success') {
-        setRecentLogs(response.data.logs);
+        setRecentLogs(response.data?.logs || []);
       }
     } catch (err) {
-      console.error('Recent logs error:', err);
+      // API moderation-logs n'existe pas encore, on ignore l'erreur silencieusement
+      setRecentLogs([]);
     } finally {
       setLogsLoading(false);
     }
@@ -56,26 +57,30 @@ const Dashboard = () => {
   const getStats = () => {
     if (!dashboardData) return [];
 
+    const safeGet = (obj, path, defaultValue = 0) => {
+      return path.split('.').reduce((acc, key) => acc?.[key] ?? defaultValue, obj);
+    };
+
     return [
       {
         title: "Total Users",
-        value: dashboardData.users.total.toString(),
-        change: `+${dashboardData.users.newThisWeek} this week`,
+        value: (safeGet(dashboardData, 'users.total') || 0).toString(),
+        change: `+${safeGet(dashboardData, 'users.newThisWeek') || 0} this week`,
         icon: Users,
         color: "text-blue-600",
-        subtitle: `${dashboardData.users.active} active, ${dashboardData.users.verified} verified`
+        subtitle: `${safeGet(dashboardData, 'users.active') || 0} active, ${safeGet(dashboardData, 'users.verified') || 0} verified`
       },
       {
         title: "Total Ads",
-        value: dashboardData.ads.total.toString(),
-        change: `+${dashboardData.ads.newThisWeek} this week`,
+        value: (safeGet(dashboardData, 'ads.total') || 0).toString(),
+        change: `+${safeGet(dashboardData, 'ads.newThisWeek') || 0} this week`,
         icon: FileText,
         color: "text-primary",
-        subtitle: `${dashboardData.ads.approved} approved`
+        subtitle: `${safeGet(dashboardData, 'ads.approved') || 0} approved`
       },
       {
         title: "Pending",
-        value: dashboardData.ads.pending.toString(),
+        value: (safeGet(dashboardData, 'ads.pending') || 0).toString(),
         change: "To moderate",
         icon: AlertTriangle,
         color: "text-yellow-600",
@@ -83,15 +88,15 @@ const Dashboard = () => {
       },
       {
         title: "Reports",
-        value: dashboardData.reports.total.toString(),
-        change: `${dashboardData.reports.pending} ongoing`,
+        value: (safeGet(dashboardData, 'reports.total') || 0).toString(),
+        change: `${safeGet(dashboardData, 'reports.pending') || 0} ongoing`,
         icon: AlertTriangle,
         color: "text-destructive",
-        subtitle: `${dashboardData.reports.resolved} resolved`
+        subtitle: `${safeGet(dashboardData, 'reports.resolved') || 0} resolved`
       },
       {
         title: "Total Views",
-        value: dashboardData.ads.totalViews.toString(),
+        value: (safeGet(dashboardData, 'ads.totalViews') || 0).toString(),
         change: "In total",
         icon: Eye,
         color: "text-purple-600",
@@ -99,8 +104,8 @@ const Dashboard = () => {
       },
       {
         title: "7 Days Activity",
-        value: (dashboardData.activity.ads7Days + dashboardData.activity.users7Days + dashboardData.activity.messages7Days).toString(),
-        change: `${dashboardData.activity.ads7Days} ads, ${dashboardData.activity.users7Days} users`,
+        value: ((safeGet(dashboardData, 'activity.ads7Days') || 0) + (safeGet(dashboardData, 'activity.users7Days') || 0) + (safeGet(dashboardData, 'activity.messages7Days') || 0)).toString(),
+        change: `${safeGet(dashboardData, 'activity.ads7Days') || 0} ads, ${safeGet(dashboardData, 'activity.users7Days') || 0} users`,
         icon: TrendingUp,
         color: "text-green-600",
         subtitle: "Recent activity"
