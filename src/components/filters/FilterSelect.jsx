@@ -13,7 +13,7 @@ const FilterSelect = ({ filter, value, onChange }) => {
       <select
         value={value || ''}
         onChange={(e) => onChange(filter.id, e.target.value)}
-        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] bg-white"
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] bg-white cursor-pointer"
         required={filter.is_required}
       >
         <option value=""></option>

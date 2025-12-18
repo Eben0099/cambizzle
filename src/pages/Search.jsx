@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Filter, Grid, List, SlidersHorizontal, MapPin, DollarSign } from 'lucide-react';
 import { useAds } from '../contexts/AdsContext';
 import { adsService } from '../services/adsService';
+import { useAdCreationData } from '../hooks/useAdsQuery';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
@@ -20,7 +21,6 @@ import {
 import { Label } from '@/components/ui/label';
 
 const Search = () => {
-  const [creationData, setCreationData] = useState({ categories: [], locations: [] });
   const [categoryAds, setCategoryAds] = useState(null);
   const [subcategoryAds, setSubcategoryAds] = useState(null);
   const [categoryLoading, setCategoryLoading] = useState(false);
@@ -41,41 +41,40 @@ const Search = () => {
     location: searchParams.get('location') || 'all'
   });
 
-  const { 
-    ads, 
-    searchResults, 
-    isLoading, 
-    searchAds, 
-    fetchAds, 
+  const {
+    ads,
+    searchResults,
+    isLoading,
+    searchAds,
+    fetchAds,
     setFilters,
-    pagination 
+    pagination
   } = useAds();
 
   const navigate = useNavigate();
   const query = searchParams.get('q') || '';
 
-  // Fetch creation data for filters
-  useEffect(() => {
-    async function fetchCreationData() {
-      try {
-        const data = await adsService.getAdCreationData();
-        
-        // Sort categories alphabetically
-        if (data.categories) {
-          data.categories.sort((a, b) => a.name.localeCompare(b.name));
-        }
-        
-        // Sort locations alphabetically
-        if (data.locations) {
-          data.locations.sort((a, b) => a.city.localeCompare(b.city));
-        }
+  // Utiliser React Query pour les données de création
+  const { data: rawCreationData } = useAdCreationData();
 
-        setCreationData(data);
-      } catch (e) {
-      }
-    }
-    fetchCreationData();
-  }, []);
+  // Trier les données de création avec useMemo
+  const creationData = useMemo(() => {
+    if (!rawCreationData) return { categories: [], locations: [] };
+
+    const sortedCategories = rawCreationData.categories
+      ? [...rawCreationData.categories].sort((a, b) => a.name.localeCompare(b.name))
+      : [];
+
+    const sortedLocations = rawCreationData.locations
+      ? [...rawCreationData.locations].sort((a, b) => a.city.localeCompare(b.city))
+      : [];
+
+    return {
+      ...rawCreationData,
+      categories: sortedCategories,
+      locations: sortedLocations
+    };
+  }, [rawCreationData]);
 
   // Function to fetch ads for a specific category
   const fetchCategoryAds = async (categoryId, filters = {}) => {
@@ -435,7 +434,7 @@ const Search = () => {
             {keywordFilter && (
               <button
                 onClick={() => setKeywordFilter('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
               >
                 ✕
               </button>

@@ -114,7 +114,7 @@ const Home = () => {
                   {keywordFilter && (
                     <button
                       onClick={() => setKeywordFilter('')}
-                      className="absolute right-14 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-white rounded-full w-6 h-6 flex items-center justify-center"
+                      className="absolute right-14 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-white rounded-full w-6 h-6 flex items-center justify-center cursor-pointer"
                       title="Clear filter"
                     >
                       ✕

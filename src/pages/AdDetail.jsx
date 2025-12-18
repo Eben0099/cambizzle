@@ -183,9 +183,9 @@ const AdDetail = () => {
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <button 
+            <button
               onClick={() => navigate(-1)}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-5 h-5" />
               <span className="font-medium">Back to Results</span>
@@ -193,9 +193,9 @@ const AdDetail = () => {
             <div className="flex items-center space-x-3">
               <button
                 onClick={handleFavorite}
-                className={`p-2 rounded-full transition-colors ${
-                  isInFavorites 
-                    ? 'text-red-600 bg-red-50 hover:bg-red-100' 
+                className={`p-2 rounded-full transition-colors cursor-pointer ${
+                  isInFavorites
+                    ? 'text-red-600 bg-red-50 hover:bg-red-100'
                     : 'text-gray-400 bg-gray-50 hover:bg-gray-100'
                 }`}
               >
@@ -203,13 +203,13 @@ const AdDetail = () => {
               </button>
               <button
                 onClick={handleShare}
-                className="p-2 rounded-full text-gray-400 bg-gray-50 hover:bg-gray-100 transition-colors"
+                className="p-2 rounded-full text-gray-400 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
               >
                 <Share2 className="w-5 h-5" />
               </button>
               <button
                 onClick={() => setIsReportModalOpen(true)}
-                className="p-2 rounded-full text-gray-400 bg-gray-50 hover:bg-gray-100 transition-colors"
+                className="p-2 rounded-full text-gray-400 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
               >
                 <Flag className="w-5 h-5" />
               </button>
@@ -223,15 +223,15 @@ const AdDetail = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <nav className="flex items-center space-x-2 text-sm">
             <button
-              onClick={() => navigate('/ads')} 
-              className="text-gray-500 hover:text-gray-700 transition-colors"
+              onClick={() => navigate('/ads')}
+              className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
             >
               Home
             </button>
             <ChevronRight className="w-4 h-4 text-gray-400" />
             <button
               onClick={() => navigate('/search')}
-              className="text-gray-500 hover:text-gray-700 transition-colors"
+              className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
             >
               All Ads
             </button>
@@ -240,7 +240,7 @@ const AdDetail = () => {
                 <ChevronRight className="w-4 h-4 text-gray-400" />
                 <button
                   onClick={() => navigate(`/search?category=${ad.category?.slug || ad.categorySlug}`)}
-                  className="text-gray-500 hover:text-gray-700 transition-colors"
+                  className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
                 >
                   {ad.categoryName}
                 </button>
@@ -251,7 +251,7 @@ const AdDetail = () => {
                 <ChevronRight className="w-4 h-4 text-gray-400" />
                 <button
                   onClick={() => navigate(`/search?category=${ad.category?.slug || ad.categorySlug}&subcategory=${ad.subcategory?.slug || ad.subcategorySlug}`)}
-                  className="text-gray-500 hover:text-gray-700 transition-colors"
+                  className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
                 >
                   {ad.subcategoryName}
                 </button>
@@ -463,13 +463,13 @@ const AdDetail = () => {
           <div className="flex space-x-3">
             <button
               onClick={() => setIsContactModalOpen(false)}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               onClick={handleSendMessage}
-              className="flex-1 px-4 py-2 bg-[#d6ba69] text-white rounded-lg hover:bg-[#c5a952] transition-colors"
+              className="flex-1 px-4 py-2 bg-[#d6ba69] text-white rounded-lg hover:bg-[#c5a952] transition-colors cursor-pointer"
             >
               Send
             </button>
@@ -491,7 +491,7 @@ const AdDetail = () => {
             <select
               value={reportReason}
               onChange={(e) => setReportReason(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d6ba69] focus:border-transparent transition-colors"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d6ba69] focus:border-transparent transition-colors cursor-pointer"
             >
               <option value="">Select a reason</option>
               <option value="spam">Spam or unwanted content</option>
@@ -504,14 +504,14 @@ const AdDetail = () => {
           <div className="flex space-x-3">
             <button
               onClick={() => setIsReportModalOpen(false)}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               onClick={handleReport}
               disabled={!reportReason}
-              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               Report
             </button>

@@ -1,95 +1,103 @@
 import { useState, useEffect } from 'react';
-import { Globe, Check } from 'lucide-react';
-import Weglot from 'react-weglot';
-import WEGLOT_CONFIG from '../config/weglot';
+import { useTranslation } from 'react-i18next';
+import { Globe, Check, ChevronDown } from 'lucide-react';
+import { changeLanguage, getCurrentLanguage } from '../i18n';
 
 /**
  * Language Switcher Component
- * Permet de changer la langue du site
+ * Permet de changer la langue du site (UI via i18n, contenu via Weglot)
  */
-const LanguageSwitcher = ({ className = '' }) => {
+const LanguageSwitcher = ({ className = '', variant = 'light' }) => {
+  const { i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
-  const [currentLanguage, setCurrentLanguage] = useState(WEGLOT_CONFIG.originalLanguage);
+  const [currentLang, setCurrentLang] = useState(getCurrentLanguage());
+
+  const languages = [
+    { code: 'en', name: 'English', flag: '🇬🇧' },
+    { code: 'fr', name: 'Francais', flag: '🇫🇷' }
+  ];
 
   useEffect(() => {
-    // Récupérer la langue actuelle de Weglot
-    const updateCurrentLanguage = () => {
-      if (window.Weglot) {
-        setCurrentLanguage(window.Weglot.getCurrentLang());
-      }
+    // Synchroniser avec i18n
+    const handleLanguageChange = (lang) => {
+      setCurrentLang(lang);
     };
 
-    updateCurrentLanguage();
-    
-    // Écouter les changements de langue
-    if (window.Weglot) {
-      window.Weglot.on('languageChanged', updateCurrentLanguage);
-    }
+    i18n.on('languageChanged', handleLanguageChange);
 
     return () => {
-      if (window.Weglot) {
-        window.Weglot.off('languageChanged', updateCurrentLanguage);
-      }
+      i18n.off('languageChanged', handleLanguageChange);
     };
-  }, []);
+  }, [i18n]);
 
   const handleLanguageChange = (langCode) => {
-    if (window.Weglot) {
-      window.Weglot.switchTo(langCode);
-      setCurrentLanguage(langCode);
-      setIsOpen(false);
+    changeLanguage(langCode);
+    setCurrentLang(langCode);
+    setIsOpen(false);
+  };
+
+  const getCurrentLanguageData = () => {
+    return languages.find(l => l.code === currentLang) || languages[0];
+  };
+
+  // Styles selon la variante
+  const styles = {
+    dark: {
+      trigger: 'bg-transparent hover:bg-gray-800 border-gray-700 text-gray-300 hover:text-white',
+      dropdown: 'bg-gray-900 border-gray-700',
+      option: 'text-gray-300 hover:bg-gray-800 hover:text-white',
+      optionActive: 'bg-[#D6BA69]/20'
+    },
+    light: {
+      trigger: 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700 hover:text-gray-900',
+      dropdown: 'bg-white border-gray-200 shadow-lg',
+      option: 'text-gray-700 hover:bg-gray-100',
+      optionActive: 'bg-[#D6BA69]/10'
     }
   };
 
-  const getCurrentLanguageName = () => {
-    const lang = WEGLOT_CONFIG.cameroonLanguages.find(l => l.code === currentLanguage);
-    return lang ? lang.name : 'Language';
-  };
-
-  const getCurrentLanguageFlag = () => {
-    const lang = WEGLOT_CONFIG.cameroonLanguages.find(l => l.code === currentLanguage);
-    return lang ? lang.flag : '🌍';
-  };
+  const currentStyles = styles[variant] || styles.light;
+  const currentLanguageData = getCurrentLanguageData();
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative ${className}`} data-wg-notranslate="true">
       {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-white hover:bg-gray-50 border border-gray-200 transition-colors duration-200 shadow-sm"
+        className={`flex items-center space-x-2 px-3 py-2 rounded-lg border transition-colors duration-200 cursor-pointer ${currentStyles.trigger}`}
         aria-label="Change language"
       >
-        <span className="text-xl">{getCurrentLanguageFlag()}</span>
-        <span className="hidden sm:inline font-medium text-gray-700">
-          {getCurrentLanguageName()}
+        <span className="text-lg">{currentLanguageData.flag}</span>
+        <span className="text-sm font-medium">
+          {currentLanguageData.name}
         </span>
-        <Globe className="w-4 h-4 text-gray-500" />
+        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {/* Dropdown Menu */}
       {isOpen && (
         <>
           {/* Backdrop */}
-          <div 
-            className="fixed inset-0 z-40" 
+          <div
+            className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
-          
+
           {/* Menu */}
-          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-            {WEGLOT_CONFIG.cameroonLanguages.map((lang) => (
+          <div className={`absolute left-0 bottom-full mb-2 w-44 rounded-lg border py-1 z-50 ${currentStyles.dropdown}`}>
+            {languages.map((lang) => (
               <button
                 key={lang.code}
                 onClick={() => handleLanguageChange(lang.code)}
-                className={`w-full flex items-center justify-between px-4 py-2 text-left hover:bg-gray-50 transition-colors ${
-                  currentLanguage === lang.code ? 'bg-[#D6BA69]/10' : ''
+                className={`w-full flex items-center justify-between px-4 py-2.5 text-left transition-colors cursor-pointer ${currentStyles.option} ${
+                  currentLang === lang.code ? currentStyles.optionActive : ''
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <span className="text-xl">{lang.flag}</span>
-                  <span className="font-medium text-gray-700">{lang.name}</span>
+                  <span className="text-lg">{lang.flag}</span>
+                  <span className="text-sm font-medium">{lang.name}</span>
                 </div>
-                {currentLanguage === lang.code && (
+                {currentLang === lang.code && (
                   <Check className="w-4 h-4 text-[#D6BA69]" />
                 )}
               </button>

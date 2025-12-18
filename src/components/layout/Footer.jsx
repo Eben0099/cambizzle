@@ -1,23 +1,27 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Facebook, Instagram } from 'lucide-react';
+import LanguageSwitcher from '../LanguageSwitcher';
 
 const Footer = () => {
+  const { t } = useTranslation();
+
   return (
-    <footer className="bg-black text-gray-300">
+    <footer className="bg-black text-gray-300" data-wg-notranslate="true">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
           {/* About Section */}
           <div className="space-y-4">
-            <h3 className="text-[#D6BA69] font-semibold text-lg">About Us</h3>
+            <h3 className="text-[#D6BA69] font-semibold text-lg">{t('footer.aboutUs')}</h3>
             <ul className="space-y-2">
               <li>
                 <Link to="/about" className="hover:text-[#D6BA69] transition-colors">
-                  About Cambizzle
+                  {t('footer.aboutUs')}
                 </Link>
               </li>
               <li>
                 <Link to="/terms" className="hover:text-[#D6BA69] transition-colors">
-                  Terms & Conditions
+                  {t('footer.terms')}
                 </Link>
               </li>
               <li>
@@ -30,11 +34,11 @@ const Footer = () => {
 
           {/* Resources Section */}
           <div className="space-y-4">
-            <h3 className="text-[#D6BA69] font-semibold text-lg">Our Resources</h3>
+            <h3 className="text-[#D6BA69] font-semibold text-lg">{t('footer.support')}</h3>
             <ul className="space-y-2">
               <li>
                 <Link to="/safety-tips" className="hover:text-[#D6BA69] transition-colors">
-                  Safety Tips
+                  {t('footer.safetyCenter')}
                 </Link>
               </li>
             </ul>
@@ -42,7 +46,7 @@ const Footer = () => {
 
           {/* Social Media Section */}
           <div className="space-y-4">
-            <h3 className="text-[#D6BA69] font-semibold text-lg">Follow Us</h3>
+            <h3 className="text-[#D6BA69] font-semibold text-lg">{t('footer.connect')}</h3>
             <div className="flex justify-center space-x-6">
               <a
                 href="https://www.facebook.com/share/p/Cu98uFNDkjT6Xn7K/"
@@ -82,13 +86,13 @@ const Footer = () => {
         </div>
 
         {/* Copyright Section */}
-        <div className="mt-12 pt-8 border-t border-gray-800 text-center">
-          <p className="text-sm text-gray-400">
-            © {new Date().getFullYear()} Cambizzle. All rights reserved.
-          </p>
-          {/* Weglot Language Switcher */}
-          <div className="mt-4" data-wg-notranslate="true">
-            <div className="weglot-container" id="weglot-switcher" />
+        <div className="mt-12 pt-8 border-t border-gray-800">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-gray-400">
+              © {new Date().getFullYear()} Cambizzle. {t('footer.copyright')}
+            </p>
+            {/* Language Switcher */}
+            <LanguageSwitcher variant="dark" />
           </div>
         </div>
       </div>
