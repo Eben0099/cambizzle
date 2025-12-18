@@ -102,11 +102,8 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
 
     setUploadingPhoto(true);
     try {
-      console.log('🖼️ Original image - Size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
-
       // Compress the image
       const compressedBlob = await compressImage(file, 800, 800, 0.7);
-      console.log('🗜️ Compressed image - Size:', (compressedBlob.size / 1024 / 1024).toFixed(2), 'MB');
 
       // Convert to base64
       const base64 = await new Promise((resolve, reject) => {
@@ -116,8 +113,6 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
         reader.readAsDataURL(compressedBlob);
       });
 
-      console.log('📏 Base64 length:', base64.length, 'characters');
-
       // Create a temporary URL for preview in the interface
       const previewUrl = URL.createObjectURL(compressedBlob);
 
@@ -126,8 +121,6 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
         photoUrl: previewUrl,
         photoBase64: base64
       }));
-
-      console.log('✅ Image processed successfully');
 
       // Immediately upload photo to server
       try {
@@ -146,7 +139,6 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
         formData.append('photo', imageBlob, 'profile-photo.jpg');
 
         const result = await onUpdateProfile(formData);
-        console.log('📤 Profile photo uploaded to server');
         // If backend returned updated user with photoUrl, use it instead of preview
         if (result?.user?.photoUrl || result?.user?.photo_url) {
           const serverPhotoUrl = result.user.photoUrl || result.user.photo_url;
@@ -159,13 +151,11 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
         setPhotoUploadSuccess('Profile photo updated successfully');
         showToast({ type: 'success', message: 'Profile photo updated successfully' });
       } catch (uploadErr) {
-        console.error('❌ Failed to upload profile photo:', uploadErr);
         const errMsg = uploadErr?.message || 'Failed to upload profile photo';
         setPhotoUploadError(errMsg);
         showToast({ type: 'error', message: errMsg });
       }
     } catch (error) {
-      console.error('Error processing image:', error);
       alert('Error processing image');
     } finally {
       setUploadingPhoto(false);
@@ -189,7 +179,6 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
       setPhotoUploadSuccess('Profile photo removed successfully');
       showToast({ type: 'success', message: 'Profile photo removed successfully' });
     } catch (error) {
-      console.error('Error during removal:', error);
       const errMsg = error?.message || 'Failed to remove profile photo';
       setPhotoUploadError(errMsg);
       showToast({ type: 'error', message: errMsg });
@@ -213,8 +202,6 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
       formData.append('document_type', editFormData.identityDocumentType);
       formData.append('document_number', editFormData.identityDocumentNumber);
       formData.append('document', identityDocument);
-      // Log FormData fields for debug
-      console.log('🔒 Identity Verification FormData:', [...formData.entries()].map(([k,v]) => `${k}: ${v instanceof Blob ? v.name : v}`));
 
       // Always get userId from user prop, fallback to localStorage if missing
       let userId = undefined;
@@ -226,8 +213,6 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
           userObj = undefined;
         }
       }
-      // Debug: log user object
-      console.log('🆔 User object for identity verification:', userObj);
       if (userObj) {
         userId = userObj.idUser || userObj.id || userObj._id;
       }
@@ -318,9 +303,6 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
   };
 
   const handleSave = async () => {
-    console.log('💾 handleSave called');
-    console.log('📊 Current editFormData:', editFormData);
-
     // Create a FormData to send data and image
     const formData = new FormData();
 
@@ -351,11 +333,7 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
       const imageBlob = new Blob([bytes], { type: mimeType });
 
       formData.append('photo', imageBlob, 'profile-photo.jpg');
-      console.log('📸 Image added to FormData:', imageBlob.size, 'bytes');
     }
-
-    console.log('📤 FormData prepared with', [...formData.entries()].length, 'fields');
-    console.log('🔍 FormData fields:', [...formData.entries()].map(([key, value]) => `${key}: ${value instanceof Blob ? 'Blob(' + value.size + ' bytes)' : value}`));
 
     // No required-field validation; submit partial updates as provided
     try {

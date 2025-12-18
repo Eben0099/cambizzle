@@ -5,6 +5,7 @@ import SEO from '../components/SEO';
 import { ProductSchema, BreadcrumbSchema } from '../components/StructuredData';
 import { API_BASE_URL, SERVER_BASE_URL } from '../config/api';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAdBySlug } from '../hooks/useAdsQuery';
 import useWeglotRetranslate from '../hooks/useWeglotRetranslate';
 import { 
   ArrowLeft, 
@@ -46,89 +47,52 @@ const AdDetail = () => {
   const { ads, favorites = [], toggleFavorite, reportAd } = useAds();
   const retranslateWeglot = useWeglotRetranslate();
   
-  const [ad, setAd] = useState(null);
-  const [seller, setSeller] = useState(null);
-  const [sellerBusiness, setSellerBusiness] = useState(null);
-  const [relatedAds, setRelatedAds] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isFavorite, setIsFavorite] = useState(false);
+  // Use React Query pour éviter les rechargements
+  const { data: adData, isLoading, isError } = useAdBySlug(slug);
+  
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [contactMessage, setContactMessage] = useState('');
   const [reportReason, setReportReason] = useState('');
+  const [relatedAds, setRelatedAds] = useState([]);
 
+  // Préparer les données de l'annonce avec les calculs de remise
+  const ad = adData ? {
+    ...adData,
+    discountPercentage: adData.discountPercentage || adData.discount_percentage || 
+      (adData.originalPrice && adData.price && adData.originalPrice > adData.price 
+        ? Math.round(((adData.originalPrice - adData.price) / adData.originalPrice) * 100)
+        : 0),
+    hasDiscount: (adData.originalPrice && adData.price && adData.originalPrice > adData.price) ||
+      (adData.discountPercentage && adData.discountPercentage > 0) ||
+      (adData.discount_percentage && adData.discount_percentage > 0)
+  } : null;
+
+  const seller = ad?.userDetails || null;
+  const sellerBusiness = ad?.seller_profile || null;
+
+  // Charger les annonces similaires quand l'annonce est chargée
   useEffect(() => {
-    const fetchAdDetails = async () => {
-      if (!slug) {
-        setIsLoading(false);
-        return;
-      }
+    const fetchRelatedAds = async () => {
+      if (!ad) return;
       try {
-        setIsLoading(true);
-        // Fetch ad details
-        const adResponse = await fetch(`${API_BASE_URL}/ads/${slug}`);
-        if (!adResponse.ok) {
-          throw new Error('Ad not found');
+        const relatedResponse = await fetch(`${API_BASE_URL}/ads?category=${encodeURIComponent(ad.categoryName)}&limit=4&exclude=${ad.id}`);
+        if (relatedResponse.ok) {
+          const relatedData = await relatedResponse.json();
+          if (relatedData && Array.isArray(relatedData)) {
+            setRelatedAds(relatedData.slice(0, 4));
+          }
         }
-        
-        const adData = await adResponse.json();
-        console.log('Ad response:', adData);
-        
-        // The API returns ad data directly with seller and business details
-        if (adData && adData.id) {
-          const adDetails = {
-            ...adData,
-            // Calculate discount percentage
-            discountPercentage: adData.discountPercentage || adData.discount_percentage || 
-              (adData.originalPrice && adData.price && adData.originalPrice > adData.price 
-                ? Math.round(((adData.originalPrice - adData.price) / adData.originalPrice) * 100)
-                : 0),
-            hasDiscount: (adData.originalPrice && adData.price && adData.originalPrice > adData.price) ||
-              (adData.discountPercentage && adData.discountPercentage > 0) ||
-              (adData.discount_percentage && adData.discount_percentage > 0)
-          };
-          setAd(adDetails);
-          
-          // Retrieve seller data from userDetails
-          if (adDetails.userDetails) {
-            setSeller(adDetails.userDetails);
-          }
-          
-          // Retrieve business profile from seller_profile
-          if (adDetails.seller_profile) {
-            setSellerBusiness(adDetails.seller_profile);
-          }
-          
-          // Fetch related ads
-          try {
-            const relatedResponse = await fetch(`${API_BASE_URL}/ads?category=${encodeURIComponent(adDetails.categoryName)}&limit=4&exclude=${adDetails.id}`);
-            if (relatedResponse.ok) {
-              const relatedData = await relatedResponse.json();
-              if (relatedData && Array.isArray(relatedData)) {
-                setRelatedAds(relatedData.slice(0, 4));
-              }
-            }
-          } catch (error) {
-            console.error('Error fetching related ads:', error);
-          }
-        } else {
-          throw new Error('Invalid ad data');
-        }
-        
-        // Retranslate après que le contenu soit chargé
-        retranslateWeglot();
       } catch (error) {
-        console.error('Error fetching ad details:', error);
-        setAd(null);
-      } finally {
-        setIsLoading(false);
+        // Silently fail for related ads
       }
     };
-
-    if (slug) {
-      fetchAdDetails();
+    
+    if (ad) {
+      fetchRelatedAds();
+      retranslateWeglot();
     }
-  }, [slug, navigate, retranslateWeglot]);
+  }, [ad, retranslateWeglot]);
 
   const isInFavorites = ad && favorites.some(fav => fav.id === ad.id);
 
@@ -167,14 +131,13 @@ const AdDetail = () => {
   };
 
   const handleSendMessage = () => {
-    console.log('Message sent:', contactMessage);
     setIsContactModalOpen(false);
     setContactMessage('');
     alert('Message sent successfully!');
   };
 
   const handleReport = () => {
-    console.log('Report submitted:', reportReason);
+
     setIsReportModalOpen(false);
     setReportReason('');
     alert('Report submitted. Thank you for helping us maintain our platform’s quality.');
@@ -184,7 +147,7 @@ const AdDetail = () => {
     return <Loader text="Loading details..." className="min-h-screen bg-gray-50" />;
   }
 
-  if (!ad) {
+  if (isError || !ad) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">

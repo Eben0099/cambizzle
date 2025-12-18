@@ -1,19 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { adsService } from '../services/adsService';
 
 const useHomeAds = (initialPage = 1, perPage = 8) => {
-  const [ads, setAds] = useState([]);
-  const [pagination, setPagination] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(initialPage);
 
-  const loadAds = useCallback(async (page = initialPage) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      console.log('🔄 Chargement des annonces pour la page d\'accueil:', page);
-
-      const response = await adsService.getAdsFromAPI(page, perPage);
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['ads', 'home', currentPage, perPage],
+    queryFn: async () => {
+      const response = await adsService.getAdsFromAPI(currentPage, perPage);
 
       // Conversion snake_case vers camelCase pour cohérence
       const processedAds = response.ads.map(ad => ({
@@ -53,36 +48,30 @@ const useHomeAds = (initialPage = 1, perPage = 8) => {
         filters: ad.filters || []
       }));
 
-      console.log('✅ Annonces traitées:', processedAds.length);
-      setAds(processedAds);
-      setPagination(response.pagination);
-    } catch (err) {
-      console.error('❌ Erreur chargement annonces:', err);
-      setError(err.message);
-      setAds([]);
-      setPagination(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [initialPage, perPage]);
+      return {
+        ads: processedAds,
+        pagination: response.pagination
+      };
+    },
+    staleTime: 3 * 60 * 1000, // Cache 3 minutes
+    gcTime: 10 * 60 * 1000, // Garde en mémoire 10 minutes
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
 
-  useEffect(() => {
-    loadAds();
-  }, [loadAds]);
-
-  const goToPage = useCallback((page) => {
-    if (page >= 1 && page <= (pagination?.totalPages || 1)) {
-      loadAds(page);
+  const goToPage = (page) => {
+    if (page >= 1 && page <= (data?.pagination?.totalPages || 1)) {
+      setCurrentPage(page);
     }
-  }, [loadAds, pagination]);
+  };
 
   return {
-    ads,
-    pagination,
+    ads: data?.ads || [],
+    pagination: data?.pagination || null,
     isLoading,
-    error,
+    error: error?.message || null,
     goToPage,
-    refetch: () => loadAds(pagination?.currentPage || 1)
+    refetch
   };
 };
 

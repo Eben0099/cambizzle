@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useProfile } from '../hooks/useProfile';
+import { useProfileQuery } from '../hooks/useProfileQuery';
 import { useAuth } from '../contexts/AuthContext';
 import ProfileHeader from '../components/profile/ProfileHeader';
 import ProfileStats from '../components/profile/ProfileStats';
@@ -39,7 +39,7 @@ const Profile = () => {
     updateSellerProfile,
     deleteAd,
     reloadUserData
-  } = useProfile();
+  } = useProfileQuery();
 
   // Vérifier si l'utilisateur est connecté
   if (!authLoading && !isAuthenticated) {
@@ -72,10 +72,8 @@ const Profile = () => {
   const handleUpdateProfile = async (profileData) => {
     try {
       await updateUser(profileData);
-      // TODO: Afficher un message de succès
     } catch (error) {
-      console.error('Erreur lors de la mise à jour du profil:', error);
-      // TODO: Afficher un message d'erreur
+      // Géré par React Query
     }
   };
 

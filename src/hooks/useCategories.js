@@ -1,17 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import categoriesService from '../services/categoriesService';
 
 const useCategories = () => {
-  const [categories, setCategories] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const loadCategories = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      console.log('🔄 Chargement des catégories...');
-
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
       const response = await categoriesService.getCategoriesWithStats();
 
       // Conversion snake_case vers camelCase
@@ -20,6 +13,7 @@ const useCategories = () => {
         slug: category.slug,
         name: category.name,
         iconPath: category.iconPath || category.icon_path,
+        iconUrl: category.iconUrl || category.icon_url,
         isActive: category.isActive || category.is_active,
         displayOrder: category.displayOrder || category.display_order,
         totalAds: category.totalAds || category.total_ads,
@@ -29,31 +23,26 @@ const useCategories = () => {
           slug: sub.slug,
           name: sub.name,
           iconPath: sub.iconPath || sub.icon_path,
+          iconUrl: sub.iconUrl || sub.icon_url,
           isActive: sub.isActive || sub.is_active,
           displayOrder: sub.displayOrder || sub.display_order,
           totalAds: sub.totalAds || sub.total_ads
         })) || []
       }));
 
-      console.log('✅ Catégories traitées:', processedCategories);
-      setCategories(processedCategories);
-    } catch (err) {
-      console.error('❌ Erreur chargement catégories:', err);
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadCategories();
-  }, [loadCategories]);
+      return processedCategories;
+    },
+    staleTime: 30 * 60 * 1000, // Cache 30 minutes (données statiques)
+    gcTime: 60 * 60 * 1000, // Garde en mémoire 1 heure
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
 
   return {
-    categories,
+    categories: data || [],
     isLoading,
-    error,
-    refetch: loadCategories
+    error: error?.message || null,
+    refetch
   };
 };
 

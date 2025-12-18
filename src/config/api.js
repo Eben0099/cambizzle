@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Configuration centralisée de l'API
 // Pour switcher entre environnements, modifiez uniquement cette ligne :
-export const SERVER_ENV = 'local'; // 'prod' ou 'local'
+export const SERVER_ENV = 'prod'; // 'prod' ou 'local'
 
 // Configuration automatique selon l'environnement
 export const API_BASE_URL = SERVER_ENV === 'prod'

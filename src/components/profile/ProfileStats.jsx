@@ -4,10 +4,6 @@ import useFavorites from '../../hooks/useFavorites';
 const ProfileStats = ({ user, userAds }) => {
   const { totalFavorites, favorites, loading } = useFavorites();
   
-  console.log('ProfileStats - totalFavorites:', totalFavorites);
-  console.log('ProfileStats - favorites:', favorites);
-  console.log('ProfileStats - loading:', loading);
-  
   const stats = [
     { 
       label: 'Active Ads', 

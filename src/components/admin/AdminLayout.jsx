@@ -47,7 +47,6 @@ const AdminLayout = ({ children }) => {
       
       // Vérifier que l'utilisateur a roleId === "1" (admin)
       if (user?.roleId !== "1") {
-        console.warn('Access denied: User is not an admin (roleId !== "1")');
         setIsAuthorized(false);
         setIsVerifying(false);
         return;
@@ -55,7 +54,6 @@ const AdminLayout = ({ children }) => {
       
       setIsAuthorized(true);
     } catch (error) {
-      console.error('Admin verification error:', error);
       setIsAuthorized(false);
       if (error.message.includes('Session expired')) {
         logout();
