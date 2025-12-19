@@ -1,27 +1,28 @@
 import { createContext, useContext, useReducer, useEffect } from 'react';
 import { authService } from '../services/authService';
+import storageService from '../services/storageService';
 
 const AuthContext = createContext();
 
-// Récupérer l'utilisateur du localStorage au démarrage
+// Récupérer l'utilisateur du storage au démarrage
 const getInitialUser = () => {
   try {
-    const savedUser = localStorage.getItem('user');
-    // Vérifier si savedUser est "undefined" (chaîne de caractères) ou null/undefined
-    if (!savedUser || savedUser === "undefined") {
+    const savedUser = storageService.getUser();
+    // Vérifier si savedUser est valide
+    if (!savedUser) {
       return null;
     }
-    return JSON.parse(savedUser);
+    return savedUser;
   } catch (error) {
-    // Nettoyer le localStorage si les données sont corrompues
-    localStorage.removeItem('user');
+    // Nettoyer le storage si les données sont corrompues
+    storageService.removeUser();
     return null;
   }
 };
 
 const initialState = {
   user: getInitialUser(),
-  isAuthenticated: !!getInitialUser() && !!localStorage.getItem('token'),
+  isAuthenticated: !!getInitialUser() && storageService.hasToken(),
   isLoading: true,
   error: null
 };
@@ -31,9 +32,9 @@ const authReducer = (state, action) => {
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
     case 'LOGIN_SUCCESS':
-      // Sauvegarder l'utilisateur dans localStorage
+      // Sauvegarder l'utilisateur dans le storage
       if (action.payload) {
-        localStorage.setItem('user', JSON.stringify(action.payload));
+        storageService.setUser(action.payload);
       }
       return {
         ...state,
@@ -43,9 +44,8 @@ const authReducer = (state, action) => {
         error: null
       };
     case 'LOGIN_ERROR':
-      // Nettoyer localStorage en cas d'erreur
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
+      // Nettoyer le storage en cas d'erreur
+      storageService.clearAuth();
       return {
         ...state,
         user: null,
@@ -54,9 +54,8 @@ const authReducer = (state, action) => {
         error: action.payload
       };
     case 'LOGOUT':
-      // Nettoyer localStorage lors de la déconnexion
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
+      // Nettoyer le storage lors de la déconnexion
+      storageService.clearAuth();
       return {
         ...state,
         user: null,
@@ -65,10 +64,10 @@ const authReducer = (state, action) => {
         error: null
       };
     case 'UPDATE_USER':
-      // Mettre à jour l'utilisateur dans localStorage
+      // Mettre à jour l'utilisateur dans le storage
       const updatedUser = { ...state.user, ...action.payload };
       if (updatedUser) {
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+        storageService.setUser(updatedUser);
       }
       return {
         ...state,
@@ -90,12 +89,12 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAuthStatus = async () => {
-    const token = localStorage.getItem('token');
+    const token = storageService.getToken();
 
     // Si pas de token, pas besoin de vérifier
     if (!token) {
       // Nettoyer l'utilisateur si pas de token
-      localStorage.removeItem('user');
+      storageService.removeUser();
       dispatch({ type: 'LOGOUT' });
       dispatch({ type: 'SET_LOADING', payload: false });
       return;
@@ -138,8 +137,7 @@ export const AuthProvider = ({ children }) => {
       dispatch({ type: 'LOGIN_SUCCESS', payload: processedUser });
     } catch (error) {
       // Token invalide ou expiré - nettoyer complètement
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      storageService.clearAuth();
       dispatch({ type: 'LOGOUT' });
       dispatch({ type: 'SET_LOADING', payload: false });
     }
@@ -164,7 +162,7 @@ export const AuthProvider = ({ children }) => {
       dispatch({ type: 'SET_LOADING', payload: true });
       const response = await authService.register(userData);
       // response.data contient {status, message, data: {user, token}}
-      localStorage.setItem('token', response.data.token);
+      storageService.setToken(response.data.token);
       dispatch({ type: 'LOGIN_SUCCESS', payload: response.data.user });
       return { success: true, data: response.data };
     } catch (error) {
@@ -174,7 +172,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    storageService.removeToken();
     dispatch({ type: 'LOGOUT' });
   };
 

@@ -1,18 +1,19 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
+import storageService from './storageService';
 
 class AuthService {
   constructor() {
-    this.token = localStorage.getItem('token');
+    this.token = storageService.getToken();
   }
 
   // Set authorization header for authenticated requests
   setAuthHeader() {
-    // Toujours récupérer le token actuel du localStorage
-    const currentToken = localStorage.getItem('token');
+    // Toujours récupérer le token actuel du storage
+    const currentToken = storageService.getToken();
     if (currentToken) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${currentToken}`;
-          } else {
+    } else {
       delete axios.defaults.headers.common['Authorization'];
     }
   }
@@ -24,13 +25,13 @@ class AuthService {
       });
 
       this.token = response.data.data.token;
-      localStorage.setItem('token', this.token);
-      
+      storageService.setToken(this.token);
+
       // Sauvegarder aussi l'utilisateur pour la persistance
       if (response.data.data.user) {
-        localStorage.setItem('user', JSON.stringify(response.data.data.user));
+        storageService.setUser(response.data.data.user);
       }
-      
+
       this.setAuthHeader();
       return response.data;
     } catch (error) {
@@ -44,11 +45,11 @@ class AuthService {
         headers: { "Content-Type": "application/json" }
       });
       this.token = response.data.token;
-      localStorage.setItem('token', this.token);
-      
+      storageService.setToken(this.token);
+
       // Sauvegarder aussi l'utilisateur pour la persistance
       if (response.data.user) {
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        storageService.setUser(response.data.user);
       }
       
       this.setAuthHeader();
@@ -60,8 +61,8 @@ class AuthService {
 
   async getCurrentUser() {
     try {
-      // Récupérer le token actuel du localStorage
-      this.token = localStorage.getItem('token');
+      // Récupérer le token actuel du storage
+      this.token = storageService.getToken();
 
       if (!this.token) {
         throw new Error('Token not found');
@@ -78,7 +79,7 @@ class AuthService {
   async updateProfile(userData) {
     try {
       // Récupérer le token actuel avant l'appel
-      this.token = localStorage.getItem('token');
+      this.token = storageService.getToken();
       if (!this.token) {
         throw new Error('Token not found');
       }
@@ -93,7 +94,7 @@ class AuthService {
   async changePassword(currentPassword, newPassword) {
     try {
       // Récupérer le token actuel avant l'appel
-      this.token = localStorage.getItem('token');
+      this.token = storageService.getToken();
       if (!this.token) {
         throw new Error('Token not found');
       }
@@ -120,7 +121,7 @@ class AuthService {
   async submitVerification(documents) {
     try {
       // Récupérer le token actuel avant l'appel
-      this.token = localStorage.getItem('token');
+      this.token = storageService.getToken();
       if (!this.token) {
         throw new Error('Token not found');
       }
@@ -135,11 +136,11 @@ class AuthService {
   async createSellerProfile(sellerData) {
     try {
       // Récupérer le token actuel avant l'appel
-      const tokenFromStorage = localStorage.getItem('token');
+      const tokenFromStorage = storageService.getToken();
 
       // Vérifier si le token est valide (pas "undefined" ou "null")
       if (!tokenFromStorage || tokenFromStorage === 'undefined' || tokenFromStorage === 'null') {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         throw new Error('Token not found - veuillez vous reconnecter');
       }
 
@@ -148,7 +149,7 @@ class AuthService {
       // Vérifier le format du JWT
       const tokenParts = this.token.split('.');
       if (tokenParts.length !== 3) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         throw new Error('Token JWT invalide');
       }
 
@@ -164,7 +165,7 @@ class AuthService {
   async updateUserProfile(userData) {
     try {
       // Récupérer le token actuel avant l'appel
-      this.token = localStorage.getItem('token');
+      this.token = storageService.getToken();
 
       if (!this.token) {
         throw new Error('Token not found');
@@ -198,7 +199,7 @@ class AuthService {
   async updateSellerProfile(sellerData) {
     try {
       // Récupérer le token actuel avant l'appel
-      this.token = localStorage.getItem('token');
+      this.token = storageService.getToken();
 
       if (!this.token) {
         throw new Error('Token not found');
@@ -215,7 +216,7 @@ class AuthService {
 
   logout() {
     this.token = null;
-    localStorage.removeItem('token');
+    storageService.removeToken();
   }
 }
 

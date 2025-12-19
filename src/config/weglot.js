@@ -15,10 +15,9 @@ export const WEGLOT_CONFIG = {
   // 🌍 Langue source (langue d'origine de votre site)
   originalLanguage: 'en',
   
-  // 🗣️ Langues de destination
+  // 🗣️ Langues de destination (ne pas inclure la langue source)
   destinationLanguages: [
-    { code: 'fr', name: 'Français' },
-    { code: 'en', name: 'English' }
+    { code: 'fr', name: 'Français' }
   ],
   
   // 📍 Configuration pour le Cameroun
@@ -33,8 +32,8 @@ export const WEGLOT_CONFIG = {
     // Auto switch basé sur la langue du navigateur
     autoSwitch: true,
     
-    // Cacher le switcher par défaut (on va créer un custom)
-    hideSwitch: true,
+    // Afficher le switcher natif Weglot (synchronisé avec i18n)
+    hideSwitch: false,
     
     // Cache les traductions
     cache: true,

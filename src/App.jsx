@@ -37,6 +37,7 @@ import ModerationLogs from './pages/admin/ModerationLogs';
 import ReferralCodes from './pages/admin/ReferralCodes';
 import PromotionPackAdmin from './components/admin/PromotionPackAdmin';
 import Payments from './pages/admin/Payments';
+import ScrollToTop from './components/ScrollToTop';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -57,6 +58,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
       <Router>
+        <ScrollToTop />
         <WeglotProvider>
           <TooltipProvider>
             <Toaster />

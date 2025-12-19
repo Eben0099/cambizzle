@@ -1,7 +1,7 @@
 import { Shield, Store, Mail, Phone, Calendar, Edit3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Button from '../ui/Button';
-import { getPhotoUrl } from '../../utils/helpers';
+import Avatar from '../ui/Avatar';
 import { useToast } from '../toast/useToast';
 
 const ProfileHeader = ({ user, sellerProfile, onEdit, onBecomeSeller }) => {
@@ -25,19 +25,13 @@ const ProfileHeader = ({ user, sellerProfile, onEdit, onBecomeSeller }) => {
         <div className="px-4 sm:px-6 pb-4 sm:pb-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-6 -mt-12 sm:-mt-16">
             <div className="relative">
-              <div className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-white rounded-full shadow-lg overflow-hidden bg-[#D6BA69] flex items-center justify-center">
-                {user.photoUrl ? (
-                  <img
-                    src={getPhotoUrl(user.photoUrl)}
-                    alt={`${user.firstName || ''} ${user.lastName || ''}`}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="text-xl sm:text-2xl font-bold text-white">
-                    {(user.firstName?.charAt(0) || '?')}{(user.lastName?.charAt(0) || '?')}
-                  </span>
-                )}
-              </div>
+              <Avatar
+                src={user.photoUrl}
+                firstName={user.firstName}
+                lastName={user.lastName}
+                size="xl"
+                className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-white shadow-lg text-xl sm:text-2xl"
+              />
             </div>
 
             <div className="flex-1 w-full">

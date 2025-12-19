@@ -46,7 +46,7 @@ const ActiveFilterBadges = ({ filters = [], selectedFilters = {}, onRemoveFilter
             <span suppressHydrationWarning>{label}</span>
             <button
               onClick={() => onRemoveFilter(filter.id)}
-              className="hover:bg-[#D6BA69]/20 rounded-full p-0.5 transition-colors"
+              className="hover:bg-[#D6BA69]/20 rounded-full p-0.5 transition-colors cursor-pointer"
               title="Remove filter"
             >
               <X className="w-3 h-3" />

@@ -1,5 +1,6 @@
 // Brands.jsx
 import React, { useState, useEffect, useMemo } from "react";
+import logger from '../../utils/logger';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -155,12 +156,12 @@ const Brands = () => {
         is_active: form.is_active ? 1 : 0,
       };
       const response = await adminService.createBrand(brandData);
-      console.log("✅ Brand created:", response);
+      logger.log("Brand created:", response);
       await loadBrands();
       setCreateOpen(false);
       toast({ description: "Brand created successfully." });
     } catch (err) {
-      console.error("❌ Error creating brand:", err);
+      logger.error("Error creating brand:", err);
       toast({ description: "Error creating brand.", variant: "destructive" });
     } finally {
       setSubmitting(false);
@@ -192,12 +193,12 @@ const Brands = () => {
         is_active: form.is_active ? 1 : 0,
       };
       await adminService.updateBrand(form.id, brandData);
-      console.log("✅ Brand updated");
+      logger.log("Brand updated");
       await loadBrands();
       setEditOpen(false);
       toast({ description: "Brand updated successfully." });
     } catch (err) {
-      console.error("❌ Error updating brand:", err);
+      logger.error("Error updating brand:", err);
       toast({ description: "Error updating brand.", variant: "destructive" });
     } finally {
       setSubmitting(false);
@@ -214,12 +215,12 @@ const Brands = () => {
     setSubmitting(true);
     try {
       await adminService.deleteBrand(deleteCandidate.id);
-      console.log("✅ Brand deleted");
+      logger.log("Brand deleted");
       await loadBrands();
       setDeleteCandidate(null);
       toast({ description: "Brand deleted successfully." });
     } catch (err) {
-      console.error("❌ Error deleting brand:", err);
+      logger.error("Error deleting brand:", err);
       toast({ description: "Error deleting brand.", variant: "destructive" });
     } finally {
       setSubmitting(false);

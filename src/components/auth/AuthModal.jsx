@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/authService';
 import { API_BASE_URL } from '../../config/api';
 import storageService from '../../services/storageService';
+import { useToast } from '../toast/useToast';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import 'react-phone-number-input/style.css';
@@ -53,13 +54,16 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
   const [isResetMode, setIsResetMode] = useState(false);
 
   const { user, login, register, updateUser } = useAuth();
+  const { showToast } = useToast();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const loginWithGoogle = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
+      setIsGoogleLoading(true);
       setIsLoading(true);
       try {
-        const payload = { 
-          access_token: tokenResponse.access_token 
+        const payload = {
+          access_token: tokenResponse.access_token
         };
 
         const response = await fetch(`${API_BASE_URL}/auth/google`, {
@@ -73,22 +77,50 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         const data = await response.json();
 
         if (data.success || data.token) {
+           // Store auth data
            storageService.setAuth(data.token, data.user);
-           setMessage(t('auth.loginSuccess'));
+
+           // Update auth context with user data
+           updateUser(data.user);
+
+           // Show success toast
+           showToast({
+             type: 'success',
+             title: t('toast.welcome'),
+             message: t('toast.loginSuccess')
+           });
+
+           // Close modal after a short delay
            setTimeout(() => {
+             handleClose();
+             // Refresh auth state without full page reload
              window.location.reload();
-           }, 1000);
+           }, 500);
         } else {
           setErrors({ submit: data.message || t('auth.googleLoginFailed') });
+          showToast({
+            type: 'error',
+            message: data.message || t('auth.googleLoginFailed')
+          });
         }
       } catch (error) {
         setErrors({ submit: t('auth.errorConnectingGoogle') });
+        showToast({
+          type: 'error',
+          message: t('auth.errorConnectingGoogle')
+        });
       } finally {
+        setIsGoogleLoading(false);
         setIsLoading(false);
       }
     },
     onError: () => {
       setErrors({ submit: t('auth.googleLoginFailed') });
+      showToast({
+        type: 'error',
+        message: t('auth.googleLoginFailed')
+      });
+      setIsGoogleLoading(false);
       setIsLoading(false);
     }
   });
@@ -1203,12 +1235,17 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
     }
   };
 
-  if (isLoading) {
-    return <Loader text={t('auth.authenticating')} />;
-  }
   return (
     <Modal isOpen={isOpen} onClose={handleClose} size="lg">
-      <div className="max-h-[90vh] overflow-y-auto">
+      <div className="max-h-[90vh] overflow-y-auto relative">
+        {/* Loading overlay for Google login */}
+        {isGoogleLoading && (
+          <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center z-50 rounded-lg">
+            <div className="w-12 h-12 border-4 border-[#D6BA69] border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-gray-700 font-medium">{t('auth.authenticating')}</p>
+            <p className="text-gray-500 text-sm mt-1">{t('auth.pleaseWait')}</p>
+          </div>
+        )}
         {renderContent()}
       </div>
     </Modal>

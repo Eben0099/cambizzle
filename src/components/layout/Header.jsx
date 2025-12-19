@@ -3,10 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search, Menu, X, Plus, User, Heart, Bell, LogOut, Shield } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../toast/useToast';
 import Button from '../ui/Button';
-import Input from '../ui/Input';
+import Avatar from '../ui/Avatar';
 import AuthModal from '../auth/AuthModal';
-import { getPhotoUrl } from '../../utils/helpers';
 
 const Header = () => {
   const { t } = useTranslation();
@@ -15,6 +15,7 @@ const Header = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login');
   const { user, isAuthenticated, logout } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
 
   const handleSearch = (e) => {
@@ -26,6 +27,11 @@ const Header = () => {
 
   const handleLogout = () => {
     logout();
+    showToast({
+      type: 'info',
+      title: t('toast.goodbye'),
+      message: t('toast.logoutSuccess')
+    });
     navigate('/');
   };
 
@@ -77,19 +83,13 @@ const Header = () => {
 
                 <div className="relative group">
                   <button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-black/10 transition-colors cursor-pointer">
-                    <div className="w-9 h-9 bg-[#D6BA69] rounded-full flex items-center justify-center overflow-hidden shadow-sm">
-                      {user?.photoUrl ? (
-                        <img
-                          src={getPhotoUrl(user.photoUrl)}
-                          alt={`${user?.firstName || ''} ${user?.lastName || ''}`}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-black text-sm font-medium">
-                          {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
-                        </span>
-                      )}
-                    </div>
+                    <Avatar
+                      src={user?.photoUrl}
+                      firstName={user?.firstName}
+                      lastName={user?.lastName}
+                      size="sm"
+                      className="shadow-sm"
+                    />
                     <span className="text-sm font-medium text-gray-300 hidden lg:block">
                       {user?.firstName}
                     </span>

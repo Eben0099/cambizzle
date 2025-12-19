@@ -249,7 +249,7 @@ const CategorySidebar = ({ className = '' }) => {
     <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-20 shadow-sm">
       <button
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="flex items-center justify-between w-full text-left rounded-lg p-3 hover:bg-gray-50 transition-colors relative z-10"
+        className="flex items-center justify-between w-full text-left rounded-lg p-3 hover:bg-gray-50 transition-colors relative z-10 cursor-pointer"
         aria-label="Toggle categories menu"
         aria-expanded={isMobileMenuOpen}
       >
@@ -325,19 +325,16 @@ const CategorySidebar = ({ className = '' }) => {
                   {/* Main Category Card */}
                   <button
                     onClick={() => handleCategoryClick(category.slug)}
-                    className="w-full bg-white rounded-xl p-4 border border-gray-200 hover:border-[#D6BA69] hover:bg-[#D6BA69]/5 transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#D6BA69] focus:ring-offset-1 shadow-sm hover:shadow-md"
+                    className="w-full h-28 bg-white rounded-xl p-3 border border-gray-200 hover:border-[#D6BA69] hover:bg-[#D6BA69]/5 transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#D6BA69] focus:ring-offset-1 shadow-sm hover:shadow-md cursor-pointer"
                     aria-label={`Voir ${category.name}`}
                   >
-                    <div className="flex flex-col items-center space-y-2">
-                      <div className="bg-gray-50 rounded-full p-3">
-                        {typeof IconComponent === 'function' ? <IconComponent /> : <IconComponent className="w-7 h-7 text-[#D6BA69]" />}
+                    <div className="flex flex-col items-center justify-center h-full space-y-2">
+                      <div className="bg-gray-50 rounded-full p-2.5 flex-shrink-0">
+                        {typeof IconComponent === 'function' ? <IconComponent /> : <IconComponent className="w-6 h-6 text-[#D6BA69]" />}
                       </div>
-                      <span className="text-xs font-medium text-gray-800 line-clamp-2 text-center">
+                      <span className="text-xs font-medium text-gray-800 line-clamp-2 text-center leading-tight">
                         {category.name}
                       </span>
-                      {/* <span className="text-xs text-gray-500 bg-gray-100 px-2.5 py-0.5 rounded-full">
-                        {totalCount}
-                      </span> */}
                     </div>
                   </button>
 
@@ -352,7 +349,7 @@ const CategorySidebar = ({ className = '' }) => {
                           <button
                             key={sub.slug}
                             onClick={() => handleSubcategoryClick(category.slug, sub.slug)}
-                            className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-white hover:shadow-sm transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#D6BA69]"
+                            className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-white hover:shadow-sm transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#D6BA69] cursor-pointer"
                             style={{
                               animation: `slideInLeft 0.3s ease forwards ${i * 40}ms`,
                               opacity: 0
@@ -430,7 +427,7 @@ const CategorySidebar = ({ className = '' }) => {
                 >
                   <button
                     onClick={() => handleCategoryClick(category.slug)}
-                    className="w-full flex items-center justify-between px-5 py-3 hover:bg-[#D6BA69]/10 transition-all rounded-r-full mx-2 group"
+                    className="w-full flex items-center justify-between px-5 py-3 hover:bg-[#D6BA69]/10 transition-all rounded-r-full mx-2 group cursor-pointer"
                   >
                     <div className="flex items-center space-x-3 flex-1">
                       {typeof Icon === 'function' ? <Icon /> : <Icon className="w-5 h-5 text-gray-600 group-hover:text-[#D6BA69]" />}
@@ -439,9 +436,11 @@ const CategorySidebar = ({ className = '' }) => {
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-xs bg-gray-100 px-2.5 py-0.5 rounded-full text-gray-600">
-                        {count}
-                      </span>
+                      {count > 0 && (
+                        <span className="text-xs bg-gray-100 px-2.5 py-0.5 rounded-full text-gray-600">
+                          {count}
+                        </span>
+                      )}
                       <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#D6BA69]" />
                     </div>
                   </button>
@@ -488,7 +487,7 @@ const CategorySidebar = ({ className = '' }) => {
                           <button
                             key={sub.slug}
                             onClick={() => handleSubcategoryClick(cat.slug, sub.slug)}
-                            className="w-full flex items-center justify-between px-5 py-2.5 hover:bg-[#D6BA69]/10 transition-all group"
+                            className="w-full flex items-center justify-between px-5 py-2.5 hover:bg-[#D6BA69]/10 transition-all group cursor-pointer"
                           >
                             <div className="flex items-center space-x-3">
                               {typeof SubIcon === 'function' ? <SubIcon /> : <SubIcon className="w-4 h-4 text-gray-500 group-hover:text-[#D6BA69]" />}
@@ -496,9 +495,11 @@ const CategorySidebar = ({ className = '' }) => {
                                 {sub.name}
                               </span>
                             </div>
-                            <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-600">
-                              {count}
-                            </span>
+                            {count > 0 && (
+                              <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-600">
+                                {count}
+                              </span>
+                            )}
                           </button>
                         );
                       })}
@@ -506,7 +507,7 @@ const CategorySidebar = ({ className = '' }) => {
                     <div className="p-4 border-t border-gray-200">
                       <button
                         onClick={() => handleCategoryClick(cat.slug)}
-                        className="w-full text-center py-2.5 text-sm font-medium text-[#D6BA69] border border-[#D6BA69] rounded-lg hover:bg-[#D6BA69] hover:text-white transition-all"
+                        className="w-full text-center py-2.5 text-sm font-medium text-[#D6BA69] border border-[#D6BA69] rounded-lg hover:bg-[#D6BA69] hover:text-white transition-all cursor-pointer"
                       >
                         View All →
                       </button>

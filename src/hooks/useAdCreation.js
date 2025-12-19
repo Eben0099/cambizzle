@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { adsService } from '../services/adsService';
+import logger from '../utils/logger';
 
 const useAdCreation = () => {
   const [creationData, setCreationData] = useState({
@@ -18,7 +19,7 @@ const useAdCreation = () => {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('📋 Chargement des données de création d\'annonce...');
+      logger.log('Chargement des données de création d\'annonce...');
 
       const response = await adsService.getAdCreationData();
 
@@ -46,10 +47,10 @@ const useAdCreation = () => {
           .sort((a, b) => a.name.localeCompare(b.name))
       };
 
-      console.log('✅ Données de création traitées:', processedData);
+      logger.log('Données de création traitées:', processedData);
       setCreationData(processedData);
     } catch (err) {
-      console.error('❌ Erreur chargement données création:', err);
+      logger.error('Erreur chargement données création:', err);
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -64,7 +65,7 @@ const useAdCreation = () => {
 
     try {
       setFieldsLoading(true);
-      console.log('🔧 Chargement des champs pour:', subcategorySlug);
+      logger.log('Chargement des champs pour:', subcategorySlug);
 
       const response = await adsService.getSubcategoryFields(subcategorySlug);
 
@@ -86,10 +87,10 @@ const useAdCreation = () => {
         }))
       };
 
-      console.log('✅ Champs sous-catégorie traités:', processedFields);
+      logger.log('Champs sous-catégorie traités:', processedFields);
       setSubcategoryFields(processedFields);
     } catch (err) {
-      console.error('❌ Erreur chargement champs sous-catégorie:', err);
+      logger.error('Erreur chargement champs sous-catégorie:', err);
       setSubcategoryFields({ brands: [], filters: [] });
     } finally {
       setFieldsLoading(false);

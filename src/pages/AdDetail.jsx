@@ -163,7 +163,7 @@ const AdDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" data-wg-notranslate="true">
+    <div className="min-h-screen bg-gray-50">
       <SEO
         title={`${ad.title} | Cambizzle`}
         description={ad.description?.slice(0, 155) || `${ad.title} - Buy or sell on Cambizzle`}
@@ -411,7 +411,7 @@ const AdDetail = () => {
                 isVerified: seller?.isVerified === '1' || seller?.isVerified === true || false,
                 phoneNumber: seller?.phone,
                 responseRate: seller?.responseRate || 95,
-                responseTime: seller?.responseTime || 'A few hours'
+                responseTime: seller?.responseTime || t('adDetail.aFewHours')
               }}
               adTitle={ad?.title}
               onContact={handleContact}

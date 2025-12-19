@@ -1,5 +1,6 @@
 // Filters.jsx
 import { useEffect, useMemo, useState } from "react";
+import logger from "../../utils/logger";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -117,10 +118,10 @@ const Filters = () => {
       setLoading(true);
       const response = await adminService.getFilters();
       // Expecting response.data = [{ subcategory: {...}, filters: [...] }, ...]
-      console.log("🔄 Filters loaded:", response);
+      logger.log("Filters loaded:", response);
       setFiltersData(response.data || []);
     } catch (error) {
-      console.error("❌ Error loading filters:", error);
+      logger.error("Error loading filters:", error);
       toast({
         title: "Error",
         description: "Unable to load filters",
@@ -222,12 +223,12 @@ const Filters = () => {
       };
 
       const response = await adminService.createFilter(filterData);
-      console.log("✅ Filter created:", response);
+      logger.log("Filter created:", response);
       await loadFilters();
       setCreateOpen(false);
       toast({ description: "Filter created successfully." });
     } catch (err) {
-      console.error("❌ Error creating filter:", err);
+      logger.error("Error creating filter:", err);
       toast({ description: "Error creating filter.", variant: "destructive" });
     } finally {
       setSubmitting(false);
@@ -262,12 +263,12 @@ const Filters = () => {
       };
 
       await adminService.updateFilter(form.id, filterData);
-      console.log("✅ Filter updated");
+      logger.log("Filter updated");
       await loadFilters();
       setEditOpen(false);
       toast({ description: "Filter updated successfully." });
     } catch (err) {
-      console.error("❌ Error updating filter:", err);
+      logger.error("Error updating filter:", err);
       toast({ description: "Error updating filter.", variant: "destructive" });
     } finally {
       setSubmitting(false);
@@ -284,12 +285,12 @@ const Filters = () => {
     setSubmitting(true);
     try {
       await adminService.deleteFilter(deleteCandidate.id);
-      console.log("✅ Filter deleted");
+      logger.log("Filter deleted");
       await loadFilters();
       setDeleteCandidate(null);
       toast({ description: "Filter deleted successfully." });
     } catch (err) {
-      console.error("❌ Error deleting filter:", err);
+      logger.error("Error deleting filter:", err);
       toast({ description: "Error deleting filter.", variant: "destructive" });
     } finally {
       setSubmitting(false);
@@ -316,7 +317,7 @@ const Filters = () => {
         display_order: (valuesOpenFor.options || []).length + 1,
       };
       await adminService.createFilterOption(valuesOpenFor.id, optionData);
-      console.log("✅ Option added");
+      logger.log("Option added");
       await loadFilters();
 
       // Update local valuesOpenFor with new data from server
@@ -328,7 +329,7 @@ const Filters = () => {
 
       toast({ description: "Option added successfully." });
     } catch (err) {
-      console.error("❌ Error adding option:", err);
+      logger.error("Error adding option:", err);
       toast({ description: "Error adding option.", variant: "destructive" });
     }
   };
@@ -339,7 +340,7 @@ const Filters = () => {
     setSubmitting(true);
     try {
       await adminService.deleteFilterOption(valuesOpenFor.id, option.id);
-      console.log("✅ Option removed");
+      logger.log("Option removed");
       await loadFilters();
 
       // Update local valuesOpenFor
@@ -351,7 +352,7 @@ const Filters = () => {
 
       toast({ description: "Option removed successfully." });
     } catch (err) {
-      console.error("❌ Error removing option:", err);
+      logger.error("Error removing option:", err);
       toast({ description: "Error removing option.", variant: "destructive" });
     } finally {
       setSubmitting(false);

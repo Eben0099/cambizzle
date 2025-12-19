@@ -434,6 +434,11 @@ const CreateAd = () => {
 
       if (result.status === 'success') {
         // Ad created successfully without payment
+        showToast({
+          type: 'success',
+          title: t('toast.success'),
+          message: t('toast.adCreated')
+        });
         navigate('/profile');
       } else if (result.status === 'payment_pending') {
         // Check if required data exists - be more flexible
@@ -473,7 +478,7 @@ const CreateAd = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" data-wg-notranslate="true">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Header */}
         <div className="flex items-center mb-8">
@@ -1083,7 +1088,7 @@ const CreateAd = () => {
             onClose={() => setPaymentModal({ show: false, paymentInfo: null, adId: null })}
             onSuccess={() => {
               setPaymentModal({ show: false, paymentInfo: null, adId: null });
-              showToast({ type: 'success', message: 'Payment successful! Your ad is now active.' });
+              showToast({ type: 'success', title: t('toast.success'), message: t('toast.paymentSuccess') });
               setTimeout(() => {
                 navigate('/profile/ads');
               }, 1500);

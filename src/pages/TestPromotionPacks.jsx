@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Loader, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import boostService from '../services/boostService';
+import logger from '../utils/logger';
 
 /**
  * Test page for Step 1: List promotion packs
@@ -18,28 +19,28 @@ const TestPromotionPacks = () => {
     setRawResponse(null);
     
     try {
-      console.log('=== TEST STEP 1: Fetching Promotion Packs ===');
-      console.log('Endpoint: GET /api/promotion-packs');
-      console.log('Headers: Authorization Bearer token from localStorage');
+      logger.log('=== TEST STEP 1: Fetching Promotion Packs ===');
+      logger.log('Endpoint: GET /api/promotion-packs');
+      logger.log('Headers: Authorization Bearer token from localStorage');
       
       const response = await boostService.getPromotionPacks();
       
-      console.log('Raw Response:', response);
+      logger.log('Raw Response:', response);
       setRawResponse(JSON.stringify(response, null, 2));
       
       // Try different response structures
       const extractedPacks = response.data || response.packs || response || [];
-      console.log('Extracted Packs:', extractedPacks);
+      logger.log('Extracted Packs:', extractedPacks);
       
       if (Array.isArray(extractedPacks)) {
         setPacks(extractedPacks);
-        console.log(`✅ Successfully loaded ${extractedPacks.length} pack(s)`);
+        logger.log(`✅ Successfully loaded ${extractedPacks.length} pack(s)`);
       } else {
         throw new Error('Response is not an array');
       }
       
     } catch (err) {
-      console.error('❌ Error:', err);
+      logger.error('❌ Error:', err);
       setError(err.message || 'Failed to fetch promotion packs');
     } finally {
       setLoading(false);

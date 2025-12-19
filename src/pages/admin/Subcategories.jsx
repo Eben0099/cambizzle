@@ -48,6 +48,7 @@ import Loader from "@/components/ui/Loader";
 import { cn } from "@/lib/utils";
 import axios from "axios";
 import { useToast } from "@/components/ui/use-toast";
+import storageService from "@/services/storageService";
 
 const Subcategories = () => {
   // States
@@ -146,7 +147,7 @@ const Subcategories = () => {
       form.append('is_active', formData.is_active ? '1' : '0');
       form.append('display_order', formData.display_order);
       if (iconFile) form.append('icon', iconFile);
-      const token = localStorage.getItem('token');
+      const token = storageService.getToken();
       const response = await fetch(`${API_BASE_URL}/admin/referentials/subcategories`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
@@ -200,7 +201,7 @@ const Subcategories = () => {
       form.append('is_active', formData.is_active ? '1' : '0');
       form.append('display_order', formData.display_order);
       if (iconFile) form.append('icon', iconFile);
-      const token = localStorage.getItem('token');
+      const token = storageService.getToken();
       const response = await fetch(`${API_BASE_URL}/admin/referentials/subcategories/${selectedSubcategory.id}`, {
         method: 'POST', // POST pour upload fichier
         headers: { Authorization: `Bearer ${token}` },
@@ -416,12 +417,15 @@ const Subcategories = () => {
                       })()}
                       alt={category.name}
                       className="w-10 h-10 object-cover rounded-md"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
                     />
-                  ) : (
-                    <div className="w-10 h-10 bg-gray-100 rounded-md flex items-center justify-center">
-                      <FolderTree className="h-5 w-5 text-gray-400" />
-                    </div>
-                  )}
+                  ) : null}
+                  <div className={`w-10 h-10 bg-gray-100 rounded-md items-center justify-center ${category.iconPath ? 'hidden' : 'flex'}`}>
+                    <FolderTree className="h-5 w-5 text-gray-400" />
+                  </div>
                   <div>
                     <h3 className="text-sm font-semibold text-gray-900">{category.name}</h3>
                     <div className="flex items-center gap-2 mt-1">
@@ -496,12 +500,15 @@ const Subcategories = () => {
                                   })()}
                                   alt={sub.name}
                                   className="w-8 h-8 object-cover rounded-md"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                  }}
                                 />
-                              ) : (
-                                <div className="w-8 h-8 bg-gray-100 rounded-md flex items-center justify-center">
-                                  <FolderTree className="h-4 w-4 text-gray-400" />
-                                </div>
-                              )}
+                              ) : null}
+                              <div className={`w-8 h-8 bg-gray-100 rounded-md items-center justify-center ${sub.iconPath ? 'hidden' : 'flex'}`}>
+                                <FolderTree className="h-4 w-4 text-gray-400" />
+                              </div>
 
                               <div>
                                 <div className="flex items-center gap-2">

@@ -198,7 +198,7 @@ const ImageUpload = ({
                     <button
                       type="button"
                       onClick={() => removeImage(index)}
-                      className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                      className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"
                       title="Delete"
                     >
                       <X className="w-4 h-4" />
@@ -227,7 +227,7 @@ const ImageUpload = ({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-[#D6BA69] hover:text-[#D6BA69] transition-colors"
+                className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-[#D6BA69] hover:text-[#D6BA69] transition-colors cursor-pointer"
               >
                 <ImageIcon className="w-8 h-8 mb-2" />
                 <span className="text-sm">Add</span>

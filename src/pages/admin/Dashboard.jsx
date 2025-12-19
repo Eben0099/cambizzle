@@ -5,6 +5,7 @@ import { Users, FileText, AlertTriangle, DollarSign, TrendingUp, Eye, CheckCircl
 import Loader from "../../components/ui/Loader";
 import { Link } from "react-router-dom";
 import adminService from "../../services/adminService";
+import logger from "../../utils/logger";
 
 const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
@@ -30,7 +31,7 @@ const Dashboard = () => {
         throw new Error(response.message || 'Error loading data');
       }
     } catch (err) {
-  console.error('Dashboard error:', err);
+  logger.error('Dashboard error:', err);
   setError(err.message || 'Error loading dashboard');
     } finally {
       setLoading(false);

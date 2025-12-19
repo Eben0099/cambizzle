@@ -404,7 +404,7 @@ const Search = () => {
   const searchDescription = `Browse ${displayedAds.length} classified ads in Cameroon. ${query ? `Find ${query}` : 'Buy and sell items'} on Cambizzle.`;
 
   return (
-    <div className="min-h-screen bg-gray-50" data-wg-notranslate="true">
+    <div className="min-h-screen bg-gray-50">
       <SEO
         title={`${searchTitle} | Cambizzle`}
         description={searchDescription}

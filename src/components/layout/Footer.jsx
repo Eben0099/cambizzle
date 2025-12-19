@@ -91,7 +91,6 @@ const Footer = () => {
             <p className="text-sm text-gray-400">
               © {new Date().getFullYear()} Cambizzle. {t('footer.copyright')}
             </p>
-            {/* Language Switcher */}
             <LanguageSwitcher variant="dark" />
           </div>
         </div>

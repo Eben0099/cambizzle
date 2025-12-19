@@ -4,6 +4,7 @@ import Button from "../../components/ui/Button";
 import Loader from "../../components/ui/Loader";
 import { API_BASE_URL } from "../../config/api";
 import { useToast } from "../../components/toast/useToast";
+import storageService from "../../services/storageService";
 import {
   LineChart,
   Line,
@@ -49,7 +50,7 @@ export default function Payments() {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem("token");
+      const token = storageService.getToken();
       const params = new URLSearchParams();
       if (statsStart) params.append("start_date", statsStart);
       if (statsEnd) params.append("end_date", statsEnd);
@@ -100,7 +101,7 @@ export default function Payments() {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem("token");
+      const token = storageService.getToken();
       const qs = new URLSearchParams({
         page: String(txPage),
         per_page: String(txPerPage),

@@ -12,10 +12,11 @@ import Card from '../components/ui/Card';
 import ImageUpload from '../components/ui/ImageUpload';
 import useAdCreation from '../hooks/useAdCreation';
 import { adsService } from '../services/adsService';
+import logger from '../utils/logger';
 
 
 const UpdateAd = () => {
-  console.log('[UpdateAd] Composant monté');
+  logger.log('[UpdateAd] Composant monté');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -58,7 +59,7 @@ const UpdateAd = () => {
 
   // Récupérer le slug depuis l'URL (ex: /edit-ad/:slug)
   const slug = window.location.pathname.split('/').pop();
-  console.log('[UpdateAd] Slug détecté:', slug);
+  logger.log('[UpdateAd] Slug détecté:', slug);
 
   // Charger les données de création en premier
   useEffect(() => {
@@ -69,11 +70,11 @@ const UpdateAd = () => {
 
   // Fetch annonce par slug et préremplir le formulaire
   useEffect(() => {
-    console.log('[UpdateAd] useEffect TOP', slug);
-    console.log('[UpdateAd] AVANT RETURN');
+    logger.log('[UpdateAd] useEffect TOP', slug);
+    logger.log('[UpdateAd] AVANT RETURN');
 
     if (!slug || !creationDataLoaded || creationLoading) {
-      console.warn('[UpdateAd] Slug non trouvé ou données de création pas chargées, fetch annulé');
+      logger.warn('[UpdateAd] Slug non trouvé ou données de création pas chargées, fetch annulé');
       return;
     }
 
@@ -193,7 +194,7 @@ const UpdateAd = () => {
   }, [formData, images, currentStep]);
 
   const handleImagesChange = (newImages) => {
-    console.log('📸 CreateAd: Changement d\'images', {
+    logger.log('📸 CreateAd: Changement d\'images', {
       previous: images.length,
       new: newImages.length,
       images: newImages.map((img, idx) => ({
@@ -248,7 +249,7 @@ const UpdateAd = () => {
           }
         } catch (err) {
           setSubcategories([]);
-          console.error('Erreur chargement sous-catégories:', err);
+          logger.error('Erreur chargement sous-catégories:', err);
         }
       }
       return;
@@ -430,7 +431,7 @@ const UpdateAd = () => {
 
     if (isLoading || !canSubmit) return;
 
-    console.log('🚀 Début soumission formulaire');
+    logger.log('🚀 Début soumission formulaire');
     
     const allErrors = {
       ...validateStep(1),
@@ -440,18 +441,18 @@ const UpdateAd = () => {
     };
     
     if (Object.keys(allErrors).length > 0) {
-      console.log('❌ Validation échouée - Arrêt soumission');
+      logger.log('❌ Validation échouée - Arrêt soumission');
       setErrors(allErrors);
       return;
     }
 
-    console.log('✅ Validation réussie - Lancement mise à jour annonce');
+    logger.log('✅ Validation réussie - Lancement mise à jour annonce');
 
     setIsLoading(true);
 
     try {
-      console.log('🚀 === DÉBUT CONSTRUCTION FORM DATA ===');
-      console.log('🚀 Données formData actuelles:', {
+      logger.log('🚀 === DÉBUT CONSTRUCTION FORM DATA ===');
+      logger.log('🚀 Données formData actuelles:', {
         title: formData.title,
         description: formData.description?.substring(0, 50) + '...',
         price: formData.price,
@@ -488,33 +489,33 @@ const UpdateAd = () => {
       formDataToSend.append('is_premium', formData.isPremium ? 1 : 0);
       formDataToSend.append('is_negotiable', formData.isNegotiable ? 1 : 0);
 
-      console.log('📝 Champs statiques ajoutés au FormData');
+      logger.log('📝 Champs statiques ajoutés au FormData');
       
       // Convertir subcategory slug en ID
       if (formData.subcategory && formData.category) {
         const selectedSubcategory = subcategories.find(sub => sub.slug === formData.subcategory);
         if (selectedSubcategory?.id) {
           formDataToSend.append('subcategory_id', selectedSubcategory.id);
-          console.log('🏷️ Sous-catégorie ajoutée:', selectedSubcategory.id);
+          logger.log('🏷️ Sous-catégorie ajoutée:', selectedSubcategory.id);
         } else {
-          console.log('⚠️ Sous-catégorie non trouvée pour slug:', formData.subcategory);
+          logger.log('⚠️ Sous-catégorie non trouvée pour slug:', formData.subcategory);
         }
       }
 
       // Convertir location_id en entier
       if (formData.locationId) {
         formDataToSend.append('location_id', parseInt(formData.locationId));
-        console.log('📍 Localisation ajoutée:', formData.locationId);
+        logger.log('📍 Localisation ajoutée:', formData.locationId);
       }
 
       // Champs dynamiques
       if (formData.brandId) {
         formDataToSend.append('brand_id', parseInt(formData.brandId));
-        console.log('🏢 Marque ajoutée:', formData.brandId);
+        logger.log('🏢 Marque ajoutée:', formData.brandId);
       }
 
       // Ajouter les filtres dynamiques (comme dans createAd)
-      console.log('🔧 Traitement des filtres dynamiques:', formData.filters);
+      logger.log('🔧 Traitement des filtres dynamiques:', formData.filters);
       let filterCount = 0;
       Object.entries(formData.filters).forEach(([filterId, value]) => {
         if (value !== undefined && value !== '') {
@@ -523,18 +524,18 @@ const UpdateAd = () => {
               formDataToSend.append(`filters[${filterId}][]`, val);
               filterCount++;
             });
-            console.log(`🔧 Filtre array ajouté: filters[${filterId}][] =`, value);
+            logger.log(`🔧 Filtre array ajouté: filters[${filterId}][] =`, value);
           } else {
             formDataToSend.append(`filters[${filterId}]`, value);
             filterCount++;
-            console.log(`🔧 Filtre simple ajouté: filters[${filterId}] = "${value}"`);
+            logger.log(`🔧 Filtre simple ajouté: filters[${filterId}] = "${value}"`);
           }
         }
       });
-      console.log(`🔧 Total filtres ajoutés: ${filterCount}`);
+      logger.log(`🔧 Total filtres ajoutés: ${filterCount}`);
 
       // Gestion des images pour mise à jour
-      console.log('📸 Traitement des images:', {
+      logger.log('📸 Traitement des images:', {
         totalImages: images.length,
         imagesWithFile: images.filter(img => img.file).length,
         imagesWithoutFile: images.filter(img => !img.file).length
@@ -546,50 +547,50 @@ const UpdateAd = () => {
         if (image.file) {
           formDataToSend.append('photos[]', image.file, `photo-${index + 1}.jpg`);
           newImageCount++;
-          console.log(`📸 Nouvelle image ${newImageCount} ajoutée: ${image.file.name} (${image.file.size} bytes)`);
+          logger.log(`📸 Nouvelle image ${newImageCount} ajoutée: ${image.file.name} (${image.file.size} bytes)`);
         }
       });
-      console.log(`📸 Total nouvelles images ajoutées: ${newImageCount}`);
+      logger.log(`📸 Total nouvelles images ajoutées: ${newImageCount}`);
 
       // 2. Ordre des images existantes (pour mise à jour de l'ordre)
       const existingImages = images.filter(img => !img.file && img.originalId);
       if (existingImages.length > 0) {
-        console.log(`📸 Envoi de l'ordre des ${existingImages.length} images existantes:`);
+        logger.log(`📸 Envoi de l'ordre des ${existingImages.length} images existantes:`);
         existingImages.forEach((image, index) => {
           const realId = image.originalId;
           formDataToSend.append('existing_photos_order[]', realId);
-          console.log(`📸 Image existante ${index + 1}: ID=${realId} (position ${index + 1})`);
+          logger.log(`📸 Image existante ${index + 1}: ID=${realId} (position ${index + 1})`);
         });
       } else {
-        console.log('📸 Aucune image existante à réorganiser');
+        logger.log('📸 Aucune image existante à réorganiser');
       }
 
       // Logs détaillés du FormData envoyé
-      console.log('📤 === DONNÉES FORM DATA ENVOYÉES ===');
-      console.log('📤 Type des données:', formDataToSend instanceof FormData ? 'FormData' : typeof formDataToSend);
+      logger.log('📤 === DONNÉES FORM DATA ENVOYÉES ===');
+      logger.log('📤 Type des données:', formDataToSend instanceof FormData ? 'FormData' : typeof formDataToSend);
 
       if (formDataToSend instanceof FormData) {
-        console.log('📤 Contenu détaillé du FormData:');
+        logger.log('📤 Contenu détaillé du FormData:');
         for (let [key, value] of formDataToSend.entries()) {
           if (value instanceof File) {
-            console.log(`  📎 ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
+            logger.log(`  📎 ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
           } else {
-            console.log(`  📝 ${key}: "${value}"`);
+            logger.log(`  📝 ${key}: "${value}"`);
           }
         }
       }
-      console.log('📤 === FIN CONTENU FORM DATA ===');
-      console.log('📤 Nombre total d\'entrées:', formDataToSend instanceof FormData ? [...formDataToSend.entries()].length : 'N/A');
+      logger.log('📤 === FIN CONTENU FORM DATA ===');
+      logger.log('📤 Nombre total d\'entrées:', formDataToSend instanceof FormData ? [...formDataToSend.entries()].length : 'N/A');
 
-      console.log('📤 Envoi des données de mise à jour vers:', `POST /ads/${slug}`);
+      logger.log('📤 Envoi des données de mise à jour vers:', `POST /ads/${slug}`);
       const result = await adsService.updateAdBySlug(slug, formDataToSend);
-      console.log('📡 Réponse API reçue:', result);
+      logger.log('📡 Réponse API reçue:', result);
 
       if (result.ad) {
         navigate('/profile');
       }
     } catch (err) {
-      console.error('Erreur mise à jour annonce:', err);
+      logger.error('Erreur mise à jour annonce:', err);
       setErrors({ submit: err.message || 'Erreur lors de la mise à jour de l\'annonce' });
     } finally {
       setIsLoading(false);

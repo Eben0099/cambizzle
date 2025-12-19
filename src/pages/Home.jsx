@@ -1,10 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Helmet } from 'react-helmet-async';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Search, ArrowRight, TrendingUp, Shield, Users, Star, Plus, Car, Home as HomeIcon, Briefcase, Shirt, Smartphone, Sofa, Baby, Book, Dumbbell, Wrench, Truck, HeadphonesIcon } from 'lucide-react';
-import { useAds } from '../contexts/AdsContext';
-import { CATEGORIES } from '../utils/constants';
+import { Search, ArrowRight, Car, Home as HomeIcon, Briefcase, Shirt, Smartphone, Sofa, Baby, Book, Dumbbell, Wrench } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
@@ -20,27 +17,10 @@ import Pagination from '../components/ui/Pagination';
 
 const Home = () => {
   const { t } = useTranslation();
-  const [searchQuery, setSearchQuery] = useState('');
   const [keywordFilter, setKeywordFilter] = useState('');
-  const { ads: contextAds, fetchAds, isLoading: contextLoading } = useAds();
   const { categories, isLoading: categoriesLoading, error: categoriesError } = useCategories();
   const { ads, pagination, isLoading: adsLoading, error: adsError, goToPage } = useHomeAds(1, 8);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    fetchAds(1, { limit: 8 });
-  }, []);
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-    }
-  };
-
-  const handleCategoryClick = (categoryId) => {
-    navigate(`/search?category=${categoryId}`);
-  };
 
   // Fonction de filtrage par mots-clés (frontend)
   const filterByKeywords = (adsArray) => {
@@ -88,7 +68,7 @@ const Home = () => {
       />
       <OrganizationSchema />
       <WebsiteSchema />
-      <div className="min-h-screen bg-gray-50" data-wg-notranslate="true">
+      <div className="min-h-screen bg-gray-50">
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-black via-gray-900 to-black text-white py-16 sm:py-20 lg:py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

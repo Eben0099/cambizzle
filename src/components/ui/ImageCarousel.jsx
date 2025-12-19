@@ -105,13 +105,13 @@ const ImageCarousel = ({ images = [], className = '' }) => {
             <>
               <button
                 onClick={prevImage}
-                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70 cursor-pointer"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <button
                 onClick={nextImage}
-                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70 cursor-pointer"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -133,7 +133,7 @@ const ImageCarousel = ({ images = [], className = '' }) => {
               <button
                 key={index}
                 onClick={() => goToImage(index)}
-                className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
                   index === currentIndex
                     ? 'border-[#D6BA69] ring-2 ring-[#D6BA69]/20'
                     : 'border-gray-200 hover:border-[#D6BA69]'
@@ -161,7 +161,7 @@ const ImageCarousel = ({ images = [], className = '' }) => {
           {/* Close Button */}
           <button
             onClick={closeZoomModal}
-            className="absolute top-4 right-4 z-50 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors"
+            className="absolute top-4 right-4 z-50 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors cursor-pointer"
           >
             <X className="w-6 h-6" />
           </button>
@@ -171,20 +171,20 @@ const ImageCarousel = ({ images = [], className = '' }) => {
             <button
               onClick={handleZoomOut}
               disabled={zoomLevel <= 0.5}
-              className="bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <ZoomOut className="w-5 h-5" />
             </button>
             <button
               onClick={handleZoomIn}
               disabled={zoomLevel >= 3}
-              className="bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <ZoomIn className="w-5 h-5" />
             </button>
             <button
               onClick={handleRotate}
-              className="bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors"
+              className="bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors cursor-pointer"
             >
               <RotateCw className="w-5 h-5" />
             </button>
@@ -200,13 +200,13 @@ const ImageCarousel = ({ images = [], className = '' }) => {
             <>
               <button
                 onClick={prevImage}
-                className="absolute left-4 top-1/2 -translate-y-1/2 z-40 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors"
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-40 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors cursor-pointer"
               >
                 <ChevronLeft className="w-6 h-6" />
               </button>
               <button
                 onClick={nextImage}
-                className="absolute right-4 top-1/2 -translate-y-1/2 z-40 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-40 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors cursor-pointer"
               >
                 <ChevronRight className="w-6 h-6" />
               </button>

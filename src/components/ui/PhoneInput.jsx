@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Phone, Loader2, Search } from 'lucide-react';
 import countriesService from '../../services/countriesService';
+import logger from '../../utils/logger';
 
 const PhoneInput = ({
   label,
@@ -39,7 +40,7 @@ const PhoneInput = ({
 
         setCountries(countriesWithLocalization);
       } catch (error) {
-        console.error('Error loading countries:', error);
+        logger.error('Error loading countries:', error);
         setCountriesError('Error loading countries');
         // Use fallback data
         const fallbackCountries = countriesService.getFallbackCountries();
@@ -123,8 +124,8 @@ const PhoneInput = ({
   // Initialize with existing value
   useEffect(() => {
     if (value && countries.length > 0) {
-      console.log('📞 Initialisation PhoneInput avec valeur:', value);
-      console.log('🌍 Pays disponibles:', countries.length);
+      logger.debug('📞 Initialisation PhoneInput avec valeur:', value);
+      logger.debug('🌍 Pays disponibles:', countries.length);
 
       // Try to parse existing number with dial code
       let detectedCountry = null;
@@ -137,7 +138,7 @@ const PhoneInput = ({
         if (value.startsWith(country.dialCode)) {
           detectedCountry = country;
           localNumber = value.substring(country.dialCode.length);
-          console.log('✅ Pays détecté:', country.name, 'Indicatif:', country.dialCode, 'Numéro local:', localNumber);
+          logger.debug('✅ Pays détecté:', country.name, 'Indicatif:', country.dialCode, 'Numéro local:', localNumber);
           break;
         }
       }
@@ -145,9 +146,9 @@ const PhoneInput = ({
       if (detectedCountry) {
         setSelectedCountry(detectedCountry.code);
         setPhoneNumber(localNumber);
-        console.log('🔄 État mis à jour - Pays:', detectedCountry.code, 'Numéro:', localNumber);
+        logger.debug('🔄 État mis à jour - Pays:', detectedCountry.code, 'Numéro:', localNumber);
       } else {
-        console.log('❌ Aucun pays détecté pour le numéro:', value);
+        logger.debug('❌ Aucun pays détecté pour le numéro:', value);
         setPhoneNumber(value); // Keep full number if no country detected
       }
     } else if (!value) {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import logger from "../../utils/logger";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Input from "@/components/ui/Input";
 import { Button } from "@/components/ui/button";
@@ -70,7 +71,7 @@ const Users = () => {
         throw new Error(response.message || 'Error loading users');
       }
     } catch (err) {
-      console.error('Users error:', err);
+      logger.error('Users error:', err);
       setError(err.message || 'Error loading users');
     } finally {
       setLoading(false);
@@ -88,7 +89,7 @@ const Users = () => {
         throw new Error(response.message || 'Error loading details');
       }
     } catch (err) {
-      console.error('User details error:', err);
+      logger.error('User details error:', err);
       showToast({ type: 'error', message: err.message || 'Error loading details' });
     } finally {
       setActionLoading(false);
@@ -113,7 +114,7 @@ const Users = () => {
         throw new Error(response.message || 'Error during suspension');
       }
     } catch (err) {
-      console.error('Suspension error:', err);
+      logger.error('Suspension error:', err);
       showToast({ type: 'error', message: err.message || 'Error during suspension' });
     } finally {
       setActionLoading(false);
@@ -134,7 +135,7 @@ const Users = () => {
         throw new Error(response.message || 'Error during reactivation');
       }
     } catch (err) {
-      console.error('Reactivation error:', err);
+      logger.error('Reactivation error:', err);
       showToast({ type: 'error', message: err.message || 'Error during reactivation' });
     } finally {
       setActionLoading(false);
@@ -155,7 +156,7 @@ const Users = () => {
         throw new Error(response.message || 'Error during verification');
       }
     } catch (err) {
-      console.error('Verification error:', err);
+      logger.error('Verification error:', err);
       showToast({ type: 'error', message: err.message || 'Error during verification' });
     } finally {
       setActionLoading(false);
@@ -343,16 +344,21 @@ const Users = () => {
                     {user.photoUrl ? (
                       <img
                         src={`${SERVER_BASE_URL}/${user.photoUrl}`.replace(/\/+/g, '/')}
-                        alt={`${user.firstName} ${user.lastName}`}
+                        alt={`${user.firstName || ''} ${user.lastName || ''}`}
                         className="h-12 w-12 rounded-full object-cover ring-1 ring-gray-200"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
                       />
-                    ) : (
-                      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-[#D6BA69] to-[#C5A952] flex items-center justify-center">
-                        <span className="text-white text-sm font-bold">
-                          {user.firstName[0]}{user.lastName[0]}
-                        </span>
-                      </div>
-                    )}
+                    ) : null}
+                    <div
+                      className={`h-12 w-12 rounded-full bg-gradient-to-br from-[#D6BA69] to-[#C5A952] items-center justify-center ${user.photoUrl ? 'hidden' : 'flex'}`}
+                    >
+                      <span className="text-white text-sm font-bold">
+                        {(user.firstName || 'U')[0]}{(user.lastName || '')[0] || ''}
+                      </span>
+                    </div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-semibold text-gray-900 truncate">
@@ -473,19 +479,24 @@ const Users = () => {
           {selectedUserDetails ? (
             <div className="space-y-3 text-sm">
               <div className="flex items-center gap-3">
-                {selectedUserDetails.photo_url || selectedUserDetails.photoUrl ? (
+                {(selectedUserDetails.photo_url || selectedUserDetails.photoUrl) ? (
                   <img
                     src={`${SERVER_BASE_URL}/${selectedUserDetails.photo_url || selectedUserDetails.photoUrl}`.replace(/\/+/g, '/')}
                     alt="Photo"
                     className="h-10 w-10 rounded-full object-cover"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
                   />
-                ) : (
-                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#D6BA69] to-[#C5A952] flex items-center justify-center">
-                    <span className="text-white text-sm font-bold">
-                      {(selectedUserDetails.first_name || selectedUserDetails.firstName)?.[0]}{(selectedUserDetails.last_name || selectedUserDetails.lastName)?.[0]}
-                    </span>
-                  </div>
-                )}
+                ) : null}
+                <div
+                  className={`h-10 w-10 rounded-full bg-gradient-to-br from-[#D6BA69] to-[#C5A952] items-center justify-center ${(selectedUserDetails.photo_url || selectedUserDetails.photoUrl) ? 'hidden' : 'flex'}`}
+                >
+                  <span className="text-white text-sm font-bold">
+                    {(selectedUserDetails.first_name || selectedUserDetails.firstName || 'U')[0]}{(selectedUserDetails.last_name || selectedUserDetails.lastName || '')[0] || ''}
+                  </span>
+                </div>
                 <div>
                   <div className="font-semibold">{selectedUserDetails.first_name || selectedUserDetails.firstName} {selectedUserDetails.last_name || selectedUserDetails.lastName}</div>
                   <div className="text-xs text-gray-500">ID: #{selectedUserDetails.id_user || selectedUserDetails.idUser}</div>

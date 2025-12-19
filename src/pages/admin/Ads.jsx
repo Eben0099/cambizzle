@@ -1,9 +1,10 @@
-﻿import { SERVER_BASE_URL } from '../../config/api';
+import { SERVER_BASE_URL } from '../../config/api';
 import { getPhotoUrl } from '../../utils/helpers';
 // Ads.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import adminService from '../../services/adminService';
+import logger from '../../utils/logger';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -95,7 +96,7 @@ const Ads = () => {
       setAds(data?.ads || []);
     } catch (err) {
       showToast({ type: 'error', message: err?.message || 'Error loading ads' });
-      console.error('Error fetching all ads:', err);
+      logger.error('Error fetching all ads:', err);
     } finally {
       setLoading(false);
     }
@@ -108,7 +109,7 @@ const Ads = () => {
       setPendingAds(response?.data || []);
     } catch (err) {
       showToast({ type: 'error', message: err?.message || 'Error loading pending ads' });
-      console.error('Error fetching pending ads:', err);
+      logger.error('Error fetching pending ads:', err);
     } finally {
       setLoading(false);
     }
@@ -130,7 +131,7 @@ const Ads = () => {
       }
     } catch (err) {
       showToast({ type: 'error', message: err?.message || 'Error approving ad' });
-      console.error('Error approving ad:', err);
+      logger.error('Error approving ad:', err);
     } finally {
       setLoading(false);
     }
@@ -170,7 +171,7 @@ const Ads = () => {
       }
     } catch (err) {
       showToast({ type: 'error', message: err?.message || 'Error rejecting ad' });
-      console.error('Error rejecting ad:', err);
+      logger.error('Error rejecting ad:', err);
     } finally {
       setLoading(false);
     }

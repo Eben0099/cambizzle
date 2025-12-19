@@ -3,10 +3,12 @@ import userService from '../../services/userService';
 import { User, Shield, Upload, X, Camera, Trash2, Building2, Lock, Eye, EyeOff } from 'lucide-react';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
+import Avatar from '../ui/Avatar';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import { getPhotoUrl } from '../../utils/helpers';
 import { useToast } from '../toast/useToast';
+import storageService from '../../services/storageService';
 
 const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
   const { showToast } = useToast();
@@ -203,12 +205,12 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
       formData.append('document_number', editFormData.identityDocumentNumber);
       formData.append('document', identityDocument);
 
-      // Always get userId from user prop, fallback to localStorage if missing
+      // Always get userId from user prop, fallback to storageService if missing
       let userId = undefined;
       let userObj = user;
       if (!userObj) {
         try {
-          userObj = JSON.parse(localStorage.getItem('user'));
+          userObj = storageService.getUser();
         } catch (e) {
           userObj = undefined;
         }
@@ -357,15 +359,13 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
           
           <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
             <div className="relative">
-              <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full overflow-hidden bg-[#D6BA69] flex items-center justify-center">
-                {editFormData.photoUrl ? (
-                  <img src={getPhotoUrl(editFormData.photoUrl)} alt="Profile photo" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-lg sm:text-xl font-bold text-white">
-                    {editFormData.firstName.charAt(0)}{editFormData.lastName.charAt(0)}
-                  </span>
-                )}
-              </div>
+              <Avatar
+                src={editFormData.photoUrl}
+                firstName={editFormData.firstName}
+                lastName={editFormData.lastName}
+                size="xl"
+                className="h-20 w-20 sm:h-24 sm:w-24"
+              />
               {uploadingPhoto && (
                 <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
                   <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -614,7 +614,7 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
                     <button
                       type="button"
                       onClick={() => setShowCurrentPassword((v) => !v)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
                       aria-label={showCurrentPassword ? 'Hide password' : 'Show password'}
                     >
                       {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -635,7 +635,7 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
                     <button
                       type="button"
                       onClick={() => setShowNewPassword((v) => !v)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
                       aria-label={showNewPassword ? 'Hide password' : 'Show password'}
                     >
                       {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -656,7 +656,7 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword((v) => !v)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
                       aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                     >
                       {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -728,7 +728,7 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
               <h3 className="text-base sm:text-lg font-semibold text-red-600">Delete Account</h3>
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 cursor-pointer"
                 aria-label="Close"
               >
                 <X className="w-5 h-5 sm:w-6 sm:h-6" />

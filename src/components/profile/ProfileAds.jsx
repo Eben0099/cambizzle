@@ -113,22 +113,18 @@ const ProfileAds = ({ userAds, onCreateAd, onEditAd, onDeleteAd, user }) => {
 
               <div className="flex gap-2">
                 {(ad.isBoosted === '1' || ad.is_boosted === '1') ? (
-                  <div className="flex-1 flex flex-col items-center justify-center">
-                    <span className="inline-flex items-center justify-center py-2 sm:py-3 text-sm sm:text-base font-semibold text-white bg-[#D6BA69] rounded border border-[#D6BA69] cursor-default select-none w-full">
-                      <Zap className="w-4 h-4 mr-1" />
-                      Boosted
-                    </span>
-                    {(ad.boostEnd || ad.boost_end) && (
-                      <span className="text-xs text-gray-700 mt-1">
-                        Boost until {new Date(ad.boostEnd || ad.boost_end).toLocaleDateString()}
-                      </span>
-                    )}
-                  </div>
+                  <span
+                    className="flex-1 h-9 inline-flex items-center justify-center text-sm font-medium text-white bg-[#D6BA69] rounded-md border border-[#D6BA69] cursor-default select-none px-3"
+                    title={(ad.boostEnd || ad.boost_end) ? `Boost until ${new Date(ad.boostEnd || ad.boost_end).toLocaleDateString()}` : ''}
+                  >
+                    <Zap className="w-4 h-4 mr-1" />
+                    Boosted
+                  </span>
                 ) : (
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 py-2 sm:py-3 text-sm sm:text-base text-[#D6BA69] hover:bg-[#D6BA69]/10 border-[#D6BA69]"
+                    className="flex-1 text-[#D6BA69] hover:bg-[#D6BA69]/10 border-[#D6BA69]"
                     onClick={() => handleBoostAd(ad)}
                     aria-label="Boost ad"
                   >
@@ -139,7 +135,7 @@ const ProfileAds = ({ userAds, onCreateAd, onEditAd, onDeleteAd, user }) => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex-1 py-2 sm:py-3 text-sm sm:text-base"
+                  className="flex-1"
                   onClick={() => navigate(`/edit-ad/${ad.slug}`)}
                   aria-label="Edit ad"
                 >
@@ -149,7 +145,7 @@ const ProfileAds = ({ userAds, onCreateAd, onEditAd, onDeleteAd, user }) => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-red-600 hover:bg-red-50 py-2 sm:py-3 text-sm sm:text-base"
+                  className="text-red-600 hover:bg-red-50"
                   onClick={() => onDeleteAd(ad)}
                   aria-label="Delete ad"
                 >

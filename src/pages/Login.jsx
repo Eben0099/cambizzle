@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css'; // Important !
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../components/toast/useToast';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 
 const Login = () => {
+  const { t } = useTranslation();
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -15,6 +18,7 @@ const Login = () => {
   const [errors, setErrors] = useState({});
 
   const { login, error: serverError, clearError } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
@@ -30,15 +34,15 @@ const Login = () => {
     const newErrors = {};
 
     if (!phone) {
-      newErrors.phone = 'Phone number is required';
+      newErrors.phone = t('auth.phoneRequired');
       hasError = true;
     } else if (!isValidPhoneNumber(phone)) {
-      newErrors.phone = 'Invalid phone number';
+      newErrors.phone = t('auth.invalidPhone');
       hasError = true;
     }
 
     if (!password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = t('auth.passwordRequired');
       hasError = true;
     }
 
@@ -50,19 +54,28 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const result = await login({ phone, password }); // ton contexte doit accepter phone maintenant
+      const result = await login({ phone, password });
       if (result.success) {
+        showToast({
+          type: 'success',
+          title: t('toast.welcome'),
+          message: t('toast.loginSuccess')
+        });
         navigate(from, { replace: true });
       }
     } catch (err) {
-      // géré par le contexte
+      showToast({
+        type: 'error',
+        title: t('toast.error'),
+        message: t('toast.loginFailed')
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center px-4 py-12" data-wg-notranslate="true">
       {/* Container principal - responsive */}
       <div className="w-full max-w-md">
         {/* Logo + Nom */}
@@ -77,10 +90,10 @@ const Login = () => {
           </Link>
 
           <h1 className="mt-8 text-2xl font-bold text-gray-900">
-            Welcome back
+            {t('auth.welcomeBack')}
           </h1>
           <p className="mt-2 text-sm text-gray-600">
-            Sign in to your account to continue
+            {t('auth.loginSubtitle')}
           </p>
         </div>
 
@@ -98,7 +111,7 @@ const Login = () => {
               {/* Champ téléphone */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone number
+                  {t('auth.phone')}
                 </label>
                 <PhoneInput
                   international
@@ -116,7 +129,7 @@ const Login = () => {
               {/* Mot de passe */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Password
+                  {t('auth.password')}
                 </label>
                 <div className="relative">
                   <input
@@ -149,14 +162,14 @@ const Login = () => {
                     type="checkbox"
                     className="w-4 h-4 text-[#D6BA69] rounded focus:ring-[#D6BA69]"
                   />
-                  <span className="text-gray-700">Remember me</span>
+                  <span className="text-gray-700">{t('auth.rememberMe')}</span>
                 </label>
 
                 <Link
                   to="/forgot-password"
                   className="font-medium text-[#D6BA69] hover:text-[#D6BA69]/80 transition"
                 >
-                  Forgot password?
+                  {t('auth.forgotPassword')}
                 </Link>
               </div>
 
@@ -167,18 +180,18 @@ const Login = () => {
                 disabled={isLoading}
                 className="w-full bg-[#D6BA69] hover:bg-[#c5a55d] text-black font-semibold py-4 rounded-xl shadow-lg transform transition hover:scale-[1.02] active:scale-100"
               >
-                {isLoading ? 'Signing in...' : 'Sign in'}
+                {isLoading ? t('auth.signingIn') : t('auth.login')}
               </Button>
             </form>
 
             {/* Lien inscription */}
             <p className="mt-8 text-center text-sm text-gray-600">
-              Don't have an account?{' '}
+              {t('auth.noAccount').split('?')[0]}?{' '}
               <Link
                 to="/register"
                 className="font-semibold text-[#D6BA69] hover:text-[#c5a55d] transition"
               >
-                Sign up
+                {t('auth.signup')}
               </Link>
             </p>
           </div>

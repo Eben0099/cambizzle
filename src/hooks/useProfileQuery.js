@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/authService';
 import { API_BASE_URL } from '../config/api';
+import storageService from '../services/storageService';
 
 /**
  * Hook pour récupérer les annonces de l'utilisateur
@@ -12,7 +13,7 @@ export const useUserAds = (userId) => {
     queryFn: async () => {
       const response = await fetch(`${API_BASE_URL}/ads/user/${userId}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${storageService.getToken()}`,
           'Content-Type': 'application/json'
         }
       });
@@ -43,7 +44,7 @@ export const useSellerProfile = (userId) => {
     queryFn: async () => {
       const response = await fetch(`${API_BASE_URL}/seller-profiles/me`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${storageService.getToken()}`,
           'Content-Type': 'application/json'
         }
       });
@@ -124,7 +125,7 @@ export const useProfileQuery = () => {
       const response = await fetch(`${API_BASE_URL}/ads/${adSlug}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${storageService.getToken()}`,
           'Content-Type': 'application/json'
         }
       });

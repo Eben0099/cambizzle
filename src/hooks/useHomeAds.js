@@ -5,10 +5,18 @@ import { adsService } from '../services/adsService';
 const useHomeAds = (initialPage = 1, perPage = 8) => {
   const [currentPage, setCurrentPage] = useState(initialPage);
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ['ads', 'home', currentPage, perPage],
     queryFn: async () => {
       const response = await adsService.getAdsFromAPI(currentPage, perPage);
+
+      // Handle case where response.ads is undefined or null
+      if (!response?.ads) {
+        return {
+          ads: [],
+          pagination: response?.pagination || null
+        };
+      }
 
       // Conversion snake_case vers camelCase pour cohérence
       const processedAds = response.ads.map(ad => ({
@@ -53,10 +61,11 @@ const useHomeAds = (initialPage = 1, perPage = 8) => {
         pagination: response.pagination
       };
     },
-    staleTime: 3 * 60 * 1000, // Cache 3 minutes
-    gcTime: 10 * 60 * 1000, // Garde en mémoire 10 minutes
-    retry: 2,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 2 * 60 * 1000, // Cache 2 minutes
+    gcTime: 5 * 60 * 1000, // Garde en mémoire 5 minutes
+    retry: 1, // Only 1 retry to avoid long waits
+    retryDelay: 1000, // 1 second delay between retries
+    refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 
   const goToPage = (page) => {
@@ -68,7 +77,7 @@ const useHomeAds = (initialPage = 1, perPage = 8) => {
   return {
     ads: data?.ads || [],
     pagination: data?.pagination || null,
-    isLoading,
+    isLoading: isLoading || isFetching,
     error: error?.message || null,
     goToPage,
     refetch
