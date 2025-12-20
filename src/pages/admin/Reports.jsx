@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -28,6 +29,7 @@ import { API_BASE_URL } from "../../config/api";
 import storageService from "../../services/storageService";
 
 const Reports = () => {
+  const { t } = useTranslation();
   const { showToast } = useToast();
 
   const [reports, setReports] = useState([]);
@@ -50,7 +52,7 @@ const Reports = () => {
     try {
       const token = storageService.getToken();
       if (!token) {
-        throw new Error('Authentication required');
+        throw new Error(t('admin.reports.authRequired'));
       }
 
       const response = await fetch(`${API_BASE_URL}/admin/reports`, {
@@ -92,15 +94,15 @@ const Reports = () => {
 
         setReports(transformedReports);
       } else {
-        throw new Error(data.message || 'Failed to fetch reports');
+        throw new Error(data.message || t('admin.reports.failedToFetch'));
       }
     } catch (err) {
       console.error('Error fetching reports:', err);
       setError(err.message);
-      toast({
-        title: "Error loading reports",
-        description: err.message,
-        variant: "destructive",
+      showToast({
+        type: "error",
+        title: t('admin.reports.errorLoading'),
+        message: err.message,
       });
     } finally {
       setLoading(false);
@@ -124,13 +126,13 @@ const Reports = () => {
   // Helpers for badges
   const getStatusBadge = (status) => {
     const variants = {
-      pending: { color: "bg-yellow-100 text-yellow-800", label: "Pending" },
-      handled: { color: "bg-green-100 text-green-800", label: "Handled" },
-      reviewed: { color: "bg-blue-100 text-blue-800", label: "Reviewed" },
-      rejected: { color: "bg-red-100 text-red-800", label: "Rejected" },
+      pending: { color: "bg-yellow-100 text-yellow-800", labelKey: "pending" },
+      handled: { color: "bg-green-100 text-green-800", labelKey: "handled" },
+      reviewed: { color: "bg-blue-100 text-blue-800", labelKey: "reviewed" },
+      rejected: { color: "bg-red-100 text-red-800", labelKey: "rejected" },
     };
     const config = variants[status] || variants.pending;
-    return <Badge className={`${config.color} font-medium`}>{config.label}</Badge>;
+    return <Badge className={`${config.color} font-medium`}>{t(`admin.reports.${config.labelKey}`)}</Badge>;
   };
 
   const getPriorityBadge = (priority) => {
@@ -139,9 +141,14 @@ const Reports = () => {
       medium: "bg-yellow-100 text-yellow-800",
       low: "bg-blue-100 text-blue-800",
     };
+    const labels = {
+      high: t('admin.reports.urgent'),
+      medium: t('admin.reports.medium'),
+      low: t('admin.reports.low'),
+    };
     return (
       <Badge className={`${colors[priority]} font-medium`}>
-        {priority === "high" ? "Urgent" : priority === "medium" ? "Medium" : "Low"}
+        {labels[priority]}
       </Badge>
     );
   };
@@ -160,8 +167,8 @@ const Reports = () => {
     if (!selectedReport || !adminNotes.trim()) {
       showToast({
         type: "error",
-        title: "Validation Error",
-        message: "Please enter admin notes before resolving the report."
+        title: t('admin.reports.validationError'),
+        message: t('admin.reports.enterAdminNotes')
       });
       return;
     }
@@ -171,7 +178,7 @@ const Reports = () => {
     try {
       const token = storageService.getToken();
       if (!token) {
-        throw new Error('Authentication required');
+        throw new Error(t('admin.reports.authRequired'));
       }
 
       const response = await fetch(`${API_BASE_URL}/admin/reports/${selectedReport.id}/resolve`, {
@@ -202,18 +209,18 @@ const Reports = () => {
         setAdminNotes("");
         showToast({
           type: "success",
-          title: "Report Resolved",
-          message: "The report has been successfully resolved."
+          title: t('admin.reports.reportResolved'),
+          message: t('admin.reports.reportResolvedSuccess')
         });
       } else {
-        throw new Error(data.message || 'Failed to resolve report');
+        throw new Error(data.message || t('admin.reports.failedToResolve'));
       }
     } catch (error) {
       console.error('Error resolving report:', error);
       showToast({
         type: "error",
-        title: "Resolution Failed",
-        message: error.message || "Failed to resolve report"
+        title: t('admin.reports.resolutionFailed'),
+        message: error.message || t('admin.reports.failedToResolve')
       });
     } finally {
       setResolving(false);
@@ -222,12 +229,12 @@ const Reports = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}  
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Reports Management</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t('admin.reports.title')}</h1>
           <p className="text-muted-foreground mt-1">
-            Monitor and manage reported ads. Depending on the nature of the report, you can take necessary actions such as deleting the ad and informing the seller via WhatsApp.
+            {t('admin.reports.subtitle')}
           </p>
         </div>
         <div className="flex gap-2">
@@ -238,7 +245,7 @@ const Reports = () => {
             className="flex items-center gap-2"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+            {t('admin.reports.refresh')}
           </Button>
           <Button
             onClick={() => exportToExcel(filteredReports, 'reports', {
@@ -259,7 +266,7 @@ const Reports = () => {
             disabled={filteredReports.length === 0 || loading}
           >
             <Download className="h-4 w-4" />
-            Export Excel
+            {t('admin.reports.exportExcel')}
           </Button>
         </div>
       </div>
@@ -267,20 +274,20 @@ const Reports = () => {
       {/* Stats Summary */}
       <div className="grid gap-4 md:grid-cols-3">
         {[
-          { 
-            label: "Pending", 
-            count: reports.filter(r => r.status === 'pending').length, 
-            color: "#D6BA69" 
+          {
+            label: t('admin.reports.pending'),
+            count: reports.filter(r => r.status === 'pending').length,
+            color: "#D6BA69"
           },
-          { 
-            label: "Handled", 
-            count: reports.filter(r => r.status === 'handled').length, 
-            color: "#4CAF50" 
+          {
+            label: t('admin.reports.handled'),
+            count: reports.filter(r => r.status === 'handled').length,
+            color: "#4CAF50"
           },
-          { 
-            label: "Total Reports", 
-            count: reports.length, 
-            color: "#2196F3" 
+          {
+            label: t('admin.reports.totalReports'),
+            count: reports.length,
+            color: "#2196F3"
           },
         ].map((stat, i) => (
           <Card
@@ -308,13 +315,13 @@ const Reports = () => {
       {/* Search Bar */}
       <Card className="border border-border shadow-sm hover:shadow-md transition bg-white">
         <CardHeader>
-          <CardTitle className="text-lg font-semibold">Search Reports</CardTitle>
+          <CardTitle className="text-lg font-semibold">{t('admin.reports.searchTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by title, reporter, or reason..."
+              placeholder={t('admin.reports.searchPlaceholder')}
               className="pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -326,17 +333,17 @@ const Reports = () => {
       {/* Table */}
       <Card className="border border-border bg-white shadow-sm hover:shadow-lg transition rounded-2xl">
         <CardHeader>
-          <CardTitle className="text-xl font-semibold">Recent Reports</CardTitle>
+          <CardTitle className="text-xl font-semibold">{t('admin.reports.recentReports')}</CardTitle>
         </CardHeader>
         <CardContent>
           {error ? (
             <div className="text-center py-8">
               <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <p className="text-red-600 font-medium mb-2">Error loading reports</p>
+              <p className="text-red-600 font-medium mb-2">{t('admin.reports.errorLoading')}</p>
               <p className="text-gray-600 mb-4">{error}</p>
               <Button onClick={fetchReports} variant="outline">
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Try Again
+                {t('admin.reports.tryAgain')}
               </Button>
             </div>
           ) : (
@@ -344,15 +351,15 @@ const Reports = () => {
               <Table>
                 <TableHeader className="bg-muted/40">
                   <TableRow>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Reported Content</TableHead>
-                    <TableHead>Reporter</TableHead>
-                    <TableHead>Contact Seller</TableHead>
-                    <TableHead>Reason</TableHead>
-                    <TableHead>Priority</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{t('admin.reports.type')}</TableHead>
+                    <TableHead>{t('admin.reports.reportedContent')}</TableHead>
+                    <TableHead>{t('admin.reports.reporter')}</TableHead>
+                    <TableHead>{t('admin.reports.contactSeller')}</TableHead>
+                    <TableHead>{t('admin.reports.reason')}</TableHead>
+                    <TableHead>{t('admin.reports.priority')}</TableHead>
+                    <TableHead>{t('admin.reports.status')}</TableHead>
+                    <TableHead>{t('admin.reports.date')}</TableHead>
+                    <TableHead className="text-right">{t('admin.reports.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -360,13 +367,13 @@ const Reports = () => {
                     <TableRow>
                       <TableCell colSpan={9} className="text-center py-8">
                         <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
-                        <p className="text-gray-600">Loading reports...</p>
+                        <p className="text-gray-600">{t('admin.reports.loading')}</p>
                       </TableCell>
                     </TableRow>
                   ) : filteredReports.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={9} className="text-center py-8">
-                        <p className="text-gray-600">No reports found</p>
+                        <p className="text-gray-600">{t('admin.reports.noReports')}</p>
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -418,7 +425,7 @@ const Reports = () => {
                                 className="bg-[#D6BA69] text-white hover:bg-[#c3a55d] transition"
                                 onClick={() => handleApprove(report.id)}
                               >
-                                Resolve
+                                {t('admin.reports.resolve')}
                               </Button>
                             )}
                           </div>
@@ -437,16 +444,16 @@ const Reports = () => {
       <Dialog open={resolveModalOpen} onOpenChange={setResolveModalOpen}>
         <DialogContent className="sm:max-w-[425px] bg-white">
           <DialogHeader>
-            <DialogTitle>Resolve Report</DialogTitle>
+            <DialogTitle>{t('admin.reports.resolveReport')}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <label htmlFor="admin-notes" className="text-sm font-medium">
-                Admin Notes <span className="text-red-500">*</span>
+                {t('admin.reports.adminNotes')} <span className="text-red-500">*</span>
               </label>
               <Textarea
                 id="admin-notes"
-                placeholder="Enter your resolution notes..."
+                placeholder={t('admin.reports.adminNotesPlaceholder')}
                 value={adminNotes}
                 onChange={(e) => setAdminNotes(e.target.value)}
                 className="min-h-[100px]"
@@ -460,7 +467,7 @@ const Reports = () => {
               onClick={() => setResolveModalOpen(false)}
               disabled={resolving}
             >
-              Cancel
+              {t('admin.reports.cancel')}
             </Button>
             <Button
               type="button"
@@ -468,7 +475,7 @@ const Reports = () => {
               disabled={!adminNotes.trim() || resolving}
               className="bg-[#D6BA69] text-white hover:bg-[#c3a55d]"
             >
-              {resolving ? "Resolving..." : "Resolve Report"}
+              {resolving ? t('admin.reports.resolving') : t('admin.reports.resolveReport')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -478,19 +485,19 @@ const Reports = () => {
       <Dialog open={contactModalOpen} onOpenChange={setContactModalOpen}>
         <DialogContent className="sm:max-w-[425px] bg-white">
           <DialogHeader>
-            <DialogTitle>Contact Seller via WhatsApp</DialogTitle>
+            <DialogTitle>{t('admin.reports.contactSellerWhatsApp')}</DialogTitle>
             <DialogDescription>
-              Send a message to the seller regarding this report.
+              {t('admin.reports.sendMessageToSeller')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <label htmlFor="whatsapp-message" className="text-sm font-medium">
-                Message <span className="text-red-500">*</span>
+                {t('admin.reports.message')} <span className="text-red-500">*</span>
               </label>
               <Textarea
                 id="whatsapp-message"
-                placeholder="Enter your message to the seller..."
+                placeholder={t('admin.reports.messagePlaceholder')}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 className="min-h-[100px]"
@@ -503,7 +510,7 @@ const Reports = () => {
               variant="outline"
               onClick={() => setContactModalOpen(false)}
             >
-              Cancel
+              {t('admin.reports.cancel')}
             </Button>
             <Button
               type="button"
@@ -519,7 +526,7 @@ const Reports = () => {
               disabled={!message.trim()}
               className="bg-green-600 text-white hover:bg-green-700"
             >
-              Send via WhatsApp
+              {t('admin.reports.sendViaWhatsApp')}
             </Button>
           </DialogFooter>
         </DialogContent>

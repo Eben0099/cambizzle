@@ -1,11 +1,20 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Grid, List, SlidersHorizontal } from 'lucide-react';
 import AdCard from '../components/ads/AdCard';
 import Button from '../components/ui/Button';
 import { useAdsByCategory } from '../hooks/useAdsQuery';
+import { useWeglotTranslate } from '../hooks/useWeglotRetranslate';
+
+// Composant pour traduire le titre dynamique
+const TranslatedTitle = ({ title }) => {
+  const { translatedText } = useWeglotTranslate(title || '');
+  return <>{translatedText || title}</>;
+};
 
 const CategoryAds = () => {
+  const { t } = useTranslation();
   const { categoryId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState('grid');
@@ -28,10 +37,10 @@ const CategoryAds = () => {
   };
 
   const sortOptions = [
-    { value: 'recent', label: 'Most recent' },
-    { value: 'price-asc', label: 'Price ascending' },
-    { value: 'price-desc', label: 'Price descending' },
-    { value: 'popular', label: 'Most popular' }
+    { value: 'recent', label: t('filters.newest') },
+    { value: 'price-asc', label: t('filters.priceLowHigh') },
+    { value: 'price-desc', label: t('filters.priceHighLow') },
+    { value: 'popular', label: t('filters.mostPopular') }
   ];
 
   // Tri des annonces avec useMemo pour éviter les recalculs inutiles
@@ -67,10 +76,10 @@ const CategoryAds = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {categoryInfo ? categoryInfo.name : 'Category Ads'}
+            <TranslatedTitle title={categoryInfo ? categoryInfo.name : t('home.categories')} />
           </h1>
           <p className="text-gray-600">
-            {pagination.total} ad{pagination.total > 1 ? 's' : ''} found
+            {pagination.total} {t('filters.adsFound', { count: pagination.total })}
           </p>
         </div>
 
@@ -83,7 +92,7 @@ const CategoryAds = () => {
               className="flex items-center space-x-2"
             >
               <SlidersHorizontal className="w-4 h-4" />
-              <span>Filters</span>
+              <span>{t('filters.filters')}</span>
             </Button>
 
             <div className="relative">
@@ -143,16 +152,16 @@ const CategoryAds = () => {
               </svg>
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Error loading ads
+              {t('errors.loadingAds')}
             </h3>
             <p className="text-gray-600 mb-6">
-              {error.message || 'Failed to load ads for this category.'}
+              {error.message || t('errors.loadFailed')}
             </p>
             <Button
               variant="primary"
               onClick={() => refetch()}
             >
-              Try again
+              {t('common.tryAgain')}
             </Button>
           </div>
         ) : displayedAds.length > 0 ? (
@@ -177,7 +186,7 @@ const CategoryAds = () => {
                     size="sm"
                     onClick={() => goToPage(pagination.previousPage || pagination.currentPage - 1)}
                   >
-                    ← Previous
+                    ← {t('common.previous')}
                   </Button>
                 )}
 
@@ -220,7 +229,7 @@ const CategoryAds = () => {
                     size="sm"
                     onClick={() => goToPage(pagination.nextPage || pagination.currentPage + 1)}
                   >
-                    Next →
+                    {t('common.next')} →
                   </Button>
                 )}
               </div>
@@ -232,10 +241,10 @@ const CategoryAds = () => {
               <Grid className="w-12 h-12 text-gray-400" />
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No ads found
+              {t('home.noAdsFound')}
             </h3>
             <p className="text-gray-600 mb-6">
-              There are no ads in this category yet.
+              {t('common.noAdsInCategory')}
             </p>
           </div>
         )}

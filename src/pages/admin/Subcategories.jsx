@@ -1,5 +1,6 @@
 // Subcategories.jsx
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +52,8 @@ import { useToast } from "@/components/ui/use-toast";
 import storageService from "@/services/storageService";
 
 const Subcategories = () => {
+  const { t } = useTranslation();
+
   // States
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -111,7 +114,7 @@ const Subcategories = () => {
         err.response?.data?.message || err.message || "Error loading categories";
       setError(message);
       toast({
-        description: message,
+        description: t('admin.subcategories.errorLoading'),
         variant: "destructive",
       });
 
@@ -164,12 +167,12 @@ const Subcategories = () => {
         });
         setIconFile(null);
         await fetchCategories();
-        toast({ description: "Subcategory created successfully." });
+        toast({ description: t('admin.subcategories.subcategoryCreated') });
       } else {
-        throw new Error(data.message || "Failed to create subcategory");
+        throw new Error(data.message || t('admin.subcategories.errorCreating'));
       }
     } catch (err) {
-      const message = err.message || "Error creating subcategory";
+      const message = err.message || t('admin.subcategories.errorCreating');
       toast({ description: message, variant: "destructive" });
     } finally {
       setSubmitting(false);
@@ -219,12 +222,12 @@ const Subcategories = () => {
         });
         setIconFile(null);
         await fetchCategories();
-        toast({ description: "Subcategory updated successfully." });
+        toast({ description: t('admin.subcategories.subcategoryUpdated') });
       } else {
-        throw new Error(data.message || "Failed to update subcategory");
+        throw new Error(data.message || t('admin.subcategories.errorUpdating'));
       }
     } catch (err) {
-      const message = err.message || "Error updating subcategory";
+      const message = err.message || t('admin.subcategories.errorUpdating');
       toast({ description: message, variant: "destructive" });
     } finally {
       setSubmitting(false);
@@ -235,7 +238,7 @@ const Subcategories = () => {
   const openDeleteDialog = (subcategory) => {
     if (subcategory.totalAds > 0) {
       toast({
-        description: "Cannot delete this subcategory because it contains ads.",
+        description: t('admin.subcategories.cannotDeleteWithAds'),
         variant: "destructive",
       });
       return;
@@ -257,18 +260,18 @@ const Subcategories = () => {
         setShowDeleteDialog(false);
         setSelectedSubcategory(null);
         await fetchCategories();
-        toast({ description: "Subcategory deleted successfully." });
+        toast({ description: t('admin.subcategories.subcategoryDeleted') });
       } else {
-        throw new Error(response.data?.message || "Failed to delete subcategory");
+        throw new Error(response.data?.message || t('admin.subcategories.errorDeleting'));
       }
     } catch (err) {
       if (err.response?.status === 422) {
-        toast({ description: "You cannot delete a non-empty subcategory.", variant: "destructive" });
+        toast({ description: t('admin.subcategories.cannotDeleteNonEmpty'), variant: "destructive" });
         setShowDeleteDialog(false);
         setSelectedSubcategory(null);
       } else {
         const message =
-          err.response?.data?.message || err.message || "Error deleting subcategory";
+          err.response?.data?.message || err.message || t('admin.subcategories.errorDeleting');
         toast({ description: message, variant: "destructive" });
       }
     } finally {
@@ -317,7 +320,7 @@ const Subcategories = () => {
   if (loading && !categories.length) {
     return (
       <div className="min-h-[360px] flex items-center justify-center">
-        <Loader text="Loading subcategories..." className="min-h-[200px]" />
+        <Loader text={t('admin.subcategories.loading')} className="min-h-[200px]" />
       </div>
     );
   }
@@ -327,9 +330,9 @@ const Subcategories = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Subcategory Management</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t('admin.subcategories.title')}</h1>
           <p className="text-gray-600 text-xs sm:text-sm mt-1">
-            {categories.reduce((sum, cat) => sum + (cat.subcategories?.length || 0), 0)} subcategories
+            {categories.reduce((sum, cat) => sum + (cat.subcategories?.length || 0), 0)} {t('admin.subcategories.subcategories')}
           </p>
         </div>
 
@@ -345,7 +348,7 @@ const Subcategories = () => {
           className="h-9 bg-[#D6BA69] hover:bg-[#C5A952] text-white text-sm rounded-lg shadow-sm flex items-center gap-1"
         >
           <Plus className="h-4 w-4" />
-          New Subcategory
+          {t('admin.subcategories.newSubcategory')}
         </Button>
       </div>
 
@@ -354,7 +357,7 @@ const Subcategories = () => {
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
           <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
           <div>
-            <h3 className="text-sm font-medium text-red-800">Error</h3>
+            <h3 className="text-sm font-medium text-red-800">{t('admin.subcategories.error')}</h3>
             <p className="text-xs text-red-600">{error}</p>
           </div>
         </div>
@@ -362,16 +365,16 @@ const Subcategories = () => {
 
       {/* Filters */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <h3 className="text-base font-semibold text-gray-900 mb-3">Filters</h3>
+        <h3 className="text-base font-semibold text-gray-900 mb-3">{t('admin.subcategories.filters')}</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <Label className="block text-sm font-medium text-gray-700 mb-2">Parent Category</Label>
+            <Label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.subcategories.parentCategory')}</Label>
             <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
               <SelectTrigger className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] bg-white">
-                <SelectValue placeholder="Select a category" />
+                <SelectValue placeholder={t('admin.subcategories.selectCategory')} />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="all">{t('admin.subcategories.all')}</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.id.toString()}>
                     {category.name}
@@ -383,7 +386,7 @@ const Subcategories = () => {
           <div className="relative">
             <Label className="block text-sm font-medium text-gray-700 mb-2">
               <Search className="w-4 h-4 inline mr-2 text-[#D6BA69]" />
-              Search
+              {t('admin.subcategories.search')}
             </Label>
             <Input
               type="text"
@@ -400,8 +403,8 @@ const Subcategories = () => {
         {paginatedCategories.length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
             <AlertCircle className="h-10 w-10 text-gray-400 mx-auto mb-3" />
-            <h3 className="text-base font-semibold text-gray-900">No categories</h3>
-            <p className="text-xs text-gray-500">Adjust filters or create a category</p>
+            <h3 className="text-base font-semibold text-gray-900">{t('admin.subcategories.noCategories')}</h3>
+            <p className="text-xs text-gray-500">{t('admin.subcategories.adjustFilters')}</p>
           </div>
         ) : (
           paginatedCategories.map((category) => (
@@ -442,16 +445,16 @@ const Subcategories = () => {
                             : "bg-red-100 text-red-800 text-xs"
                         }
                       >
-                        {category.isActive ? "Active" : "Inactive"}
+                        {category.isActive ? t('admin.subcategories.active') : t('admin.subcategories.inactive')}
                       </Badge>
 
                       <div className="flex items-center">
                         <FileText className="h-3 w-3 mr-1 text-gray-500" />
-                        <span className="text-xs text-gray-600">{category.totalAds} ads</span>
+                        <span className="text-xs text-gray-600">{category.totalAds} {t('admin.subcategories.ads')}</span>
                       </div>
 
                       <span className="text-xs text-gray-600">
-                        {category.subcategories?.length || 0} subcategories
+                        {category.subcategories?.length || 0} {t('admin.subcategories.subcategoriesCount')}
                       </span>
                     </div>
                   </div>
@@ -468,7 +471,7 @@ const Subcategories = () => {
                     }}
                   >
                     <Plus className="h-3 w-3 mr-1" />
-                    Add
+                    {t('admin.subcategories.add')}
                   </Button>
 
                   {expandedCategories[category.id] ? (
@@ -489,7 +492,7 @@ const Subcategories = () => {
                 {expandedCategories[category.id] && (
                   <div className="border-t border-gray-100">
                     {(!category.subcategories || category.subcategories.length === 0) ? (
-                      <div className="p-4 text-center text-xs text-gray-500">No subcategories in this category</div>
+                      <div className="p-4 text-center text-xs text-gray-500">{t('admin.subcategories.noSubcategoriesInCategory')}</div>
                     ) : (
                       <ul className="divide-y divide-gray-100">
                         {category.subcategories.map((sub) => (
@@ -526,18 +529,18 @@ const Subcategories = () => {
                                         : "bg-red-100 text-red-800 text-xs"
                                     }
                                   >
-                                    {sub.isActive ? "Active" : "Inactive"}
+                                    {sub.isActive ? t('admin.subcategories.active') : t('admin.subcategories.inactive')}
                                   </Badge>
                                 </div>
 
-                                <p className="text-xs text-gray-600 mt-1">Slug: {sub.slug}</p>
+                                <p className="text-xs text-gray-600 mt-1">{t('admin.subcategories.slug')} {sub.slug}</p>
 
                                 <div className="flex items-center gap-3 mt-1 text-xs text-gray-600">
                                   <div className="flex items-center">
                                     <FileText className="h-3 w-3 mr-1 text-gray-500" />
-                                    <span>{sub.totalAds} ads</span>
+                                    <span>{sub.totalAds} {t('admin.subcategories.ads')}</span>
                                   </div>
-                                  <div>Order: {sub.displayOrder}</div>
+                                  <div>{t('admin.subcategories.order')} {sub.displayOrder}</div>
                                 </div>
                               </div>
                             </div>
@@ -549,7 +552,7 @@ const Subcategories = () => {
                                 onClick={() => openEditModal(sub, category.id)}
                               >
                                 <Edit className="h-3 w-3 mr-1" />
-                                Edit
+                                {t('admin.subcategories.edit')}
                               </Button>
 
                               <Button
@@ -559,7 +562,7 @@ const Subcategories = () => {
                                 disabled={sub.totalAds > 0}
                               >
                                 <Trash2 className="h-3 w-3 mr-1" />
-                                Delete
+                                {t('admin.subcategories.delete')}
                               </Button>
                             </div>
                           </li>
@@ -586,7 +589,7 @@ const Subcategories = () => {
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-xs text-gray-600">Page {currentPage} / {totalPages}</span>
+            <span className="text-xs text-gray-600">{t('admin.subcategories.page')} {currentPage} / {totalPages}</span>
             <Button
               size="sm"
               className="h-8 w-8 p-0 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-full"
@@ -605,21 +608,21 @@ const Subcategories = () => {
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-gray-900 flex items-center gap-2">
               <Plus className="h-5 w-5 text-[#D6BA69]" />
-              New Subcategory
+              {t('admin.subcategories.newSubcategory')}
             </DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleCreate} className="space-y-4">
             <div>
               <Label htmlFor="category_id" className="text-sm font-medium text-gray-700">
-                Parent Category <span className="text-red-500">*</span>
+                {t('admin.subcategories.parentCategory')} <span className="text-red-500">*</span>
               </Label>
               <Select
                 value={formData.category_id}
                 onValueChange={(value) => setFormData((prev) => ({ ...prev, category_id: value }))}
               >
                 <SelectTrigger className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] bg-white">
-                  <SelectValue placeholder="Select a category" />
+                  <SelectValue placeholder={t('admin.subcategories.selectCategory')} />
                 </SelectTrigger>
                 <SelectContent className="bg-white">
                   {categories.map((c) => (
@@ -633,14 +636,14 @@ const Subcategories = () => {
 
             <div>
               <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-                Name <span className="text-red-500">*</span>
+                {t('admin.subcategories.name')} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="name"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                placeholder="e.g. Cars"
+                placeholder={t('admin.subcategories.egCars')}
                 required
                 className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
               />
@@ -649,7 +652,7 @@ const Subcategories = () => {
             {/* Slug field removed, now generated by backend */}
 
             <div>
-              <Label htmlFor="icon-edit" className="text-sm font-medium text-gray-700">Icon (image)</Label>
+              <Label htmlFor="icon-edit" className="text-sm font-medium text-gray-700">{t('admin.subcategories.iconImage')}</Label>
               <input
                 id="icon-edit"
                 name="icon"
@@ -660,14 +663,14 @@ const Subcategories = () => {
               />
               {iconFile && (
                 <div className="mt-2">
-                  <img src={URL.createObjectURL(iconFile)} alt="Preview" className="h-12 w-12 object-contain rounded" />
+                  <img src={URL.createObjectURL(iconFile)} alt={t('admin.subcategories.preview')} className="h-12 w-12 object-contain rounded" />
                 </div>
               )}
-              <p className="text-xs text-gray-500 mt-1">Upload an icon image (PNG, JPG, SVG...)</p>
+              <p className="text-xs text-gray-500 mt-1">{t('admin.subcategories.uploadIcon')}</p>
             </div>
 
             <div>
-              <Label htmlFor="icon" className="text-sm font-medium text-gray-700">Icon (image)</Label>
+              <Label htmlFor="icon" className="text-sm font-medium text-gray-700">{t('admin.subcategories.iconImage')}</Label>
               <input
                 id="icon"
                 name="icon"
@@ -678,14 +681,14 @@ const Subcategories = () => {
               />
               {iconFile && (
                 <div className="mt-2">
-                  <img src={URL.createObjectURL(iconFile)} alt="Preview" className="h-12 w-12 object-contain rounded" />
+                  <img src={URL.createObjectURL(iconFile)} alt={t('admin.subcategories.preview')} className="h-12 w-12 object-contain rounded" />
                 </div>
               )}
-              <p className="text-xs text-gray-500 mt-1">Upload an icon image (PNG, JPG, SVG...)</p>
+              <p className="text-xs text-gray-500 mt-1">{t('admin.subcategories.uploadIcon')}</p>
             </div>
 
             <div>
-              <Label htmlFor="display_order" className="text-sm font-medium text-gray-700">Display Order</Label>
+              <Label htmlFor="display_order" className="text-sm font-medium text-gray-700">{t('admin.subcategories.displayOrder')}</Label>
               <Input
                 id="display_order"
                 name="display_order"
@@ -696,13 +699,13 @@ const Subcategories = () => {
                 className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
                 placeholder="1"
               />
-              <p className="text-xs text-gray-500 mt-1">Smaller numbers appear first (optional)</p>
+              <p className="text-xs text-gray-500 mt-1">{t('admin.subcategories.displayOrderHint')}</p>
             </div>
 
             <div>
-              <Label className="text-sm font-medium text-gray-700">Status</Label>
+              <Label className="text-sm font-medium text-gray-700">{t('admin.subcategories.statusLabel')}</Label>
               <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg mt-1">
-                <span className="text-xs text-gray-600">Enable this subcategory</span>
+                <span className="text-xs text-gray-600">{t('admin.subcategories.enableSubcategory')}</span>
                 <Switch
                   checked={formData.is_active}
                   onChange={(checked) => setFormData((prev) => ({ ...prev, is_active: checked }))}
@@ -718,7 +721,7 @@ const Subcategories = () => {
                 className="flex-1 h-9 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300"
                 disabled={submitting}
               >
-                Cancel
+                {t('admin.subcategories.cancel')}
               </Button>
 
               <Button
@@ -729,10 +732,10 @@ const Subcategories = () => {
                 {submitting ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Creating...
+                    {t('admin.subcategories.creating')}
                   </>
                 ) : (
-                  "Create"
+                  t('admin.subcategories.create')
                 )}
               </Button>
             </div>
@@ -746,21 +749,21 @@ const Subcategories = () => {
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-gray-900 flex items-center gap-2">
               <Edit className="h-5 w-5 text-[#D6BA69]" />
-              Edit Subcategory
+              {t('admin.subcategories.editSubcategory')}
             </DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleUpdate} className="space-y-4">
             <div>
               <Label htmlFor="category_id" className="text-sm font-medium text-gray-700">
-                Parent Category <span className="text-red-500">*</span>
+                {t('admin.subcategories.parentCategory')} <span className="text-red-500">*</span>
               </Label>
               <Select
                 value={formData.category_id}
                 onValueChange={(value) => setFormData((prev) => ({ ...prev, category_id: value }))}
               >
                 <SelectTrigger className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] bg-white">
-                  <SelectValue placeholder="Select a category" />
+                  <SelectValue placeholder={t('admin.subcategories.selectCategory')} />
                 </SelectTrigger>
                 <SelectContent className="bg-white">
                   {categories.map((c) => (
@@ -774,14 +777,14 @@ const Subcategories = () => {
 
             <div>
               <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-                Name <span className="text-red-500">*</span>
+                {t('admin.subcategories.name')} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="name"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                placeholder="e.g. Cars"
+                placeholder={t('admin.subcategories.egCars')}
                 required
                 className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
               />
@@ -790,7 +793,7 @@ const Subcategories = () => {
             {/* Slug field removed, now generated by backend */}
 
             <div>
-              <Label htmlFor="icon-edit" className="text-sm font-medium text-gray-700">Icon (image)</Label>
+              <Label htmlFor="icon-edit" className="text-sm font-medium text-gray-700">{t('admin.subcategories.iconImage')}</Label>
               <input
                 id="icon-edit"
                 name="icon"
@@ -801,14 +804,14 @@ const Subcategories = () => {
               />
               {iconFile && (
                 <div className="mt-2">
-                  <img src={URL.createObjectURL(iconFile)} alt="Preview" className="h-12 w-12 object-contain rounded" />
+                  <img src={URL.createObjectURL(iconFile)} alt={t('admin.subcategories.preview')} className="h-12 w-12 object-contain rounded" />
                 </div>
               )}
-              <p className="text-xs text-gray-500 mt-1">Upload an icon image (PNG, JPG, SVG...)</p>
+              <p className="text-xs text-gray-500 mt-1">{t('admin.subcategories.uploadIcon')}</p>
             </div>
 
             <div>
-              <Label htmlFor="display_order" className="text-sm font-medium text-gray-700">Display Order</Label>
+              <Label htmlFor="display_order" className="text-sm font-medium text-gray-700">{t('admin.subcategories.displayOrder')}</Label>
               <Input
                 id="display_order"
                 name="display_order"
@@ -819,13 +822,13 @@ const Subcategories = () => {
                 className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
                 placeholder="1"
               />
-              <p className="text-xs text-gray-500 mt-1">Smaller numbers appear first (optional)</p>
+              <p className="text-xs text-gray-500 mt-1">{t('admin.subcategories.displayOrderHint')}</p>
             </div>
 
             <div>
-              <Label className="text-sm font-medium text-gray-700">Status</Label>
+              <Label className="text-sm font-medium text-gray-700">{t('admin.subcategories.statusLabel')}</Label>
               <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg mt-1">
-                <span className="text-xs text-gray-600">Enable this subcategory</span>
+                <span className="text-xs text-gray-600">{t('admin.subcategories.enableSubcategory')}</span>
                 <Switch
                   checked={formData.is_active}
                   onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, is_active: checked }))}
@@ -841,7 +844,7 @@ const Subcategories = () => {
                 className="flex-1 h-9 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300"
                 disabled={submitting}
               >
-                Cancel
+                {t('admin.subcategories.cancel')}
               </Button>
 
               <Button
@@ -852,10 +855,10 @@ const Subcategories = () => {
                 {submitting ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Updating...
+                    {t('admin.subcategories.updating')}
                   </>
                 ) : (
-                  "Update"
+                  t('admin.subcategories.update')
                 )}
               </Button>
             </div>
@@ -867,10 +870,10 @@ const Subcategories = () => {
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent className="max-w-md bg-white rounded-xl shadow-xl border border-gray-200">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-lg font-bold text-gray-900">Confirm deletion</AlertDialogTitle>
+            <AlertDialogTitle className="text-lg font-bold text-gray-900">{t('admin.subcategories.confirmDeletion')}</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-gray-600">
-              This action cannot be undone. The subcategory{" "}
-              <strong>{selectedSubcategory?.name}</strong> will be permanently deleted.
+              {t('admin.subcategories.deleteWarning')}{" "}
+              <strong>{selectedSubcategory?.name}</strong> {t('admin.subcategories.willBeDeleted')}
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -879,7 +882,7 @@ const Subcategories = () => {
               className="h-9 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300"
               disabled={submitting}
             >
-              Cancel
+              {t('admin.subcategories.cancel')}
             </AlertDialogCancel>
 
             <AlertDialogAction
@@ -890,10 +893,10 @@ const Subcategories = () => {
               {submitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Deleting...
+                  {t('admin.subcategories.deleting')}
                 </>
               ) : (
-                "Delete"
+                t('admin.subcategories.delete')
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

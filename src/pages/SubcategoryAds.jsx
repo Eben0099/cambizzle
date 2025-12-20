@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Grid, List, SlidersHorizontal } from 'lucide-react';
 import AdCard from '../components/ads/AdCard';
 import Button from '../components/ui/Button';
@@ -8,8 +9,16 @@ import FilterSidebar from '../components/filters/FilterSidebar';
 import ActiveFilterBadges from '../components/filters/ActiveFilterBadges';
 import { buildFilterQueryParams, parseFiltersFromURL, resetFilters, countActiveFilters } from '../utils/filterHelpers';
 import { useAdsBySubcategory, useSubcategoryFilters, useAdCreationData } from '../hooks/useAdsQuery';
+import { useWeglotTranslate } from '../hooks/useWeglotRetranslate';
+
+// Composant pour traduire le titre dynamique
+const TranslatedTitle = ({ title }) => {
+  const { translatedText } = useWeglotTranslate(title || '');
+  return <>{translatedText || title}</>;
+};
 
 const SubcategoryAds = () => {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedFilters, setSelectedFilters] = useState({});
   const [viewMode, setViewMode] = useState('grid');
@@ -205,15 +214,15 @@ const SubcategoryAds = () => {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {displayInfo.title}
+            <TranslatedTitle title={displayInfo.title} />
           </h1>
           <p className="text-gray-600">
-            {displayInfo.count} ad{displayInfo.count > 1 ? 's' : ''} found
+            {displayInfo.count} {t('filters.adsFound', { count: displayInfo.count })}
           </p>
 
           {error && (
             <div className="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded">
-              Error: {error.message || 'Failed to load ads'}
+              {t('common.error')}: {error.message || t('errors.loadFailed')}
             </div>
           )}
         </div>
@@ -244,7 +253,7 @@ const SubcategoryAds = () => {
                 className="w-full flex items-center justify-center space-x-2"
               >
                 <SlidersHorizontal className="w-4 h-4" />
-                <span>Filters</span>
+                <span>{t('filters.filters')}</span>
                 {countActiveFilters(selectedFilters) > 0 && (
                   <span className="bg-[#D6BA69] text-black text-xs font-medium px-2 py-1 rounded-full">
                     {countActiveFilters(selectedFilters)}
@@ -269,10 +278,10 @@ const SubcategoryAds = () => {
                     onChange={(e) => setSortBy(e.target.value)}
                     className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] cursor-pointer"
                   >
-                    <option value="recent">Most recent</option>
-                    <option value="price-asc">Price ascending</option>
-                    <option value="price-desc">Price descending</option>
-                    <option value="popular">Most popular</option>
+                    <option value="recent">{t('filters.newest')}</option>
+                    <option value="price-asc">{t('filters.priceLowHigh')}</option>
+                    <option value="price-desc">{t('filters.priceHighLow')}</option>
+                    <option value="popular">{t('filters.mostPopular')}</option>
                   </select>
                 </div>
               </div>
@@ -310,16 +319,16 @@ const SubcategoryAds = () => {
               <Card className="text-center py-12">
                 <div className="text-gray-500">
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Error loading ads
+                    {t('errors.loadingAds')}
                   </h3>
                   <p className="text-gray-600 mb-6">
-                    {error.message || 'Failed to load ads'}
+                    {error.message || t('errors.loadFailed')}
                   </p>
                   <Button
                     variant="primary"
                     onClick={() => refetch()}
                   >
-                    Try again
+                    {t('common.tryAgain')}
                   </Button>
                 </div>
               </Card>
@@ -339,19 +348,19 @@ const SubcategoryAds = () => {
               <Card className="text-center py-12">
                 <div className="text-gray-500">
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    No ads found
+                    {t('home.noAdsFound')}
                   </h3>
                   <p className="text-gray-600 mb-4">
                     {countActiveFilters(selectedFilters) > 0
-                      ? 'No ads match your selected filters. Try adjusting your criteria.'
-                      : 'There are no ads in this subcategory yet.'}
+                      ? t('filters.noMatchingAds')
+                      : t('common.noAdsInCategory')}
                   </p>
                   {countActiveFilters(selectedFilters) > 0 && (
                     <Button
                       variant="primary"
                       onClick={handleResetFilters}
                     >
-                      Reset Filters
+                      {t('filters.resetFilters')}
                     </Button>
                   )}
                 </div>

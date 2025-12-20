@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/badge";
 import { Users, FileText, AlertTriangle, DollarSign, TrendingUp, Eye, CheckCircle, XCircle, Clock, Shield, User, ExternalLink, ChartBar, Tag, Activity } from "lucide-react";
@@ -8,6 +9,7 @@ import adminService from "../../services/adminService";
 import logger from "../../utils/logger";
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const [dashboardData, setDashboardData] = useState(null);
   const [recentLogs, setRecentLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -64,52 +66,52 @@ const Dashboard = () => {
 
     return [
       {
-        title: "Total Users",
+        title: t('admin.dashboard.totalUsers'),
         value: (safeGet(dashboardData, 'users.total') || 0).toString(),
-        change: `+${safeGet(dashboardData, 'users.newThisWeek') || 0} this week`,
+        change: `+${safeGet(dashboardData, 'users.newThisWeek') || 0} ${t('admin.dashboard.thisWeek')}`,
         icon: Users,
         color: "text-blue-600",
-        subtitle: `${safeGet(dashboardData, 'users.active') || 0} active, ${safeGet(dashboardData, 'users.verified') || 0} verified`
+        subtitle: `${safeGet(dashboardData, 'users.active') || 0} ${t('admin.dashboard.active')}, ${safeGet(dashboardData, 'users.verified') || 0} ${t('admin.dashboard.verified')}`
       },
       {
-        title: "Total Ads",
+        title: t('admin.dashboard.totalAds'),
         value: (safeGet(dashboardData, 'ads.total') || 0).toString(),
-        change: `+${safeGet(dashboardData, 'ads.newThisWeek') || 0} this week`,
+        change: `+${safeGet(dashboardData, 'ads.newThisWeek') || 0} ${t('admin.dashboard.thisWeek')}`,
         icon: FileText,
         color: "text-primary",
-        subtitle: `${safeGet(dashboardData, 'ads.approved') || 0} approved`
+        subtitle: `${safeGet(dashboardData, 'ads.approved') || 0} ${t('admin.dashboard.approved')}`
       },
       {
-        title: "Pending",
+        title: t('admin.dashboard.pending'),
         value: (safeGet(dashboardData, 'ads.pending') || 0).toString(),
-        change: "To moderate",
+        change: t('admin.dashboard.toModerate'),
         icon: AlertTriangle,
         color: "text-yellow-600",
-        subtitle: "Pending ads"
+        subtitle: t('admin.dashboard.pendingAds')
       },
       {
-        title: "Reports",
+        title: t('admin.dashboard.reports'),
         value: (safeGet(dashboardData, 'reports.total') || 0).toString(),
-        change: `${safeGet(dashboardData, 'reports.pending') || 0} ongoing`,
+        change: `${safeGet(dashboardData, 'reports.pending') || 0} ${t('admin.dashboard.ongoing')}`,
         icon: AlertTriangle,
         color: "text-destructive",
-        subtitle: `${safeGet(dashboardData, 'reports.resolved') || 0} resolved`
+        subtitle: `${safeGet(dashboardData, 'reports.resolved') || 0} ${t('admin.dashboard.resolved')}`
       },
       {
-        title: "Total Views",
+        title: t('admin.dashboard.totalViews'),
         value: (safeGet(dashboardData, 'ads.totalViews') || 0).toString(),
-        change: "In total",
+        change: t('admin.dashboard.inTotal'),
         icon: Eye,
         color: "text-purple-600",
-        subtitle: "All ads combined"
+        subtitle: t('admin.dashboard.allAdsCombined')
       },
       {
-        title: "7 Days Activity",
+        title: t('admin.dashboard.activity7Days'),
         value: ((safeGet(dashboardData, 'activity.ads7Days') || 0) + (safeGet(dashboardData, 'activity.users7Days') || 0) + (safeGet(dashboardData, 'activity.messages7Days') || 0)).toString(),
-        change: `${safeGet(dashboardData, 'activity.ads7Days') || 0} ads, ${safeGet(dashboardData, 'activity.users7Days') || 0} users`,
+        change: `${safeGet(dashboardData, 'activity.ads7Days') || 0} ${t('admin.dashboard.ads')}, ${safeGet(dashboardData, 'activity.users7Days') || 0} users`,
         icon: TrendingUp,
         color: "text-green-600",
-        subtitle: "Recent activity"
+        subtitle: t('admin.dashboard.recentActivity')
       },
     ];
   };
@@ -117,14 +119,14 @@ const Dashboard = () => {
   // Fonctions utilitaires pour les logs
   const getActionLabel = (actionType) => {
     const actions = {
-      'ad_approve': 'Ad approved',
-      'ad_reject': 'Ad rejected',
-      'ad_suspend': 'Ad suspended',
-      'user_suspend': 'User suspended',
-      'user_unsuspend': 'User reactivated',
-      'user_verify': 'User verified',
-      'user_unverify': 'Verification removed',
-      'user_delete': 'User deleted',
+      'ad_approve': t('admin.dashboard.adApproved'),
+      'ad_reject': t('admin.dashboard.adRejected'),
+      'ad_suspend': t('admin.dashboard.adSuspended'),
+      'user_suspend': t('admin.dashboard.userSuspended'),
+      'user_unsuspend': t('admin.dashboard.userReactivated'),
+      'user_verify': t('admin.dashboard.userVerified'),
+      'user_unverify': t('admin.dashboard.verificationRemoved'),
+      'user_delete': t('admin.dashboard.userDeleted'),
     };
     return actions[actionType] || actionType;
   };
@@ -153,32 +155,32 @@ const Dashboard = () => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInMinutes = Math.floor((now - date) / (1000 * 60));
-    
-  if (diffInMinutes < 1) return 'Just now';
-  if (diffInMinutes < 60) return `${diffInMinutes} min ago`;
-    
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  if (diffInHours < 24) return `${diffInHours}h ago`;
-    
-  const diffInDays = Math.floor(diffInHours / 24);
-  return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+
+    if (diffInMinutes < 1) return t('admin.dashboard.justNow');
+    if (diffInMinutes < 60) return `${diffInMinutes} ${t('admin.dashboard.minAgo')}`;
+
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}${t('admin.dashboard.hAgo')}`;
+
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays} ${diffInDays > 1 ? t('admin.dashboard.daysAgo') : t('admin.dashboard.dayAgo')}`;
   };
 
   if (loading) {
-      return <Loader text="Loading dashboard..." className="min-h-[400px]" />;
+      return <Loader text={t('admin.dashboard.loading')} className="min-h-[400px]" />;
   }
 
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="text-destructive mb-2">Error</div>
+          <div className="text-destructive mb-2">{t('admin.dashboard.error')}</div>
           <p className="text-muted-foreground mb-4">{error}</p>
-          <button 
+          <button
             onClick={fetchDashboardData}
             className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
           >
-            Retry
+            {t('admin.dashboard.retry')}
           </button>
         </div>
       </div>
@@ -193,13 +195,13 @@ return (
   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
     <div className="space-y-1">
       <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
-        Dashboard
+        {t('admin.dashboard.title')}
       </h1>
       <p className="text-gray-600 text-sm sm:text-base">
-        Cambizzle platform overview
+        {t('admin.dashboard.subtitle')}
       </p>
     </div>
-    <button 
+    <button
       onClick={fetchDashboardData}
       className="bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-sm flex items-center gap-2 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
       disabled={logsLoading}
@@ -209,7 +211,7 @@ return (
       ) : (
         <TrendingUp className="h-4 w-4" />
       )}
-      <span>Refresh Data</span>
+      <span>{t('admin.dashboard.refreshData')}</span>
     </button>
   </div>
 
@@ -258,23 +260,23 @@ return (
             </div>
             <div>
               <h3 className="text-lg lg:text-xl font-semibold text-gray-900">
-                Recent Activity
+                {t('admin.dashboard.recentActivityTitle')}
               </h3>
-              <p className="text-sm text-gray-500">Latest moderation actions</p>
+              <p className="text-sm text-gray-500">{t('admin.dashboard.latestModerationActions')}</p>
             </div>
           </div>
-          <Link 
-            to="/admin/moderation-logs" 
+          <Link
+            to="/admin/moderation-logs"
             className="text-sm text-[#D6BA69] hover:text-[#D6BA69]/80 font-medium flex items-center gap-1 transition-colors group"
           >
-            View All
+            {t('admin.dashboard.viewAll')}
             <ExternalLink className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
         
         <div className="space-y-4 max-h-96 overflow-y-auto">
           {logsLoading ? (
-              <Loader text="Loading activity..." className="py-12" />
+              <Loader text={t('admin.dashboard.loadingActivity')} className="py-12" />
           ) : recentLogs && recentLogs.length > 0 ? (
             recentLogs.map((log) => (
               <div 
@@ -314,8 +316,8 @@ return (
           ) : (
             <div className="text-center py-12 text-gray-500">
               <Shield className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-              <p className="text-sm font-medium">No recent activity</p>
-              <p className="text-xs mt-1">Moderation logs will appear here</p>
+              <p className="text-sm font-medium">{t('admin.dashboard.noRecentActivity')}</p>
+              <p className="text-xs mt-1">{t('admin.dashboard.moderationLogsWillAppear')}</p>
             </div>
           )}
         </div>
@@ -326,15 +328,15 @@ return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
       <div className="p-6 lg:p-8">
         <h3 className="text-lg lg:text-xl font-semibold text-gray-900 mb-6">
-          Platform Statistics
+          {t('admin.dashboard.platformStatistics')}
         </h3>
-        
+
         <div className="space-y-8">
           {/* Ads Distribution */}
           <div>
             <h4 className="text-sm font-semibold text-gray-900 mb-6 flex items-center gap-2">
               <ChartBar className="h-4 w-4 text-[#D6BA69]" />
-              Ads Distribution
+              {t('admin.dashboard.adsDistribution')}
             </h4>
             <div className="space-y-4">
               {dashboardData.ads.byStatus.map((statusData, i) => {
@@ -349,9 +351,9 @@ return (
                 };
                 const getLabel = (status) => {
                   switch (status) {
-                    case 'approved': return 'Approved';
-                    case 'pending': return 'Pending Review';
-                    case 'rejected': return 'Rejected';
+                    case 'approved': return t('admin.dashboard.approvedStatus');
+                    case 'pending': return t('admin.dashboard.pendingReview');
+                    case 'rejected': return t('admin.dashboard.rejected');
                     default: return status;
                   }
                 };
@@ -382,7 +384,7 @@ return (
             <div>
               <h4 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <Tag className="h-4 w-4 text-[#D6BA69]" />
-                Top Categories
+                {t('admin.dashboard.topCategories')}
               </h4>
               <div className="space-y-3 max-h-40 overflow-y-auto">
                 {dashboardData.topCategories && dashboardData.topCategories.length > 0 ? (
@@ -398,13 +400,13 @@ return (
                         </span>
                       </div>
                       <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-full group-hover:bg-[#D6BA69]/10 group-hover:text-[#D6BA69]">
-                        {category.adCount} ads
+                        {category.adCount} {t('admin.dashboard.ads')}
                       </span>
                     </div>
                   ))
                 ) : (
                   <div className="text-center py-6 text-gray-500">
-                    <p className="text-sm">No categories data</p>
+                    <p className="text-sm">{t('admin.dashboard.noCategoriesData')}</p>
                   </div>
                 )}
               </div>
@@ -414,20 +416,20 @@ return (
             <div className="bg-gradient-to-r from-[#D6BA69]/5 to-[#B8945F]/5 p-4 rounded-xl border border-[#D6BA69]/10">
               <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <Activity className="h-4 w-4" />
-                This Week Activity
+                {t('admin.dashboard.thisWeekActivity')}
               </h4>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div className="text-center p-3 bg-white/50 rounded-lg">
                   <div className="text-2xl font-bold text-[#D6BA69]">
                     {dashboardData.activity?.ads7Days || 0}
                   </div>
-                  <div className="text-xs text-gray-600 uppercase tracking-wide">New Ads</div>
+                  <div className="text-xs text-gray-600 uppercase tracking-wide">{t('admin.dashboard.newAds')}</div>
                 </div>
                 <div className="text-center p-3 bg-white/50 rounded-lg">
                   <div className="text-2xl font-bold text-[#D6BA69]">
                     {dashboardData.activity?.users7Days || 0}
                   </div>
-                  <div className="text-xs text-gray-600 uppercase tracking-wide">New Users</div>
+                  <div className="text-xs text-gray-600 uppercase tracking-wide">{t('admin.dashboard.newUsers')}</div>
                 </div>
               </div>
             </div>

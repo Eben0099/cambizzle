@@ -1,12 +1,14 @@
 // src/pages/admin/Feedbacks.jsx
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import Loader from "../../components/ui/Loader";
 import { API_BASE_URL } from "../../config/api";
 import storageService from "../../services/storageService";
 import { useToast } from "../../components/toast/useToast";
 
 export default function Feedbacks() {
+  const { t } = useTranslation();
   const { showToast } = useToast();
 
   const [feedbacks, setFeedbacks] = useState([]);
@@ -44,10 +46,10 @@ export default function Feedbacks() {
         setAllFeedbacks(json.data.items);
         setFeedbacks(json.data.items); // Initially show all
       } else {
-        showToast({ type: "error", message: json.message ?? "Failed to load feedbacks" });
+        showToast({ type: "error", message: json.message ?? t('admin.feedbacks.failedToLoad') });
       }
     } catch (e) {
-      showToast({ type: "error", message: e.message ?? "Network error" });
+      showToast({ type: "error", message: e.message ?? t('admin.feedbacks.networkError') });
       setError(e.message);
     } finally {
       setLoading(false);
@@ -87,27 +89,33 @@ export default function Feedbacks() {
       const token = storageService.getToken();
       const res = await fetch(`${API_BASE_URL}/admin/feedbacks/${feedbackId}/${action}`, {
         method: 'PUT',
-        headers: { 
+        headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
       const json = await res.json();
       if (json.status === "success") {
-        showToast({ type: "success", message: `Feedback ${action}d successfully` });
+        showToast({
+          type: "success",
+          message: action === 'approve' ? t('admin.feedbacks.feedbackApproved') : t('admin.feedbacks.feedbackRejected')
+        });
         fetchFeedbacks(); // Refresh the list
       } else {
-        showToast({ type: "error", message: json.message ?? `Failed to ${action} feedback` });
+        showToast({
+          type: "error",
+          message: json.message ?? (action === 'approve' ? t('admin.feedbacks.failedToApprove') : t('admin.feedbacks.failedToReject'))
+        });
       }
     } catch (e) {
-      showToast({ type: "error", message: e.message ?? "Network error" });
+      showToast({ type: "error", message: e.message ?? t('admin.feedbacks.networkError') });
     }
   };
 
   return (
     <div className="max-w-5xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-      <h1 className="text-2xl font-bold mb-6">Ad Feedback Management</h1>
-      
+      <h1 className="text-2xl font-bold mb-6">{t('admin.feedbacks.title')}</h1>
+
       {/* Filters */}
       <div className="mb-4 flex flex-wrap gap-4">
         <select
@@ -116,16 +124,16 @@ export default function Feedbacks() {
           onChange={handleFilterChange}
           className="px-3 py-2 border rounded"
         >
-          <option value="">All Statuses</option>
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
+          <option value="">{t('admin.feedbacks.allStatuses')}</option>
+          <option value="pending">{t('admin.feedbacks.pending')}</option>
+          <option value="approved">{t('admin.feedbacks.approved')}</option>
+          <option value="rejected">{t('admin.feedbacks.rejected')}</option>
         </select>
-        
+
         <input
           type="text"
           name="ad_title"
-          placeholder="Search by ad title..."
+          placeholder={t('admin.feedbacks.searchByAdTitle')}
           value={filters.ad_title}
           onChange={handleFilterChange}
           className="px-3 py-2 border rounded"
@@ -135,28 +143,28 @@ export default function Feedbacks() {
         <input
           type="text"
           name="author_name"
-          placeholder="Search by author name..."
+          placeholder={t('admin.feedbacks.searchByAuthorName')}
           value={filters.author_name}
           onChange={handleFilterChange}
           className="px-3 py-2 border rounded"
           style={{ minWidth: 200 }}
         />
       </div>
-      
-      {loading && <Loader text="Loading..." />}
+
+      {loading && <Loader text={t('admin.feedbacks.loading')} />}
       {error && <p className="text-red-600 text-center">{error}</p>}
       
       <div className="bg-white rounded-lg shadow overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-gray-50">
-              <th className="text-left py-2 px-3">Ad Title</th>
-              <th className="text-left py-2 px-3">Author Name</th>
-              <th className="text-left py-2 px-3">Rating</th>
-              <th className="text-left py-2 px-3">Comment</th>
-              <th className="text-left py-2 px-3">Status</th>
-              <th className="text-left py-2 px-3">Date</th>
-              <th className="text-left py-2 px-3">Actions</th>
+              <th className="text-left py-2 px-3">{t('admin.feedbacks.adTitle')}</th>
+              <th className="text-left py-2 px-3">{t('admin.feedbacks.authorName')}</th>
+              <th className="text-left py-2 px-3">{t('admin.feedbacks.rating')}</th>
+              <th className="text-left py-2 px-3">{t('admin.feedbacks.comment')}</th>
+              <th className="text-left py-2 px-3">{t('admin.feedbacks.status')}</th>
+              <th className="text-left py-2 px-3">{t('admin.feedbacks.date')}</th>
+              <th className="text-left py-2 px-3">{t('admin.feedbacks.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -189,20 +197,20 @@ export default function Feedbacks() {
                         onClick={() => handleAction(fb.id, 'approve')}
                         className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
                       >
-                        Approve
+                        {t('admin.feedbacks.approve')}
                       </button>
                       <button
                         onClick={() => handleAction(fb.id, 'reject')}
                         className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
                       >
-                        Reject
+                        {t('admin.feedbacks.reject')}
                       </button>
                     </div>
                   )}
                 </td>
               </tr>
             )) : (
-              <tr><td colSpan={7} className="p-4 text-gray-500 text-center">No feedback found.</td></tr>
+              <tr><td colSpan={7} className="p-4 text-gray-500 text-center">{t('admin.feedbacks.noFeedbackFound')}</td></tr>
             )}
           </tbody>
         </table>

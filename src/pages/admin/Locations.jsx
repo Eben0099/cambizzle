@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,7 @@ import { exportToExcel } from "../../utils/exportToExcel";
 import { useToast } from "@/components/ui/use-toast";
 
 const Locations = () => {
+  const { t } = useTranslation();
   const { toast } = useToast();
 
   const [locations, setLocations] = useState([
@@ -56,7 +58,7 @@ const Locations = () => {
   // ---- CRUD FUNCTIONS ----
   const handleAddRegion = () => {
     if (!newRegion.trim()) {
-      toast({ title: "Error", description: "Region name cannot be empty.", variant: "destructive" });
+      toast({ title: t('admin.locations.error'), description: t('admin.locations.regionEmpty'), variant: "destructive" });
       return;
     }
     const newLoc = {
@@ -67,17 +69,17 @@ const Locations = () => {
     };
     setLocations([...locations, newLoc]);
     setNewRegion("");
-    toast({ title: "Region added", description: `${newLoc.region} has been created successfully.` });
+    toast({ title: t('admin.locations.regionAdded'), description: `${newLoc.region} ${t('admin.locations.regionCreated')}` });
   };
 
   const handleDeleteRegion = (id) => {
     setLocations(locations.filter((loc) => loc.id !== id));
-    toast({ title: "Region deleted", description: "Region removed successfully." });
+    toast({ title: t('admin.locations.regionDeleted'), description: t('admin.locations.regionRemoved') });
   };
 
   const handleAddCity = () => {
     if (!newCity.trim() || !selectedRegion) {
-      toast({ title: "Error", description: "City name cannot be empty.", variant: "destructive" });
+      toast({ title: t('admin.locations.error'), description: t('admin.locations.cityEmpty'), variant: "destructive" });
       return;
     }
     const updated = locations.map((loc) =>
@@ -87,7 +89,7 @@ const Locations = () => {
     );
     setLocations(updated);
     setNewCity("");
-    toast({ title: "City added", description: `${newCity} added to ${selectedRegion.region}.` });
+    toast({ title: t('admin.locations.cityAdded'), description: `${newCity} ${t('admin.locations.cityAddedTo')} ${selectedRegion.region}.` });
   };
 
   const handleDeleteCity = (regionId, city) => {
@@ -97,7 +99,7 @@ const Locations = () => {
         : loc
     );
     setLocations(updated);
-    toast({ title: "City deleted", description: `${city} removed successfully.` });
+    toast({ title: t('admin.locations.cityDeleted'), description: `${city} ${t('admin.locations.cityRemoved')}` });
   };
 
   const filteredLocations = locations.filter(
@@ -111,9 +113,9 @@ const Locations = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Location Management</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t('admin.locations.title')}</h1>
           <p className="text-muted-foreground mt-1">
-            Manage regions and their respective cities
+            {t('admin.locations.subtitle')}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -128,7 +130,7 @@ const Locations = () => {
               {
                 columns: [
                   { header: 'Region', key: 'region' },
-                  { header: 'City', key: 'city' },
+                  { header: t('admin.locations.city'), key: 'city' },
                   { header: 'Ads Count', key: 'adsCount' },
                 ],
                 sheetName: 'Locations'
@@ -138,7 +140,7 @@ const Locations = () => {
             disabled={locations.length === 0}
           >
             <Download className="h-4 w-4" />
-            Export
+            {t('admin.locations.export')}
           </Button>
           <Dialog>
             <DialogTrigger asChild>
@@ -146,19 +148,19 @@ const Locations = () => {
                 className="bg-[#D6BA69] text-white hover:bg-[#c3a55d] transition-colors"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                New Region
+                {t('admin.locations.newRegion')}
               </Button>
             </DialogTrigger>
           <DialogContent className="max-w-md bg-white rounded-xl p-6">
             <DialogHeader>
-              <DialogTitle className="text-lg font-semibold">Add New Region</DialogTitle>
+              <DialogTitle className="text-lg font-semibold">{t('admin.locations.addNewRegion')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="regionname">Region Name</Label>
+                <Label htmlFor="regionname">{t('admin.locations.regionName')}</Label>
                 <Input
                   id="regionname"
-                  placeholder="e.g. Centre, Littoral..."
+                  placeholder={t('admin.locations.regionPlaceholder')}
                   value={newRegion}
                   onChange={(e) => setNewRegion(e.target.value)}
                 />
@@ -167,7 +169,7 @@ const Locations = () => {
                 className="w-full bg-[#D6BA69] text-white hover:bg-[#c3a55d] transition"
                 onClick={handleAddRegion}
               >
-                Add Region
+                {t('admin.locations.addRegion')}
               </Button>
             </div>
           </DialogContent>
@@ -178,13 +180,13 @@ const Locations = () => {
       {/* Search Bar */}
       <Card className="border border-border shadow-sm hover:shadow-md transition bg-white">
         <CardHeader>
-          <CardTitle className="text-lg font-semibold">Search Regions or Cities</CardTitle>
+          <CardTitle className="text-lg font-semibold">{t('admin.locations.searchTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by region or city..."
+              placeholder={t('admin.locations.searchPlaceholder')}
               className="pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -218,19 +220,19 @@ const Locations = () => {
                       onClick={() => setSelectedRegion(location)}
                     >
                       <Plus className="h-4 w-4 mr-1" />
-                      Add City
+                      {t('admin.locations.addCity')}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-md bg-white rounded-xl p-6">
                     <DialogHeader>
-                      <DialogTitle>Add City to {selectedRegion?.region}</DialogTitle>
+                      <DialogTitle>{t('admin.locations.addCityTo')} {selectedRegion?.region}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 pt-4">
                       <div className="space-y-2">
-                        <Label htmlFor="cityname">City Name</Label>
+                        <Label htmlFor="cityname">{t('admin.locations.cityName')}</Label>
                         <Input
                           id="cityname"
-                          placeholder="e.g. Yaoundé"
+                          placeholder={t('admin.locations.cityPlaceholder')}
                           value={newCity}
                           onChange={(e) => setNewCity(e.target.value)}
                         />
@@ -239,7 +241,7 @@ const Locations = () => {
                         className="w-full bg-[#D6BA69] text-white hover:bg-[#c3a55d] transition"
                         onClick={handleAddCity}
                       >
-                        Add City
+                        {t('admin.locations.addCity')}
                       </Button>
                     </div>
                   </DialogContent>
@@ -268,8 +270,8 @@ const Locations = () => {
                 <Table>
                   <TableHeader className="bg-muted/40">
                     <TableRow>
-                      <TableHead>City</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead>{t('admin.locations.city')}</TableHead>
+                      <TableHead className="text-right">{t('admin.locations.actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

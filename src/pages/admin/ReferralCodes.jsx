@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card";
 import Input from "../../components/ui/Input";
 import Loader from "../../components/ui/Loader";
@@ -22,6 +23,7 @@ import { exportToExcel } from "../../utils/exportToExcel";
 import adminService from "../../services/adminService";
 
 const ReferralCodes = () => {
+  const { t } = useTranslation();
   const { showToast } = useToast();
   const [codes, setCodes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,10 +44,10 @@ const ReferralCodes = () => {
       } else if (response.status === "success" && Array.isArray(response.data)) {
         setCodes(response.data);
       } else {
-        throw new Error(response.message || "Error loading referral codes");
+        throw new Error(response.message || t('admin.referralCodes.errorLoading'));
       }
     } catch (err) {
-      showToast({ type: 'error', message: err.message || 'Error loading referral codes' });
+      showToast({ type: 'error', message: err.message || t('admin.referralCodes.errorLoading') });
     } finally {
       setLoading(false);
     }
@@ -63,16 +65,16 @@ const ReferralCodes = () => {
     setExpandedCode(expandedCode === codeId ? null : codeId);
   };
 
-  if (loading) return <Loader text="Loading referral codes..." className="min-h-[400px]" />;
+  if (loading) return <Loader text={t('admin.referralCodes.loading')} className="min-h-[400px]" />;
 
   if (error)
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="text-destructive mb-2">Error</div>
+          <div className="text-destructive mb-2">{t('admin.referralCodes.error')}</div>
           <p className="text-muted-foreground mb-4">{error}</p>
           <Button onClick={fetchCodes} className="w-full">
-            Retry
+            {t('admin.referralCodes.retry')}
           </Button>
         </div>
       </div>
@@ -83,8 +85,8 @@ const ReferralCodes = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Referral Codes</h1>
-          <p className="text-gray-600 mt-1">Manage all referral codes and track referrals</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('admin.referralCodes.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('admin.referralCodes.subtitle')}</p>
         </div>
         <div className="flex items-center gap-4">
           <Button
@@ -106,10 +108,10 @@ const ReferralCodes = () => {
             disabled={filteredCodes.length === 0}
           >
             <Download className="h-4 w-4" />
-            Export
+            {t('admin.referralCodes.export')}
           </Button>
           <div className="text-right">
-            <div className="text-sm text-gray-600">Total Codes</div>
+            <div className="text-sm text-gray-600">{t('admin.referralCodes.totalCodes')}</div>
             <div className="text-2xl font-bold text-[#D6BA69]">{codes.length}</div>
           </div>
         </div>
@@ -121,7 +123,7 @@ const ReferralCodes = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Active Codes</p>
+                <p className="text-sm text-gray-600">{t('admin.referralCodes.activeCodes')}</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {codes.filter(c => c.isActive === "1").length}
                 </p>
@@ -135,7 +137,7 @@ const ReferralCodes = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Referrals</p>
+                <p className="text-sm text-gray-600">{t('admin.referralCodes.totalReferrals')}</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {codes.reduce((sum, c) => sum + parseInt(c.currentUses || 0), 0)}
                 </p>
@@ -149,9 +151,9 @@ const ReferralCodes = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Avg. Uses per Code</p>
+                <p className="text-sm text-gray-600">{t('admin.referralCodes.avgUsesPerCode')}</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {codes.length > 0 
+                  {codes.length > 0
                     ? (codes.reduce((sum, c) => sum + parseInt(c.currentUses || 0), 0) / codes.length).toFixed(1)
                     : 0}
                 </p>
@@ -168,7 +170,7 @@ const ReferralCodes = () => {
           <div className="relative">
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Search by code, name, or email..."
+              placeholder={t('admin.referralCodes.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -215,7 +217,7 @@ const ReferralCodes = () => {
                     <div className="flex items-center gap-6">
                       <div className="text-center">
                         <div className="text-2xl font-bold text-[#D6BA69]">{code.currentUses}</div>
-                        <div className="text-xs text-gray-600">Uses</div>
+                        <div className="text-xs text-gray-600">{t('admin.referralCodes.uses')}</div>
                       </div>
                       
                       <Badge
@@ -226,9 +228,9 @@ const ReferralCodes = () => {
                         }
                       >
                         {code.isActive === "1" ? (
-                          <><CheckCircle className="h-3 w-3 mr-1 inline" />Active</>
+                          <><CheckCircle className="h-3 w-3 mr-1 inline" />{t('admin.referralCodes.active')}</>
                         ) : (
-                          <><XCircle className="h-3 w-3 mr-1 inline" />Inactive</>
+                          <><XCircle className="h-3 w-3 mr-1 inline" />{t('admin.referralCodes.inactive')}</>
                         )}
                       </Badge>
                     </div>
@@ -250,7 +252,7 @@ const ReferralCodes = () => {
                 <div className="border-t border-gray-200 bg-gray-50 p-4">
                   <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <Users className="h-4 w-4" />
-                    Referrals ({code.filleuls.length})
+                    {t('admin.referralCodes.referrals')} ({code.filleuls.length})
                   </h4>
                   <div className="space-y-2">
                     {code.filleuls.map((filleul) => (
@@ -302,7 +304,7 @@ const ReferralCodes = () => {
 
               {expandedCode === code.id && (!code.filleuls || code.filleuls.length === 0) && (
                 <div className="border-t border-gray-200 bg-gray-50 p-4 text-center text-gray-500 text-sm">
-                  No referrals yet
+                  {t('admin.referralCodes.noReferralsYet')}
                 </div>
               )}
             </CardContent>
@@ -312,7 +314,7 @@ const ReferralCodes = () => {
         {filteredCodes.length === 0 && (
           <Card className="bg-white border border-gray-200">
             <CardContent className="p-8 text-center text-gray-500">
-              No referral codes found
+              {t('admin.referralCodes.noCodesFound')}
             </CardContent>
           </Card>
         )}

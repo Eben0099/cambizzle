@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { SERVER_BASE_URL } from "../../config/api";
 import { API_BASE_URL } from "../../config/api";
 import { Card } from "@/components/ui/card";
@@ -46,6 +47,7 @@ import { toast } from "sonner";
 import storageService from "@/services/storageService";
 
 const Categories = () => {
+  const { t } = useTranslation();
   // States
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -81,10 +83,10 @@ const Categories = () => {
       if (response.status === "success") {
         setCategories(response.data.categories || []);
       } else {
-        throw new Error(response.message || "Failed to load categories.");
+        throw new Error(response.message || t('admin.categories.errorLoading'));
       }
     } catch (err) {
-      setError(err.message || "Error loading categories.");
+      setError(err.message || t('admin.categories.errorLoading'));
     } finally {
       setLoading(false);
     }
@@ -129,12 +131,12 @@ const Categories = () => {
         });
         setIconFile(null);
         fetchCategories();
-        toast.success("Category created successfully.");
+        toast.success(t('admin.categories.categoryCreated'));
       } else {
-        throw new Error(data.message || "Error creating category.");
+        throw new Error(data.message || t('admin.categories.errorCreating'));
       }
     } catch (err) {
-      toast.error(err.message || "Error creating category.");
+      toast.error(err.message || t('admin.categories.errorCreating'));
     } finally {
       setSubmitting(false);
     }
@@ -181,10 +183,10 @@ const Categories = () => {
         });
         setIconFile(null);
         fetchCategories();
-        toast.success("Category updated successfully.");
+        toast.success(t('admin.categories.categoryUpdated'));
       }
     } catch (err) {
-      toast.error(err.message || "Error updating category.");
+      toast.error(err.message || t('admin.categories.errorUpdating'));
     } finally {
       setSubmitting(false);
     }
@@ -205,23 +207,23 @@ const Categories = () => {
         setShowDeleteDialog(false);
         setSelectedCategory(null);
         fetchCategories();
-        toast.success("Category deleted successfully.");
+        toast.success(t('admin.categories.categoryDeleted'));
       } else {
         if (response.status === 422) {
-          toast.error("You cannot delete a non-empty category.");
+          toast.error(t('admin.categories.cannotDeleteNonEmpty'));
           setShowDeleteDialog(false);
           setSelectedCategory(null);
         } else {
-          toast.error(response.message || "Error deleting category.");
+          toast.error(response.message || t('admin.categories.errorDeleting'));
         }
       }
     } catch (err) {
       if (err.response?.status === 422) {
-        toast.error("You cannot delete a non-empty category.");
+        toast.error(t('admin.categories.cannotDeleteNonEmpty'));
         setShowDeleteDialog(false);
         setSelectedCategory(null);
       } else {
-        toast.error(err.message || "Error deleting category.");
+        toast.error(err.message || t('admin.categories.errorDeleting'));
       }
     } finally {
       setSubmitting(false);
@@ -246,7 +248,7 @@ const Categories = () => {
   };
 
   if (loading && !categories.length) {
-    return <Loader text="Loading categories..." className="min-h-[400px]" />;
+    return <Loader text={t('admin.categories.loading')} className="min-h-[400px]" />;
   }
 
   return (
@@ -255,10 +257,10 @@ const Categories = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-            Category Management
+            {t('admin.categories.title')}
           </h1>
           <p className="text-gray-600 text-xs sm:text-sm mt-1">
-            {categories.length} categories
+            {categories.length} {t('admin.categories.categories')}
           </p>
         </div>
         <Button
@@ -266,7 +268,7 @@ const Categories = () => {
           className="h-9 bg-[#D6BA69] hover:bg-[#C5A952] text-white text-sm rounded-lg shadow-sm flex items-center gap-1"
         >
           <Plus className="h-4 w-4" />
-          New Category
+          {t('admin.categories.newCategory')}
         </Button>
       </div>
 
@@ -275,7 +277,7 @@ const Categories = () => {
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
           <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
           <div>
-            <h3 className="text-sm font-medium text-red-800">Error</h3>
+            <h3 className="text-sm font-medium text-red-800">{t('admin.categories.error')}</h3>
             <p className="text-xs text-red-600">{error}</p>
           </div>
         </div>
@@ -284,29 +286,29 @@ const Categories = () => {
       {/* Table */}
       <Card className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="p-4 border-b border-gray-100 bg-gray-50">
-          <h3 className="text-base font-semibold text-gray-900">Category List</h3>
+          <h3 className="text-base font-semibold text-gray-900">{t('admin.categories.categoryList')}</h3>
         </div>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-50 hover:bg-gray-50">
                 <TableHead className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">
-                  Order
+                  {t('admin.categories.order')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">
-                  Name
+                  {t('admin.categories.name')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">
-                  Slug
+                  {t('admin.categories.slug')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">
-                  Icon
+                  {t('admin.categories.icon')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">
-                  Status
+                  {t('admin.categories.status')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-xs font-medium text-gray-500 uppercase text-right">
-                  Actions
+                  {t('admin.categories.actions')}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -318,9 +320,9 @@ const Categories = () => {
                     className="py-8 text-center text-gray-500"
                   >
                     <AlertCircle className="h-10 w-10 mx-auto mb-3 text-gray-400" />
-                    <p className="text-base font-medium">No categories found</p>
+                    <p className="text-base font-medium">{t('admin.categories.noCategories')}</p>
                     <p className="text-xs mt-1">
-                      Create your first category to get started
+                      {t('admin.categories.createFirst')}
                     </p>
                   </TableCell>
                 </TableRow>
@@ -371,7 +373,7 @@ const Categories = () => {
                             : "bg-red-100 text-red-800 text-xs"
                         }
                       >
-                        {category.isActive ? "Active" : "Inactive"}
+                        {category.isActive ? t('admin.categories.active') : t('admin.categories.inactive')}
                       </Badge>
                     </TableCell>
                     <TableCell className="px-4 py-3 text-right">
@@ -382,7 +384,7 @@ const Categories = () => {
                           onClick={() => openEditModal(category)}
                         >
                           <Edit className="h-3 w-3 mr-1" />
-                          Edit
+                          {t('admin.categories.edit')}
                         </Button>
                         <Button
                           size="sm"
@@ -390,7 +392,7 @@ const Categories = () => {
                           onClick={() => openDeleteDialog(category)}
                         >
                           <Trash2 className="h-3 w-3 mr-1" />
-                          Delete
+                          {t('admin.categories.delete')}
                         </Button>
                       </div>
                     </TableCell>
@@ -414,7 +416,7 @@ const Categories = () => {
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <span className="text-xs text-gray-600">
-                Page {currentPage} / {totalPages}
+                {t('admin.categories.page')} {currentPage} / {totalPages}
               </span>
               <Button
                 size="sm"
@@ -435,13 +437,13 @@ const Categories = () => {
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-gray-900 flex items-center gap-2">
               <Plus className="h-5 w-5 text-[#D6BA69]" />
-              New Category
+              {t('admin.categories.newCategory')}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreate} className="space-y-4">
             <div>
               <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-                Name <span className="text-red-500">*</span>
+                {t('admin.categories.nameRequired')} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="name"
@@ -457,7 +459,7 @@ const Categories = () => {
 
             <div>
               <Label htmlFor="icon-edit" className="text-sm font-medium text-gray-700">
-                Icon (image)
+                {t('admin.categories.iconImage')}
               </Label>
               <input
                 id="icon-edit"
@@ -472,11 +474,11 @@ const Categories = () => {
                   <img src={URL.createObjectURL(iconFile)} alt="Preview" className="h-12 w-12 object-contain rounded" />
                 </div>
               )}
-              <p className="text-xs text-gray-500 mt-1">Upload an icon image (PNG, JPG, SVG...)</p>
+              <p className="text-xs text-gray-500 mt-1">{t('admin.categories.uploadIcon')}</p>
             </div>
             <div>
               <Label htmlFor="icon" className="text-sm font-medium text-gray-700">
-                Icon (image)
+                {t('admin.categories.iconImage')}
               </Label>
               <input
                 id="icon"
@@ -491,14 +493,14 @@ const Categories = () => {
                   <img src={URL.createObjectURL(iconFile)} alt="Preview" className="h-12 w-12 object-contain rounded" />
                 </div>
               )}
-              <p className="text-xs text-gray-500 mt-1">Upload an icon image (PNG, JPG, SVG...)</p>
+              <p className="text-xs text-gray-500 mt-1">{t('admin.categories.uploadIcon')}</p>
             </div>
             <div>
               <Label
                 htmlFor="display_order"
                 className="text-sm font-medium text-gray-700"
               >
-                Display Order
+                {t('admin.categories.displayOrder')}
               </Label>
               <Input
                 id="display_order"
@@ -511,14 +513,14 @@ const Categories = () => {
                 className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Smaller numbers appear first (optional)
+                {t('admin.categories.displayOrderHint')}
               </p>
             </div>
             <div>
-              <Label className="text-sm font-medium text-gray-700">Status</Label>
+              <Label className="text-sm font-medium text-gray-700">{t('admin.categories.status')}</Label>
               <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg mt-1">
                 <span className="text-xs text-gray-600">
-                  Enable this category
+                  {t('admin.categories.enableCategory')}
                 </span>
                 <Switch
                   checked={formData.is_active}
@@ -536,7 +538,7 @@ const Categories = () => {
                 className="flex-1 h-9 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300"
                 disabled={submitting}
               >
-                Cancel
+                {t('admin.categories.cancel')}
               </Button>
               <Button
                 type="submit"
@@ -546,10 +548,10 @@ const Categories = () => {
                 {submitting ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Creating...
+                    {t('admin.categories.creating')}
                   </>
                 ) : (
-                  "Create"
+                  t('admin.categories.create')
                 )}
               </Button>
             </div>
@@ -563,13 +565,13 @@ const Categories = () => {
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-gray-900 flex items-center gap-2">
               <Edit className="h-5 w-5 text-[#D6BA69]" />
-              Edit Category
+              {t('admin.categories.editCategory')}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleUpdate} className="space-y-4">
             <div>
               <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-                Name
+                {t('admin.categories.name')}
               </Label>
               <Input
                 id="name"
@@ -582,7 +584,7 @@ const Categories = () => {
             </div>
             {/* Slug field removed, now generated by backend */}
             <div>
-              <Label htmlFor="icon-edit" className="text-sm font-medium text-gray-700">Icon (image)</Label>
+              <Label htmlFor="icon-edit" className="text-sm font-medium text-gray-700">{t('admin.categories.iconImage')}</Label>
               <input
                 id="icon-edit"
                 name="icon"
@@ -596,14 +598,14 @@ const Categories = () => {
                   <img src={URL.createObjectURL(iconFile)} alt="Preview" className="h-12 w-12 object-contain rounded" />
                 </div>
               )}
-              <p className="text-xs text-gray-500 mt-1">Upload an icon image (PNG, JPG, SVG...)</p>
+              <p className="text-xs text-gray-500 mt-1">{t('admin.categories.uploadIcon')}</p>
             </div>
             <div>
               <Label
                 htmlFor="display_order"
                 className="text-sm font-medium text-gray-700"
               >
-                Display Order
+                {t('admin.categories.displayOrder')}
               </Label>
               <Input
                 id="display_order"
@@ -616,10 +618,10 @@ const Categories = () => {
               />
             </div>
             <div>
-              <Label className="text-sm font-medium text-gray-700">Status</Label>
+              <Label className="text-sm font-medium text-gray-700">{t('admin.categories.status')}</Label>
               <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg mt-1">
                 <span className="text-xs text-gray-600">
-                  Enable this category
+                  {t('admin.categories.enableCategory')}
                 </span>
                 <Switch
                   checked={formData.is_active}
@@ -637,7 +639,7 @@ const Categories = () => {
                 className="flex-1 h-9 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300"
                 disabled={submitting}
               >
-                Cancel
+                {t('admin.categories.cancel')}
               </Button>
               <Button
                 type="submit"
@@ -647,10 +649,10 @@ const Categories = () => {
                 {submitting ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Updating...
+                    {t('admin.categories.updating')}
                   </>
                 ) : (
-                  "Update"
+                  t('admin.categories.update')
                 )}
               </Button>
             </div>
@@ -663,10 +665,10 @@ const Categories = () => {
         <AlertDialogContent className="bg-white rounded-xl border border-gray-200">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base font-semibold text-gray-900">
-              Confirm Deletion
+              {t('admin.categories.confirmDeletion')}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-gray-600">
-              This action cannot be undone. Are you sure you want to delete{" "}
+              {t('admin.categories.deleteWarning')}{" "}
               <span className="font-semibold">
                 {selectedCategory?.name}
               </span>
@@ -675,7 +677,7 @@ const Categories = () => {
           </AlertDialogHeader>
           <AlertDialogFooter className="pt-3">
             <AlertDialogCancel className="bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300">
-              Cancel
+              {t('admin.categories.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
@@ -685,10 +687,10 @@ const Categories = () => {
               {submitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Deleting...
+                  {t('admin.categories.deleting')}
                 </>
               ) : (
-                "Delete"
+                t('admin.categories.delete')
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

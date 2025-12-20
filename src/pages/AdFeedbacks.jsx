@@ -93,11 +93,11 @@ export default function AdFeedbacks() {
       } else {
         const errorData = await response.json();
         console.error('Error submitting feedback:', errorData);
-        alert('Error submitting feedback. Please try again.');
+        alert(t('adDetail.feedback.submitError'));
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Network error. Please check your connection and try again.');
+      alert(t('adDetail.feedback.networkError'));
     } finally {
       setSubmitting(false);
     }
@@ -209,10 +209,10 @@ export default function AdFeedbacks() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center max-w-md">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Listing not found
+            {t('adDetail.feedback.listingNotFound')}
           </h1>
           <Button onClick={() => navigate(-1)}>
-            Back
+            {t('common.back')}
           </Button>
         </div>
       </div>
@@ -244,7 +244,7 @@ export default function AdFeedbacks() {
                 <span className="font-medium">{averageRating}</span>
               </div>
               <span>•</span>
-              <span>{ratingsCount} {ratingsCount > 1 ? 'reviews' : 'review'}</span>
+              <span>{ratingsCount} {ratingsCount > 1 ? t('adDetail.feedback.reviews') : t('adDetail.feedback.review')}</span>
             </div>
           </div>
         </div>
@@ -259,10 +259,10 @@ export default function AdFeedbacks() {
                 <MessageCircle className="w-10 h-10 text-gray-400" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                No reviews yet
+                {t('adDetail.feedback.noReviewsYet')}
               </h3>
               <p className="text-gray-600 max-w-sm mx-auto">
-                Be the first to share your experience with this listing.
+                {t('adDetail.feedback.beFirstToReview')}
               </p>
             </div>
           ) : (
@@ -350,14 +350,14 @@ export default function AdFeedbacks() {
               {submitSuccess && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                   <p className="text-green-800 text-sm font-medium">
-                    Feedback submitted successfully! It will be visible after admin approval.
+                    {t('adDetail.feedback.submitSuccess')}
                   </p>
                 </div>
               )}
 
               {/* Star selection */}
               <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-gray-700">Your rating:</span>
+                <span className="text-sm font-medium text-gray-700">{t('adDetail.feedback.yourRating')}</span>
                 <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
@@ -390,7 +390,7 @@ export default function AdFeedbacks() {
                         submitFeedback();
                       }
                     }}
-                    placeholder="Share your experience..."
+                    placeholder={t('adDetail.feedback.shareExperience')}
                     className="w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-300 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     rows={1}
                     style={{ minHeight: '48px', maxHeight: '120px' }}
@@ -409,13 +409,13 @@ export default function AdFeedbacks() {
           ) : (
             <div className="text-center py-4">
               <p className="text-gray-700 mb-3">
-                Sign in to leave a review
+                {t('adDetail.feedback.signInToReview')}
               </p>
               <Button
                 onClick={() => navigate('/login')}
                 className="bg-blue-500 hover:bg-blue-600"
               >
-                Sign in
+                {t('adDetail.feedback.signIn')}
               </Button>
             </div>
           )}

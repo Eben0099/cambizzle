@@ -174,8 +174,8 @@ const AdDetail = () => {
     if (!reportReason.trim()) {
       showToast({
         type: 'error',
-        title: 'Report Error',
-        message: 'Please select a reason for reporting this ad.'
+        title: t('toast.error'),
+        message: t('adDetail.report.errorNoReason')
       });
       return;
     }
@@ -184,8 +184,8 @@ const AdDetail = () => {
     if (!token) {
       showToast({
         type: 'error',
-        title: 'Authentication Required',
-        message: 'You must be logged in to report ads.'
+        title: t('adDetail.report.authRequired'),
+        message: t('adDetail.report.mustBeLoggedIn')
       });
       return;
     }
@@ -212,8 +212,8 @@ const AdDetail = () => {
       if (data.status === 'success') {
         showToast({
           type: 'success',
-          title: 'Report Submitted',
-          message: 'Thank you for helping us maintain a safe platform. Your report has been submitted successfully.'
+          title: t('adDetail.report.submitted'),
+          message: t('adDetail.report.submittedMessage')
         });
         setIsReportModalOpen(false);
         setReportReason('');
@@ -225,8 +225,8 @@ const AdDetail = () => {
       console.error('Report error:', error);
       showToast({
         type: 'error',
-        title: 'Report Failed',
-        message: error.message || 'Unable to submit report. Please try again later.'
+        title: t('adDetail.report.failed'),
+        message: error.message || t('adDetail.report.failedMessage')
       });
     } finally {
       setIsReporting(false);
@@ -603,36 +603,36 @@ const AdDetail = () => {
       <Modal
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
-        title="Report Ad"
+        title={t('adDetail.report.title')}
       >
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Reason for reporting
+              {t('adDetail.report.reasonLabel')}
             </label>
             <select
               value={reportReason}
               onChange={(e) => setReportReason(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d6ba69] focus:border-transparent transition-colors cursor-pointer"
             >
-              <option value="">Select a reason</option>
-              <option value="spam">Spam</option>
-              <option value="fraud">Fraud or scam</option>
-              <option value="inappropriate">Inappropriate content</option>
-              <option value="duplicate">Duplicate ad</option>
-              <option value="other">Other</option>
+              <option value="">{t('adDetail.report.selectReason')}</option>
+              <option value="spam">{t('adDetail.report.spam')}</option>
+              <option value="fraud">{t('adDetail.report.fraud')}</option>
+              <option value="inappropriate">{t('adDetail.report.inappropriate')}</option>
+              <option value="duplicate">{t('adDetail.report.duplicate')}</option>
+              <option value="other">{t('adDetail.report.other')}</option>
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Additional details <span className="text-gray-500">(optional)</span>
+              {t('adDetail.report.additionalDetails')} <span className="text-gray-500">{t('adDetail.report.optional')}</span>
             </label>
             <textarea
               value={reportDescription}
               onChange={(e) => setReportDescription(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d6ba69] focus:border-transparent resize-none transition-colors"
               rows={3}
-              placeholder="Please provide more details about why you're reporting this ad..."
+              placeholder={t('adDetail.report.detailsPlaceholder')}
             />
           </div>
           <div className="flex space-x-3">
@@ -645,14 +645,14 @@ const AdDetail = () => {
               disabled={isReporting}
               className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               onClick={handleReport}
               disabled={!reportReason || isReporting}
               className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
-              {isReporting ? 'Submitting...' : 'Submit Report'}
+              {isReporting ? t('adDetail.report.submitting') : t('adDetail.report.submitReport')}
             </button>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/badge";
 import Input from "../../components/ui/Input";
@@ -20,6 +21,7 @@ import adminService from "../../services/adminService";
 import { Button } from "../../components/ui/Button";
 
 const ModerationLogs = () => {
+  const { t } = useTranslation();
   const { showToast } = useToast();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,10 +46,10 @@ const ModerationLogs = () => {
         setLogs(response.data.logs);
         setTotalLogs(response.data.total);
       } else {
-        throw new Error(response.message || 'Error loading logs');
+        throw new Error(response.message || t('admin.moderationLogs.errorLoading'));
       }
     } catch (err) {
-      showToast({ type: 'error', message: err.message || 'Error loading logs' });
+      showToast({ type: 'error', message: err.message || t('admin.moderationLogs.errorLoading') });
     } finally {
       setLoading(false);
     }
@@ -55,14 +57,14 @@ const ModerationLogs = () => {
 
   const getActionLabel = (actionType) => {
     const actions = {
-      'ad_approve': 'Ad Approved',
-      'ad_reject': 'Ad Rejected',
-      'ad_suspend': 'Ad Suspended',
-      'user_suspend': 'User Suspended',
-      'user_unsuspend': 'User Reactivated',
-      'user_verify': 'User Verified',
-      'user_unverify': 'Verification Removed',
-      'user_delete': 'User Deleted',
+      'ad_approve': t('admin.moderationLogs.adApproved'),
+      'ad_reject': t('admin.moderationLogs.adRejected'),
+      'ad_suspend': t('admin.moderationLogs.adSuspended'),
+      'user_suspend': t('admin.moderationLogs.userSuspended'),
+      'user_unsuspend': t('admin.moderationLogs.userReactivated'),
+      'user_verify': t('admin.moderationLogs.userVerified'),
+      'user_unverify': t('admin.moderationLogs.verificationRemoved'),
+      'user_delete': t('admin.moderationLogs.userDeleted'),
     };
     return actions[actionType] || actionType;
   };
@@ -129,14 +131,14 @@ const ModerationLogs = () => {
     deleted: 'text-gray-700 bg-gray-200',
   };
 
-  if (loading) return <Loader text="Loading logs..." className="min-h-[400px]" />;
+  if (loading) return <Loader text={t('admin.moderationLogs.loading')} className="min-h-[400px]" />;
 
   if (error) return (
     <div className="flex items-center justify-center min-h-[400px]">
       <div className="text-center">
-        <div className="text-destructive mb-2">Error</div>
+        <div className="text-destructive mb-2">{t('admin.moderationLogs.error')}</div>
         <p className="text-muted-foreground mb-4">{error}</p>
-        <Button onClick={fetchLogs} className="w-full">Retry</Button>
+        <Button onClick={fetchLogs} className="w-full">{t('admin.moderationLogs.retry')}</Button>
       </div>
     </div>
   );
@@ -145,12 +147,12 @@ const ModerationLogs = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Moderation Logs</h1>
-          <p className="text-muted-foreground mt-1">History of moderation actions</p>
+          <h1 className="text-3xl font-bold text-foreground">{t('admin.moderationLogs.title')}</h1>
+          <p className="text-muted-foreground mt-1">{t('admin.moderationLogs.subtitle')}</p>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Shield className="h-4 w-4" />
-          <span>{totalLogs} total logs</span>
+          <span>{totalLogs} {t('admin.moderationLogs.totalLogs')}</span>
         </div>
       </div>
 
@@ -159,7 +161,7 @@ const ModerationLogs = () => {
         {Object.entries(summary).map(([key, value]) => (
           <Card key={key} className="border-border">
             <CardContent className="py-6 text-center">
-              <p className="text-sm font-medium text-muted-foreground mb-1 capitalize">{key}</p>
+              <p className="text-sm font-medium text-muted-foreground mb-1">{t(`admin.moderationLogs.${key}`)}</p>
               <p className={`text-2xl font-bold ${summaryColors[key]}`}>{value}</p>
             </CardContent>
           </Card>
@@ -169,16 +171,16 @@ const ModerationLogs = () => {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <CardTitle>{t('admin.moderationLogs.filters')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">Search</label>
+              <label className="text-sm font-medium text-foreground mb-2 block">{t('admin.moderationLogs.search')}</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search logs..."
+                  placeholder={t('admin.moderationLogs.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -186,30 +188,30 @@ const ModerationLogs = () => {
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">Action Type</label>
-              <select 
+              <label className="text-sm font-medium text-foreground mb-2 block">{t('admin.moderationLogs.actionType')}</label>
+              <select
                 value={filterAction}
                 onChange={(e) => setFilterAction(e.target.value)}
                 className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
               >
-                <option value="">All actions</option>
-                <option value="ad_approve">Ad Approval</option>
-                <option value="ad_reject">Ad Rejection</option>
-                <option value="user_suspend">User Suspension</option>
-                <option value="user_unsuspend">User Reactivation</option>
-                <option value="user_verify">User Verification</option>
+                <option value="">{t('admin.moderationLogs.allActions')}</option>
+                <option value="ad_approve">{t('admin.moderationLogs.adApproval')}</option>
+                <option value="ad_reject">{t('admin.moderationLogs.adRejection')}</option>
+                <option value="user_suspend">{t('admin.moderationLogs.userSuspension')}</option>
+                <option value="user_unsuspend">{t('admin.moderationLogs.userReactivation')}</option>
+                <option value="user_verify">{t('admin.moderationLogs.userVerification')}</option>
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">Target Type</label>
-              <select 
+              <label className="text-sm font-medium text-foreground mb-2 block">{t('admin.moderationLogs.targetType')}</label>
+              <select
                 value={filterTarget}
                 onChange={(e) => setFilterTarget(e.target.value)}
                 className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
               >
-                <option value="">All targets</option>
-                <option value="ad">Ads</option>
-                <option value="user">Users</option>
+                <option value="">{t('admin.moderationLogs.allTargets')}</option>
+                <option value="ad">{t('admin.moderationLogs.ads')}</option>
+                <option value="user">{t('admin.moderationLogs.users')}</option>
               </select>
             </div>
           </div>
@@ -223,12 +225,12 @@ const ModerationLogs = () => {
             <table className="w-full">
               <thead className="border-b">
                 <tr>
-                  <th className="text-left p-4 font-medium text-muted-foreground">Action</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground">Target</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground">Change</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground">Reason</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground">Date</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground">Moderator</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground">{t('admin.moderationLogs.action')}</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground">{t('admin.moderationLogs.target')}</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground">{t('admin.moderationLogs.change')}</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground">{t('admin.moderationLogs.reason')}</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground">{t('admin.moderationLogs.date')}</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground">{t('admin.moderationLogs.moderator')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -249,7 +251,7 @@ const ModerationLogs = () => {
                         ) : (
                           <User className="h-4 w-4 text-muted-foreground" />
                         )}
-                        <span className="text-sm">{log.targetType === 'ad' ? 'Ad' : 'User'} #{log.targetId}</span>
+                        <span className="text-sm">{log.targetType === 'ad' ? t('admin.moderationLogs.ad') : t('admin.moderationLogs.user')} #{log.targetId}</span>
                       </div>
                     </td>
                     <td className="p-4">
@@ -280,7 +282,7 @@ const ModerationLogs = () => {
             </table>
             {filteredLogs.length === 0 && (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">No logs found</p>
+                <p className="text-muted-foreground">{t('admin.moderationLogs.noLogsFound')}</p>
               </div>
             )}
           </div>
@@ -295,19 +297,19 @@ const ModerationLogs = () => {
             disabled={currentPage === 1}
             className="flex items-center gap-2 px-3 py-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-sm"
           >
-            <ChevronLeft className="h-4 w-4" /> Previous
+            <ChevronLeft className="h-4 w-4" /> {t('admin.moderationLogs.previous')}
           </button>
-          
+
           <span className="px-4 py-2 text-sm text-muted-foreground">
-            Page {currentPage} of {totalPages}
+            {t('admin.moderationLogs.pageOf', { current: currentPage, total: totalPages })}
           </span>
-          
+
           <button
             onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
             disabled={currentPage === totalPages}
             className="flex items-center gap-2 px-3 py-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-sm"
           >
-            Next <ChevronRight className="h-4 w-4" />
+            {t('admin.moderationLogs.next')} <ChevronRight className="h-4 w-4" />
           </button>
         </div>
       )}

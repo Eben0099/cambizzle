@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import logger from "../../utils/logger";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Input from "@/components/ui/Input";
@@ -33,6 +34,7 @@ import { useToast } from "../../components/toast/useToast";
 
 const Users = () => {
   // States
+  const { t } = useTranslation();
   const { showToast } = useToast();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -69,11 +71,11 @@ const Users = () => {
       if (response.status === 'success') {
         setUsers(response.data.users || []);
       } else {
-        throw new Error(response.message || 'Error loading users');
+        throw new Error(response.message || t('admin.users.errorLoading'));
       }
     } catch (err) {
       logger.error('Users error:', err);
-      setError(err.message || 'Error loading users');
+      setError(err.message || t('admin.users.errorLoading'));
     } finally {
       setLoading(false);
     }
@@ -87,11 +89,11 @@ const Users = () => {
         setSelectedUserDetails(response.data);
         setUserDetailsModalOpen(true);
       } else {
-        throw new Error(response.message || 'Error loading details');
+        throw new Error(response.message || t('admin.users.errorLoadingDetails'));
       }
     } catch (err) {
       logger.error('User details error:', err);
-      showToast({ type: 'error', message: err.message || 'Error loading details' });
+      showToast({ type: 'error', message: err.message || t('admin.users.errorLoadingDetails') });
     } finally {
       setActionLoading(false);
     }
@@ -100,7 +102,7 @@ const Users = () => {
   // Actions
   const handleSuspendUser = async () => {
     if (!selectedUser || !suspendReason.trim()) {
-      showToast({ type: 'error', message: 'Please fill in the suspension reason' });
+      showToast({ type: 'error', message: t('admin.users.fillSuspensionReason') });
       return;
     }
     try {
@@ -110,13 +112,13 @@ const Users = () => {
         setSuspendModalOpen(false);
         resetSuspendForm();
         fetchUsers();
-        showToast({ type: 'success', message: 'User suspended successfully' });
+        showToast({ type: 'success', message: t('admin.users.userSuspended') });
       } else {
-        throw new Error(response.message || 'Error during suspension');
+        throw new Error(response.message || t('admin.users.errorSuspension'));
       }
     } catch (err) {
       logger.error('Suspension error:', err);
-      showToast({ type: 'error', message: err.message || 'Error during suspension' });
+      showToast({ type: 'error', message: err.message || t('admin.users.errorSuspension') });
     } finally {
       setActionLoading(false);
     }
@@ -131,13 +133,13 @@ const Users = () => {
         setUnsuspendModalOpen(false);
         resetUnsuspendForm();
         fetchUsers();
-        showToast({ type: 'success', message: 'User reactivated successfully' });
+        showToast({ type: 'success', message: t('admin.users.userReactivated') });
       } else {
-        throw new Error(response.message || 'Error during reactivation');
+        throw new Error(response.message || t('admin.users.errorReactivation'));
       }
     } catch (err) {
       logger.error('Reactivation error:', err);
-      showToast({ type: 'error', message: err.message || 'Error during reactivation' });
+      showToast({ type: 'error', message: err.message || t('admin.users.errorReactivation') });
     } finally {
       setActionLoading(false);
     }
@@ -152,13 +154,13 @@ const Users = () => {
         setVerifyModalOpen(false);
         resetVerifyForm();
         fetchUsers();
-        showToast({ type: 'success', message: 'Identity verified successfully' });
+        showToast({ type: 'success', message: t('admin.users.identityVerified') });
       } else {
-        throw new Error(response.message || 'Error during verification');
+        throw new Error(response.message || t('admin.users.errorVerification'));
       }
     } catch (err) {
       logger.error('Verification error:', err);
-      showToast({ type: 'error', message: err.message || 'Error during verification' });
+      showToast({ type: 'error', message: err.message || t('admin.users.errorVerification') });
     } finally {
       setActionLoading(false);
     }
@@ -184,20 +186,20 @@ const Users = () => {
   // Formatting and badges
   const getStatusBadge = (user) => {
     if (user.isSuspended === "1") {
-      return <Badge className="bg-red-100 text-red-800 text-xs">Suspended</Badge>;
+      return <Badge className="bg-red-100 text-red-800 text-xs">{t('admin.users.suspended')}</Badge>;
     }
     if (user.deleted) {
-      return <Badge className="bg-gray-100 text-gray-800 text-xs">Deleted</Badge>;
+      return <Badge className="bg-gray-100 text-gray-800 text-xs">{t('admin.users.deleted')}</Badge>;
     }
-    return <Badge className="bg-green-100 text-green-800 text-xs">Active</Badge>;
+    return <Badge className="bg-green-100 text-green-800 text-xs">{t('admin.users.active')}</Badge>;
   };
 
   const getRoleBadge = (roleId) => {
     const roles = {
-      "1": { label: "Admin", className: "bg-red-100 text-red-800 text-xs" },
-      "2": { label: "User", className: "bg-gray-100 text-gray-800 text-xs" },
+      "1": { label: t('admin.users.admin'), className: "bg-red-100 text-red-800 text-xs" },
+      "2": { label: t('admin.users.user'), className: "bg-gray-100 text-gray-800 text-xs" },
     };
-    const role = roles[roleId] || { label: "Unknown", className: "bg-gray-100 text-gray-800 text-xs" };
+    const role = roles[roleId] || { label: t('admin.users.unknown'), className: "bg-gray-100 text-gray-800 text-xs" };
     return <Badge className={role.className}>{role.label}</Badge>;
   };
 
@@ -249,7 +251,7 @@ const Users = () => {
 
   // Loading state
   if (loading && users.length === 0) {
-    return <Loader text="Loading users..." className="min-h-[400px]" />;
+    return <Loader text={t('admin.users.loading')} className="min-h-[400px]" />;
   }
 
   // Error state
@@ -263,7 +265,7 @@ const Users = () => {
             onClick={fetchUsers}
             className="h-9 bg-[#D6BA69] hover:bg-[#C5A952] text-white text-sm px-4 rounded-lg"
           >
-            Retry
+            {t('admin.users.retry')}
           </Button>
         </div>
       </div>
@@ -275,8 +277,8 @@ const Users = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">User Management</h1>
-          <p className="text-gray-600 text-xs sm:text-sm mt-1">{filteredUsers.length} users</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t('admin.users.title')}</h1>
+          <p className="text-gray-600 text-xs sm:text-sm mt-1">{filteredUsers.length} {t('admin.users.users')}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -298,23 +300,23 @@ const Users = () => {
             disabled={filteredUsers.length === 0}
           >
             <Download className="h-4 w-4" />
-            Export Excel
+            {t('admin.users.exportExcel')}
           </Button>
           <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg shadow-sm">
             <User className="h-4 w-4 text-[#D6BA69]" />
-            <span className="text-xs text-gray-600">{filteredUsers.length} total</span>
+            <span className="text-xs text-gray-600">{filteredUsers.length} {t('admin.users.total')}</span>
           </div>
         </div>
       </div>
 
       {/* Filters */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <h3 className="text-base font-semibold text-gray-900 mb-3">Filters & Search</h3>
+        <h3 className="text-base font-semibold text-gray-900 mb-3">{t('admin.users.filtersAndSearch')}</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Search..."
+              placeholder={t('admin.users.search')}
               className="pl-10 h-10 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -322,33 +324,33 @@ const Users = () => {
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="h-10 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69]">
-              <SelectValue placeholder="Status" />
+              <SelectValue placeholder={t('admin.users.status')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="suspended">Suspended</SelectItem>
-              <SelectItem value="deleted">Deleted</SelectItem>
+              <SelectItem value="all">{t('admin.users.allStatuses')}</SelectItem>
+              <SelectItem value="active">{t('admin.users.active')}</SelectItem>
+              <SelectItem value="suspended">{t('admin.users.suspended')}</SelectItem>
+              <SelectItem value="deleted">{t('admin.users.deleted')}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={roleFilter} onValueChange={setRoleFilter}>
             <SelectTrigger className="h-10 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69]">
-              <SelectValue placeholder="Role" />
+              <SelectValue placeholder={t('admin.users.role')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All roles</SelectItem>
-              <SelectItem value="1">Admin</SelectItem>
-              <SelectItem value="2">User</SelectItem>
+              <SelectItem value="all">{t('admin.users.allRoles')}</SelectItem>
+              <SelectItem value="1">{t('admin.users.admin')}</SelectItem>
+              <SelectItem value="2">{t('admin.users.user')}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={verifiedFilter} onValueChange={setVerifiedFilter}>
             <SelectTrigger className="h-10 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69]">
-              <SelectValue placeholder="Verification" />
+              <SelectValue placeholder={t('admin.users.verification')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="verified">Verified</SelectItem>
-              <SelectItem value="unverified">Unverified</SelectItem>
+              <SelectItem value="all">{t('admin.users.all')}</SelectItem>
+              <SelectItem value="verified">{t('admin.users.verified')}</SelectItem>
+              <SelectItem value="unverified">{t('admin.users.unverified')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -418,7 +420,7 @@ const Users = () => {
                       disabled={actionLoading}
                     >
                       <Eye className="h-3 w-3 mr-1" />
-                      Details
+                      {t('admin.users.details')}
                     </Button>
                     {user.isIdentityVerified === "0" && (
                       <Button
@@ -430,7 +432,7 @@ const Users = () => {
                         }}
                       >
                         <Shield className="h-3 w-3 mr-1" />
-                        Verify
+                        {t('admin.users.verify')}
                       </Button>
                     )}
                   </div>
@@ -451,12 +453,12 @@ const Users = () => {
                     {user.isSuspended === "0" ? (
                       <>
                         <Ban className="h-3 w-3 mr-1" />
-                        Suspend
+                        {t('admin.users.suspend')}
                       </>
                     ) : (
                       <>
                         <UserCheck className="h-3 w-3 mr-1" />
-                        Reactivate
+                        {t('admin.users.reactivate')}
                       </>
                     )}
                   </Button>
@@ -468,7 +470,7 @@ const Users = () => {
                   </span>
                   <span className={`flex items-center gap-1 ${user.isIdentityVerified === "1" ? "text-green-600" : "text-gray-600"}`}>
                     <Shield className="h-3 w-3" />
-                    {user.isIdentityVerified === "1" ? "Verified" : "Unverified"}
+                    {user.isIdentityVerified === "1" ? t('admin.users.verified') : t('admin.users.unverified')}
                   </span>
                 </div>
               </div>
@@ -477,8 +479,8 @@ const Users = () => {
         ) : (
           <div className="col-span-full bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
             <AlertTriangle className="h-10 w-10 text-gray-400 mx-auto mb-3" />
-            <h3 className="text-base font-semibold text-gray-900">No users</h3>
-            <p className="text-xs text-gray-500">Adjust filters to see results</p>
+            <h3 className="text-base font-semibold text-gray-900">{t('admin.users.noUsers')}</h3>
+            <p className="text-xs text-gray-500">{t('admin.users.noUsersHint')}</p>
           </div>
         )}
       </div>
@@ -498,7 +500,7 @@ const Users = () => {
       <Dialog open={userDetailsModalOpen} onOpenChange={setUserDetailsModalOpen}>
         <DialogContent className="max-w-md bg-white rounded-xl shadow-xl border border-gray-200">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-gray-900">User Details</DialogTitle>
+            <DialogTitle className="text-lg font-bold text-gray-900">{t('admin.users.userDetails')}</DialogTitle>
           </DialogHeader>
           {selectedUserDetails ? (
             <div className="space-y-3 text-sm">
@@ -537,32 +539,32 @@ const Users = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-gray-400" />
-                  Role: <span className="ml-1">{selectedUserDetails.role || selectedUserDetails.roleId}</span>
+                  {t('admin.users.roleLabel')} <span className="ml-1">{selectedUserDetails.role || selectedUserDetails.roleId}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Shield className="h-4 w-4 text-gray-400" />
-                  Status: <span className="ml-1">{
+                  {t('admin.users.statusLabel')} <span className="ml-1">{
                     selectedUserDetails.is_verified !== undefined
-                      ? (selectedUserDetails.is_verified === 1 || selectedUserDetails.is_verified === "1" ? 'Verified' : selectedUserDetails.is_verified === 2 || selectedUserDetails.is_verified === "2" ? 'Pending' : 'Unverified')
-                      : (selectedUserDetails.isVerified === 1 || selectedUserDetails.isVerified === "1" ? 'Verified' : selectedUserDetails.isVerified === 2 || selectedUserDetails.isVerified === "2" ? 'Pending' : 'Unverified')
+                      ? (selectedUserDetails.is_verified === 1 || selectedUserDetails.is_verified === "1" ? t('admin.users.verified') : selectedUserDetails.is_verified === 2 || selectedUserDetails.is_verified === "2" ? t('admin.users.pending') : t('admin.users.unverified'))
+                      : (selectedUserDetails.isVerified === 1 || selectedUserDetails.isVerified === "1" ? t('admin.users.verified') : selectedUserDetails.isVerified === 2 || selectedUserDetails.isVerified === "2" ? t('admin.users.pending') : t('admin.users.unverified'))
                   }</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-gray-400" />
-                  Registered: {formatDate(selectedUserDetails.created_at || selectedUserDetails.createdAt)}
+                  {t('admin.users.registered')} {formatDate(selectedUserDetails.created_at || selectedUserDetails.createdAt)}
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">Referral code:</span> {selectedUserDetails.referral_code || selectedUserDetails.referralCode || 'N/A'}
+                  <span className="font-medium">{t('admin.users.referralCode')}</span> {selectedUserDetails.referral_code || selectedUserDetails.referralCode || 'N/A'}
                 </div>
                 {/* Identity Section */}
                 <div className="mt-2 p-2 bg-gray-50 rounded-lg border">
-                  <div className="font-semibold mb-1">Identity</div>
-                  <div className="text-xs text-gray-600">Type: <span className="font-medium">{selectedUserDetails.identity_document_type || selectedUserDetails.identityDocumentType || 'N/A'}</span></div>
-                  <div className="text-xs text-gray-600">Number: <span className="font-medium">{selectedUserDetails.identity_document_number || selectedUserDetails.identityDocumentNumber || 'N/A'}</span></div>
-                  <div className="text-xs text-gray-600">Status: <span className="font-medium">{selectedUserDetails.identity?.status_label || selectedUserDetails.identityStatusLabel || 'N/A'}</span></div>
-                  <div className="text-xs text-gray-600">Vérifié le: <span className="font-medium">{selectedUserDetails.identity_verified_at ? formatDate(selectedUserDetails.identity_verified_at) : selectedUserDetails.identityVerifiedAt ? formatDate(selectedUserDetails.identityVerifiedAt) : 'Non vérifié'}</span></div>
+                  <div className="font-semibold mb-1">{t('admin.users.identity')}</div>
+                  <div className="text-xs text-gray-600">{t('admin.users.identityType')} <span className="font-medium">{selectedUserDetails.identity_document_type || selectedUserDetails.identityDocumentType || 'N/A'}</span></div>
+                  <div className="text-xs text-gray-600">{t('admin.users.identityNumber')} <span className="font-medium">{selectedUserDetails.identity_document_number || selectedUserDetails.identityDocumentNumber || 'N/A'}</span></div>
+                  <div className="text-xs text-gray-600">{t('admin.users.identityStatus')} <span className="font-medium">{selectedUserDetails.identity?.status_label || selectedUserDetails.identityStatusLabel || 'N/A'}</span></div>
+                  <div className="text-xs text-gray-600">{t('admin.users.verifiedAt')} <span className="font-medium">{selectedUserDetails.identity_verified_at ? formatDate(selectedUserDetails.identity_verified_at) : selectedUserDetails.identityVerifiedAt ? formatDate(selectedUserDetails.identityVerifiedAt) : t('admin.users.notVerified')}</span></div>
                   {selectedUserDetails.identity_review_reason && (
-                    <div className="text-xs text-red-600">Raison du refus: {selectedUserDetails.identity_review_reason}</div>
+                    <div className="text-xs text-red-600">{t('admin.users.rejectionReason')} {selectedUserDetails.identity_review_reason}</div>
                   )}
                   {/* Document display/download */}
                   {(selectedUserDetails.identity_document_url || selectedUserDetails.identityDocumentUrl) && (
@@ -573,7 +575,7 @@ const Users = () => {
                         if (isPdf) {
                           return (
                             <div>
-                              <a href={url} download target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-xs">Télécharger le PDF</a>
+                              <a href={url} download target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-xs">{t('admin.users.downloadPdf')}</a>
                               <div className="mt-2 border rounded overflow-hidden" style={{height: '300px'}}>
                                 <iframe src={url} title="Document PDF" width="100%" height="100%" style={{border:0}} />
                               </div>
@@ -582,7 +584,7 @@ const Users = () => {
                         } else {
                           return (
                             <div>
-                              <a href={url} download target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-xs">Télécharger l'image</a>
+                              <a href={url} download target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-xs">{t('admin.users.downloadImage')}</a>
                               <div className="mt-2">
                                 <img src={url} alt="Document identité" className="max-h-48 rounded border" />
                               </div>
@@ -596,14 +598,14 @@ const Users = () => {
               </div>
             </div>
           ) : (
-            <div className="text-center text-gray-500 text-sm">Loading...</div>
+            <div className="text-center text-gray-500 text-sm">{t('admin.users.loadingDetails')}</div>
           )}
           <div className="mt-4 flex justify-end">
             <Button
               onClick={() => setUserDetailsModalOpen(false)}
               className="h-9 bg-[#D6BA69] hover:bg-[#C5A952] text-white text-sm rounded-lg"
             >
-              Close
+              {t('admin.users.close')}
             </Button>
           </div>
         </DialogContent>
@@ -613,13 +615,13 @@ const Users = () => {
       <Dialog open={verifyModalOpen} onOpenChange={setVerifyModalOpen}>
         <DialogContent className="max-w-md bg-white rounded-xl shadow-xl border border-gray-200">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-gray-900">Verify Identity</DialogTitle>
+            <DialogTitle className="text-lg font-bold text-gray-900">{t('admin.users.verifyIdentity')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <Label htmlFor="verifyNotes" className="text-sm font-medium text-gray-700">Notes (optional)</Label>
+            <Label htmlFor="verifyNotes" className="text-sm font-medium text-gray-700">{t('admin.users.notesOptional')}</Label>
             <Textarea
               id="verifyNotes"
-              placeholder="Verification reason"
+              placeholder={t('admin.users.verificationReason')}
               value={verifyNotes}
               onChange={(e) => setVerifyNotes(e.target.value)}
               className="h-20 text-sm rounded-lg"
@@ -630,7 +632,7 @@ const Users = () => {
               onClick={() => setVerifyModalOpen(false)}
               className="h-9 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300"
             >
-              Cancel
+              {t('admin.users.cancel')}
             </Button>
             <Button
               onClick={handleVerifyUser}
@@ -640,10 +642,10 @@ const Users = () => {
               {actionLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Verifying...
+                  {t('admin.users.verifying')}
                 </>
               ) : (
-                'Verify'
+                t('admin.users.verify')
               )}
             </Button>
           </div>
@@ -654,26 +656,26 @@ const Users = () => {
       <Dialog open={suspendModalOpen} onOpenChange={setSuspendModalOpen}>
         <DialogContent className="max-w-md bg-white rounded-xl shadow-xl border border-gray-200">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-gray-900">Suspend User</DialogTitle>
+            <DialogTitle className="text-lg font-bold text-gray-900">{t('admin.users.suspendUser')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <Label htmlFor="suspendReason" className="text-sm font-medium text-gray-700">
-              Suspension Reason *
+              {t('admin.users.suspensionReason')}
             </Label>
             <Input
               id="suspendReason"
-              placeholder="Reason (required)"
+              placeholder={t('admin.users.reasonRequired')}
               value={suspendReason}
               onChange={(e) => setSuspendReason(e.target.value)}
               className="h-10 text-sm rounded-lg"
               required
             />
             <Label htmlFor="suspendNotes" className="text-sm font-medium text-gray-700">
-              Notes (optional)
+              {t('admin.users.notesOptional')}
             </Label>
             <Textarea
               id="suspendNotes"
-              placeholder="Additional notes"
+              placeholder={t('admin.users.additionalNotes')}
               value={suspendNotes}
               onChange={(e) => setSuspendNotes(e.target.value)}
               className="h-20 text-sm rounded-lg"
@@ -684,7 +686,7 @@ const Users = () => {
               onClick={() => setSuspendModalOpen(false)}
               className="h-9 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300"
             >
-              Cancel
+              {t('admin.users.cancel')}
             </Button>
             <Button
               onClick={handleSuspendUser}
@@ -694,10 +696,10 @@ const Users = () => {
               {actionLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Suspending...
+                  {t('admin.users.suspending')}
                 </>
               ) : (
-                'Suspend'
+                t('admin.users.suspend')
               )}
             </Button>
           </div>
@@ -708,15 +710,15 @@ const Users = () => {
       <Dialog open={unsuspendModalOpen} onOpenChange={setUnsuspendModalOpen}>
         <DialogContent className="max-w-md bg-white rounded-xl shadow-xl border border-gray-200">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-gray-900">Reactivate User</DialogTitle>
+            <DialogTitle className="text-lg font-bold text-gray-900">{t('admin.users.reactivateUser')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <Label htmlFor="unsuspendNotes" className="text-sm font-medium text-gray-700">
-              Notes (optional)
+              {t('admin.users.notesOptional')}
             </Label>
             <Textarea
               id="unsuspendNotes"
-              placeholder="Reactivation reason"
+              placeholder={t('admin.users.reactivationReason')}
               value={unsuspendNotes}
               onChange={(e) => setUnsuspendNotes(e.target.value)}
               className="h-20 text-sm rounded-lg"
@@ -727,7 +729,7 @@ const Users = () => {
               onClick={() => setUnsuspendModalOpen(false)}
               className="h-9 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300"
             >
-              Cancel
+              {t('admin.users.cancel')}
             </Button>
             <Button
               onClick={handleUnsuspendUser}
@@ -737,10 +739,10 @@ const Users = () => {
               {actionLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Reactivating...
+                  {t('admin.users.reactivating')}
                 </>
               ) : (
-                'Reactivate'
+                t('admin.users.reactivate')
               )}
             </Button>
           </div>

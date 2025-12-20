@@ -1,5 +1,6 @@
 // src/pages/admin/Payments.jsx
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import Button from "../../components/ui/Button";
 import Loader from "../../components/ui/Loader";
 import { API_BASE_URL } from "../../config/api";
@@ -25,6 +26,7 @@ const COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6"];
 
 export default function Payments() {
   /* ---------- STATE ---------- */
+  const { t } = useTranslation();
   const { showToast } = useToast();
   const [stats, setStats] = useState(null);
   const [transactions, setTransactions] = useState([]);
@@ -161,7 +163,7 @@ export default function Payments() {
   /* ---------- RENDER ---------- */
   return (
     <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-      <h1 className="text-2xl font-bold mb-6">Payment Dashboard</h1>
+      <h1 className="text-2xl font-bold mb-6">{t('admin.payments.title')}</h1>
 
       {/* Tabs */}
       <div className="flex space-x-6 border-b mb-6">
@@ -174,7 +176,7 @@ export default function Payments() {
               : "text-gray-500"
           }`}
         >
-          Overview
+          {t('admin.payments.overview')}
         </Button>
         <Button
           type="button"
@@ -185,12 +187,12 @@ export default function Payments() {
               : "text-gray-500"
           }`}
         >
-          Transactions
+          {t('admin.payments.transactions')}
         </Button>
       </div>
 
       {/* Global loading / error */}
-  {loading && <Loader text="Loading..." />}
+  {loading && <Loader text={t('common.loading')} />}
       {error && <p className="text-red-600 text-center">{error}</p>}
 
       {/* ==================== OVERVIEW TAB ==================== */}
@@ -216,19 +218,19 @@ export default function Payments() {
               type="submit"
               className="bg-[#D6BA69] text-black px-4 py-1 rounded hover:bg-[#c9a63a]"
             >
-              Apply
+              {t('admin.payments.apply')}
             </Button>
           </form>
 
           {/* KPIs */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {[
-              { label: "Total Transactions", value: stats.summary.total_transactions },
-              { label: "Total Revenue", value: `${stats.summary.total_revenue} FCFA` },
-              { label: "Paid", value: stats.summary.paid },
-              { label: "Pending", value: stats.summary.pending },
-              { label: "Failed", value: stats.summary.failed },
-              { label: "Refunded", value: stats.summary.refunded },
+              { label: t('admin.payments.totalTransactions'), value: stats.summary.total_transactions },
+              { label: t('admin.payments.totalRevenue'), value: `${stats.summary.total_revenue} FCFA` },
+              { label: t('admin.payments.paid'), value: stats.summary.paid },
+              { label: t('admin.payments.pending'), value: stats.summary.pending },
+              { label: t('admin.payments.failed'), value: stats.summary.failed },
+              { label: t('admin.payments.refunded'), value: stats.summary.refunded },
             ].map((kpi, i) => (
               <div
                 key={i}
@@ -242,7 +244,7 @@ export default function Payments() {
 
           {/* Revenue by Day */}
           <div>
-            <h2 className="text-lg font-semibold mb-2">Revenue by Day</h2>
+            <h2 className="text-lg font-semibold mb-2">{t('admin.payments.revenueByDay')}</h2>
             <div className="bg-white rounded-lg shadow p-4 h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={stats.revenue_by_day}>
@@ -274,7 +276,7 @@ export default function Payments() {
           {/* By Method – Pie + Table */}
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <h2 className="text-lg font-semibold mb-2">Revenue by Method (Pie)</h2>
+              <h2 className="text-lg font-semibold mb-2">{t('admin.payments.revenueByMethodPie')}</h2>
               <div className="bg-white rounded-lg shadow p-4 h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -298,14 +300,14 @@ export default function Payments() {
             </div>
 
             <div>
-              <h2 className="text-lg font-semibold mb-2">Revenue by Method (Table)</h2>
+              <h2 className="text-lg font-semibold mb-2">{t('admin.payments.revenueByMethodTable')}</h2>
               <div className="bg-white rounded-lg shadow p-4 overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left py-2">Method</th>
-                      <th className="text-left py-2">Count</th>
-                      <th className="text-left py-2">Revenue</th>
+                      <th className="text-left py-2">{t('admin.payments.method')}</th>
+                      <th className="text-left py-2">{t('admin.payments.count')}</th>
+                      <th className="text-left py-2">{t('admin.payments.revenue')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -324,24 +326,20 @@ export default function Payments() {
 
           {/* Top Boosted Ads */}
           <div>
-            <h2 className="text-lg font-semibold mb-2">Top Boosted Ads</h2>
+            <h2 className="text-lg font-semibold mb-2">{t('admin.payments.topBoostedAds')}</h2>
             <div className="bg-white rounded-lg shadow p-4 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-2">Ad ID</th>
-                    <th className="text-left py-2">Title</th>
-                    <th className="text-left py-2">User</th>
-                    <th className="text-left py-2">Boosts</th>
-                    <th className="text-left py-2">Revenue</th>
+                    <th className="text-left py-2">{t('admin.payments.adId')}</th>
+                    <th className="text-left py-2">{t('admin.payments.boosts')}</th>
+                    <th className="text-left py-2">{t('admin.payments.revenue')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {stats.top_boosted_ads.map((ad) => (
                     <tr key={ad.ad_id} className="border-b">
                       <td className="py-1">{ad.ad_id}</td>
-                      <td className="py-1">{ad.ad_title ?? ad.title ?? "-"}</td>
-                      <td className="py-1">{ad.user_name ?? ad.user?.name ?? ad.user_email ?? "-"}</td>
                       <td className="py-1">{ad.payments_count}</td>
                       <td className="py-1">{ad.revenue} FCFA</td>
                     </tr>
@@ -353,18 +351,16 @@ export default function Payments() {
 
           {/* Latest Transactions */}
           <div>
-            <h2 className="text-lg font-semibold mb-2">Latest Transactions</h2>
+            <h2 className="text-lg font-semibold mb-2">{t('admin.payments.latestTransactions')}</h2>
             <div className="bg-white rounded-lg shadow p-4 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-2">Ref.</th>
-                    <th className="text-left py-2">Amount</th>
-                    <th className="text-left py-2">Status</th>
-                    <th className="text-left py-2">Method</th>
-                    <th className="text-left py-2">Date</th>
-                    <th className="text-left py-2">Ad Title</th>
-                    <th className="text-left py-2">User</th>
+                    <th className="text-left py-2">{t('admin.payments.reference')}</th>
+                    <th className="text-left py-2">{t('admin.payments.amount')}</th>
+                    <th className="text-left py-2">{t('admin.payments.status')}</th>
+                    <th className="text-left py-2">{t('admin.payments.method')}</th>
+                    <th className="text-left py-2">{t('admin.payments.date')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -387,10 +383,8 @@ export default function Payments() {
                           {tx.status}
                         </span>
                       </td>
-                      <td className="py-1">{tx.payment_method}</td>
-                      <td className="py-1">{tx.created_at}</td>
-                      <td className="py-1">{tx.ad_title ?? tx.ad?.title ?? "-"}</td>
-                      <td className="py-1">{tx.user_name ?? tx.user?.name ?? tx.user_email ?? tx.user?.email ?? "-"}</td>
+                      <td className="py-1">{tx.payment_method ?? "-"}</td>
+                      <td className="py-1">{tx.created_at ?? "-"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -414,17 +408,17 @@ export default function Payments() {
               onChange={changeTxFilter}
               className="border rounded px-3 py-1"
             >
-              <option value="">All Statuses</option>
-              <option value="paid">Paid</option>
-              <option value="pending">Pending</option>
-              <option value="failed">Failed</option>
-              <option value="refunded">Refunded</option>
+              <option value="">{t('admin.payments.allStatuses')}</option>
+              <option value="paid">{t('admin.payments.paid')}</option>
+              <option value="pending">{t('admin.payments.pending')}</option>
+              <option value="failed">{t('admin.payments.failed')}</option>
+              <option value="refunded">{t('admin.payments.refunded')}</option>
             </select>
 
             <input
               type="text"
               name="method"
-              placeholder="Payment Method"
+              placeholder={t('admin.payments.paymentMethod')}
               value={txFilters.method}
               onChange={changeTxFilter}
               className="border rounded px-3 py-1"
@@ -450,22 +444,22 @@ export default function Payments() {
               type="submit"
               className="bg-[#D6BA69] text-black px-4 py-1 rounded hover:bg-[#c9a63a]"
             >
-              Filter
+              {t('admin.payments.filter')}
             </Button>
 
             <Button
               type="button"
               onClick={() => exportToExcel(transactions, 'payments', {
                 columns: [
-                  { header: 'Reference', key: 'reference' },
-                  { header: 'Amount (FCFA)', key: 'amount' },
-                  { header: 'Phone', key: 'phone' },
-                  { header: 'Method', key: 'payment_method' },
-                  { header: 'Status', key: 'status' },
-                  { header: 'Description', key: 'description' },
-                  { header: 'Date', key: 'created_at' },
-                  { header: 'Ad Title', key: 'ad_title' },
-                  { header: 'User Email', key: 'user_email' },
+                  { header: t('admin.payments.reference'), key: 'reference' },
+                  { header: `${t('admin.payments.amount')} (FCFA)`, key: 'amount' },
+                  { header: t('admin.payments.phone'), key: 'phone' },
+                  { header: t('admin.payments.method'), key: 'payment_method' },
+                  { header: t('admin.payments.status'), key: 'status' },
+                  { header: t('admin.payments.description'), key: 'description' },
+                  { header: t('admin.payments.date'), key: 'created_at' },
+                  { header: t('admin.payments.adTitle'), key: 'ad_title' },
+                  { header: t('admin.payments.user'), key: 'user_email' },
                 ],
                 sheetName: 'Payments'
               })}
@@ -473,7 +467,7 @@ export default function Payments() {
               disabled={transactions.length === 0}
             >
               <Download className="h-4 w-4" />
-              Export Excel
+              {t('admin.payments.exportExcel')}
             </Button>
           </form>
 
@@ -483,14 +477,14 @@ export default function Payments() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-gray-50">
-                    <th className="text-left py-2 px-3">Référence</th>
-                    <th className="text-left py-2 px-3">Montant</th>
-                    <th className="text-left py-2 px-3">Téléphone</th>
-                    <th className="text-left py-2 px-3">Méthode de paiement</th>
-                    <th className="text-left py-2 px-3">Statut</th>
-                    <th className="text-left py-2 px-3">Description</th>
-                    <th className="text-left py-2 px-3">Date</th>
-                    <th className="text-left py-2 px-3">Titre de l'annonce</th>
+                    <th className="text-left py-2 px-3">{t('admin.payments.reference')}</th>
+                    <th className="text-left py-2 px-3">{t('admin.payments.amount')}</th>
+                    <th className="text-left py-2 px-3">{t('admin.payments.phone')}</th>
+                    <th className="text-left py-2 px-3">{t('admin.payments.paymentMethod')}</th>
+                    <th className="text-left py-2 px-3">{t('admin.payments.status')}</th>
+                    <th className="text-left py-2 px-3">{t('admin.payments.description')}</th>
+                    <th className="text-left py-2 px-3">{t('admin.payments.date')}</th>
+                    <th className="text-left py-2 px-3">{t('admin.payments.adTitle')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -523,7 +517,7 @@ export default function Payments() {
                 </tbody>
               </table>
             ) : (
-              <p className="p-4 text-gray-500">No transactions found.</p>
+              <p className="p-4 text-gray-500">{t('admin.payments.noTransactions')}</p>
             )}
           </div>
 
@@ -536,10 +530,10 @@ export default function Payments() {
                 disabled={txPage === 1}
                 className="bg-[#D6BA69] text-black px-4 py-2 rounded disabled:opacity-50"
               >
-                Previous
+                {t('admin.payments.previous')}
               </Button>
               <span>
-                Page {pagination.current_page} / {pagination.total_pages}
+                {t('admin.payments.page')} {pagination.current_page} / {pagination.total_pages}
               </span>
               <Button
                 type="button"
@@ -549,7 +543,7 @@ export default function Payments() {
                 disabled={txPage === pagination.total_pages}
                 className="bg-[#D6BA69] text-black px-4 py-2 rounded disabled:opacity-50"
               >
-                Next
+                {t('admin.payments.next')}
               </Button>
             </div>
           )}

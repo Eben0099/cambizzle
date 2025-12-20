@@ -1,5 +1,6 @@
 // Brands.jsx
 import React, { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import logger from '../../utils/logger';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,7 @@ import adminService from '@/services/adminService';
  */
 
 const Brands = () => {
+  const { t } = useTranslation();
   const { toast } = useToast();
 
   // Data state
@@ -100,7 +102,7 @@ const Brands = () => {
       }, {});
       setBrandsData(Object.values(grouped));
     } catch (err) {
-      toast({ description: 'Failed to load brands.', variant: 'destructive' });
+      toast({ description: t('admin.brands.loadError'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -170,10 +172,10 @@ const Brands = () => {
       logger.log("Brand created:", response);
       await loadBrands();
       setCreateOpen(false);
-      toast({ description: "Brand created successfully." });
+      toast({ description: t('admin.brands.createSuccess') });
     } catch (err) {
       logger.error("Error creating brand:", err);
-      toast({ description: "Error creating brand.", variant: "destructive" });
+      toast({ description: t('admin.brands.createError'), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -207,10 +209,10 @@ const Brands = () => {
       logger.log("Brand updated");
       await loadBrands();
       setEditOpen(false);
-      toast({ description: "Brand updated successfully." });
+      toast({ description: t('admin.brands.updateSuccess') });
     } catch (err) {
       logger.error("Error updating brand:", err);
-      toast({ description: "Error updating brand.", variant: "destructive" });
+      toast({ description: t('admin.brands.updateError'), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -229,17 +231,17 @@ const Brands = () => {
       logger.log("Brand deleted");
       await loadBrands();
       setDeleteCandidate(null);
-      toast({ description: "Brand deleted successfully." });
+      toast({ description: t('admin.brands.deleteSuccess') });
     } catch (err) {
       logger.error("Error deleting brand:", err);
-      toast({ description: "Error deleting brand.", variant: "destructive" });
+      toast({ description: t('admin.brands.deleteError'), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
   };
 
   if (loading) {
-    return <Loader text="Loading brands..." />;
+    return <Loader text={t('admin.brands.loading')} />;
   }
 
   return (
@@ -248,15 +250,15 @@ const Brands = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Brands Management</h1>
-            <p className="text-sm text-gray-600 mt-1">Manage brands by subcategory</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('admin.brands.title')}</h1>
+            <p className="text-sm text-gray-600 mt-1">{t('admin.brands.subtitle')}</p>
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
             {/* Search */}
             <div className="relative w-full sm:w-auto">
               <Input
-                placeholder="Search..."
+                placeholder={t('admin.brands.search')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10 h-9 w-full sm:w-64 text-sm rounded-lg border-gray-200 focus:ring-[#D6BA69]"
@@ -269,9 +271,9 @@ const Brands = () => {
               onClick={() => exportToExcel(allBrandsFlat, 'brands', {
                 columns: [
                   { header: 'ID', key: 'id' },
-                  { header: 'Name', key: 'name' },
-                  { header: 'Subcategory', key: 'subcategoryName' },
-                  { header: 'Ads Count', key: 'adsCount' },
+                  { header: t('admin.brands.name'), key: 'name' },
+                  { header: t('admin.brands.subcategory'), key: 'subcategoryName' },
+                  { header: t('admin.brands.ads'), key: 'adsCount' },
                 ],
                 sheetName: 'Brands'
               })}
@@ -279,7 +281,7 @@ const Brands = () => {
               disabled={allBrandsFlat.length === 0}
             >
               <Download className="h-4 w-4" />
-              Export
+              {t('admin.brands.export')}
             </Button>
 
             {/* Create button */}
@@ -288,7 +290,7 @@ const Brands = () => {
               className="h-9 px-4 bg-[#D6BA69] hover:bg-[#C5A952] text-white rounded-lg transition-colors duration-200 w-full sm:w-auto"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Create
+              {t('admin.brands.create')}
             </Button>
           </div>
         </div>
@@ -298,28 +300,28 @@ const Brands = () => {
           <Card className="border-gray-200">
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-gray-900">{totalBrands}</div>
-              <div className="text-sm text-gray-600">Total Brands</div>
+              <div className="text-sm text-gray-600">{t('admin.brands.totalBrands')}</div>
             </CardContent>
           </Card>
 
           <Card className="border-gray-200">
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-gray-900">{subcategoryOptions.length}</div>
-              <div className="text-sm text-gray-600">Subcategories</div>
+              <div className="text-sm text-gray-600">{t('admin.brands.subcategories')}</div>
             </CardContent>
           </Card>
 
           <Card className="border-gray-200">
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-gray-900">{displayedCount}</div>
-              <div className="text-sm text-gray-600">Displayed</div>
+              <div className="text-sm text-gray-600">{t('admin.brands.displayed')}</div>
             </CardContent>
           </Card>
         </div>
 
         {/* Groups */}
         {filteredData.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">No brands found</div>
+          <div className="text-center py-8 text-gray-500">{t('admin.brands.noBrandsFound')}</div>
         ) : (
           <Accordion type="single" collapsible className="w-full border border-gray-200 rounded-lg">
             {filteredData.map((group, index) => (
@@ -328,23 +330,23 @@ const Brands = () => {
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-gray-900">{group.subcategory.name}</span>
                     <span className="text-sm text-gray-600">{group.subcategory.category_name}</span>
-                    <span className="text-sm text-gray-600">- {group.brands.length} brands</span>
+                    <span className="text-sm text-gray-600">- {group.brands.length} {t('admin.brands.brands')}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
                   <Table>
                     <TableHeader>
                       <TableRow className="border-gray-200">
-                        <TableHead className="font-semibold text-gray-900">Name</TableHead>
-                        <TableHead className="font-semibold text-gray-900">Ads</TableHead>
-                        <TableHead className="font-semibold text-gray-900 text-right">Actions</TableHead>
+                        <TableHead className="font-semibold text-gray-900">{t('admin.brands.name')}</TableHead>
+                        <TableHead className="font-semibold text-gray-900">{t('admin.brands.ads')}</TableHead>
+                        <TableHead className="font-semibold text-gray-900 text-right">{t('admin.brands.actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {group.brands.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={3} className="text-center py-4 text-gray-500">
-                            No brands in this subcategory
+                            {t('admin.brands.noBrandsInSubcategory')}
                           </TableCell>
                         </TableRow>
                       ) : (
@@ -352,7 +354,7 @@ const Brands = () => {
                           <TableRow key={brand.id} className="border-gray-200 hover:bg-gray-50">
                             <TableCell className="font-medium">{brand.name}</TableCell>
                             <TableCell>
-                              <Badge className="bg-gray-100 text-gray-800 text-xs">{brand.adsCount} ads</Badge>
+                              <Badge className="bg-gray-100 text-gray-800 text-xs">{brand.adsCount} {t('admin.brands.ads')}</Badge>
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex items-center justify-end gap-2">
@@ -389,17 +391,17 @@ const Brands = () => {
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogContent className="bg-white max-w-md sm:max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Create a Brand</DialogTitle>
+              <DialogTitle>{t('admin.brands.createBrand')}</DialogTitle>
             </DialogHeader>
 
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <Label htmlFor="brandDescription">Description</Label>
+                <Label htmlFor="brandDescription">{t('admin.brands.description')}</Label>
                 <Input
                   id="brandDescription"
                   value={form.description}
                   onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-                  placeholder="Brand description"
+                  placeholder={t('admin.brands.descriptionPlaceholder')}
                   className="mt-1"
                 />
               </div>
@@ -410,28 +412,28 @@ const Brands = () => {
                   checked={form.is_active}
                   onChange={e => setForm((prev) => ({ ...prev, is_active: e.target.checked }))}
                 />
-                <Label htmlFor="brandActive">Active</Label>
+                <Label htmlFor="brandActive">{t('admin.brands.active')}</Label>
               </div>
               <div>
-                <Label htmlFor="name">Brand name</Label>
+                <Label htmlFor="name">{t('admin.brands.brandName')}</Label>
                 <Input
                   id="name"
                   value={form.name}
                   onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                  placeholder="Ex: Samsung, Toyota..."
+                  placeholder={t('admin.brands.brandNamePlaceholder')}
                   className="mt-1"
                   required
                 />
               </div>
 
               <div>
-                <Label htmlFor="subcategory">Subcategory</Label>
+                <Label htmlFor="subcategory">{t('admin.brands.subcategory')}</Label>
                 <Select
                   value={form.subcategory_id}
                   onValueChange={(value) => setForm((prev) => ({ ...prev, subcategory_id: value }))}
                 >
                   <SelectTrigger className="mt-1 h-9 w-full bg-white">
-                    <SelectValue placeholder="Select a subcategory" />
+                    <SelectValue placeholder={t('admin.brands.selectSubcategory')} />
                   </SelectTrigger>
                   <SelectContent className="bg-white">
                     {subcategoryOptions.map((sub) => (
@@ -449,7 +451,7 @@ const Brands = () => {
                   variant="outline"
                   onClick={() => setCreateOpen(false)}
                 >
-                  Cancel
+                  {t('admin.brands.cancel')}
                 </Button>
 
                 <Button
@@ -460,10 +462,10 @@ const Brands = () => {
                   {submitting ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Creating...
+                      {t('admin.brands.creating')}
                     </>
                   ) : (
-                    "Create"
+                    t('admin.brands.create')
                   )}
                 </Button>
               </div>
@@ -475,12 +477,12 @@ const Brands = () => {
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
           <DialogContent className="bg-white max-w-md sm:max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Edit Brand</DialogTitle>
+              <DialogTitle>{t('admin.brands.editBrand')}</DialogTitle>
             </DialogHeader>
 
             <form onSubmit={handleUpdate} className="space-y-4">
               <div>
-                <Label htmlFor="editBrandDescription">Description</Label>
+                <Label htmlFor="editBrandDescription">{t('admin.brands.description')}</Label>
                 <Input
                   id="editBrandDescription"
                   value={form.description}
@@ -495,10 +497,10 @@ const Brands = () => {
                   checked={form.is_active}
                   onChange={e => setForm((prev) => ({ ...prev, is_active: e.target.checked }))}
                 />
-                <Label htmlFor="editBrandActive">Active</Label>
+                <Label htmlFor="editBrandActive">{t('admin.brands.active')}</Label>
               </div>
               <div>
-                <Label htmlFor="edit-name">Brand name</Label>
+                <Label htmlFor="edit-name">{t('admin.brands.brandName')}</Label>
                 <Input
                   id="edit-name"
                   value={form.name}
@@ -509,7 +511,7 @@ const Brands = () => {
               </div>
 
               <div>
-                <Label htmlFor="edit-subcategory">Subcategory</Label>
+                <Label htmlFor="edit-subcategory">{t('admin.brands.subcategory')}</Label>
                 <Select
                   value={form.subcategory_id}
                   onValueChange={(value) => setForm((prev) => ({ ...prev, subcategory_id: value }))}
@@ -533,7 +535,7 @@ const Brands = () => {
                   variant="outline"
                   onClick={() => setEditOpen(false)}
                 >
-                  Cancel
+                  {t('admin.brands.cancel')}
                 </Button>
 
                 <Button
@@ -544,10 +546,10 @@ const Brands = () => {
                   {submitting ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Updating...
+                      {t('admin.brands.updating')}
                     </>
                   ) : (
-                    "Update"
+                    t('admin.brands.update')
                   )}
                 </Button>
               </div>
@@ -560,17 +562,17 @@ const Brands = () => {
           <Dialog open={!!deleteCandidate} onOpenChange={() => setDeleteCandidate(null)}>
             <DialogContent className="bg-white max-w-md">
               <DialogHeader>
-                <DialogTitle>Confirm Delete</DialogTitle>
+                <DialogTitle>{t('admin.brands.confirmDelete')}</DialogTitle>
               </DialogHeader>
 
               <div className="space-y-4">
                 <p className="text-sm text-gray-600">
-                  Are you sure you want to delete the brand "<strong>{deleteCandidate.name}</strong>"?
-                  This action cannot be undone.
+                  {t('admin.brands.deleteConfirmMessage')} "<strong>{deleteCandidate.name}</strong>"?
+                  {t('admin.brands.deleteWarning')}
                 </p>
 
                 <div className="flex justify-end gap-3">
-                  <Button variant="outline" onClick={() => setDeleteCandidate(null)}>Cancel</Button>
+                  <Button variant="outline" onClick={() => setDeleteCandidate(null)}>{t('admin.brands.cancel')}</Button>
                   <Button
                     onClick={handleDelete}
                     disabled={submitting}
@@ -579,10 +581,10 @@ const Brands = () => {
                     {submitting ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Deleting...
+                        {t('admin.brands.deleting')}
                       </>
                     ) : (
-                      "Delete"
+                      t('admin.brands.delete')
                     )}
                   </Button>
                 </div>

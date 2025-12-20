@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, Navigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { LayoutDashboard, Users, FileText, FolderTree, Filter, MapPin, AlertTriangle, Settings, LogOut, Tag, Shield, Menu, X, Home, User, CreditCard } from "lucide-react";
 import Loader from "../ui/Loader";
 import { cn } from "../../lib/utils";
@@ -7,32 +8,39 @@ import { Button } from "../ui/Button";
 import adminService from "../../services/adminService";
 import { useAuth } from "../../contexts/AuthContext";
 
-const navigation = [
+const navigationConfig = [
   // Section 1: Main
-  { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { name: "My profile", href: "/profile", icon: User },
-  { name: "Payments", href: "/admin/payments", icon: CreditCard },
-  { name: "Users", href: "/admin/users", icon: Users },
-  { name: "Ads", href: "/admin/ads", icon: FileText },
-  { name: "Feedbacks", href: "/admin/feedbacks", icon: AlertTriangle },
+  { nameKey: "dashboard", href: "/admin", icon: LayoutDashboard },
+  { nameKey: "myProfile", href: "/profile", icon: User },
+  { nameKey: "payments", href: "/admin/payments", icon: CreditCard },
+  { nameKey: "users", href: "/admin/users", icon: Users },
+  { nameKey: "ads", href: "/admin/ads", icon: FileText },
+  { nameKey: "feedbacks", href: "/admin/feedbacks", icon: AlertTriangle },
   // Section 2: Content Management
-  { name: "Categories", href: "/admin/categories", icon: FolderTree },
-  { name: "Subcategories", href: "/admin/subcategories", icon: FolderTree },
-  { name: "Dynamic Filters", href: "/admin/filters", icon: Filter },
-  { name: "Brands", href: "/admin/brands", icon: Tag },
-  { name: "Locations", href: "/admin/locations", icon: MapPin },
+  { nameKey: "categories", href: "/admin/categories", icon: FolderTree },
+  { nameKey: "subcategories", href: "/admin/subcategories", icon: FolderTree },
+  { nameKey: "dynamicFilters", href: "/admin/filters", icon: Filter },
+  { nameKey: "brands", href: "/admin/brands", icon: Tag },
+  { nameKey: "locations", href: "/admin/locations", icon: MapPin },
   // Section 3: Promotion, Reports, Moderation, Referral
-  { name: "Promotion Packs", href: "/admin/promotion-packs", icon: Tag },
-  { name: "Reports", href: "/admin/reports", icon: AlertTriangle },
-  { name: "Moderation Logs", href: "/admin/moderation-logs", icon: Shield },
-  { name: "Referral Codes", href: "/admin/referralcodes", icon: Tag },
+  { nameKey: "promotionPacks", href: "/admin/promotion-packs", icon: Tag },
+  { nameKey: "reports", href: "/admin/reports", icon: AlertTriangle },
+  { nameKey: "moderationLogs", href: "/admin/moderation-logs", icon: Shield },
+  { nameKey: "referralCodes", href: "/admin/referralcodes", icon: Tag },
 ];
 
 const AdminLayout = ({ children }) => {
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const [isVerifying, setIsVerifying] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Build navigation with translated names
+  const navigation = navigationConfig.map(item => ({
+    ...item,
+    name: t(`admin.sidebar.${item.nameKey}`)
+  }));
 
   useEffect(() => {
     verifyAdminAccess();
@@ -74,7 +82,7 @@ const AdminLayout = ({ children }) => {
 
   if (isVerifying) {
     return (
-      <Loader text="Verifying permissions..." />
+      <Loader text={t('admin.sidebar.verifyingPermissions')} />
     );
   }
 
@@ -110,7 +118,7 @@ const AdminLayout = ({ children }) => {
             </div>
             <div>
               <h1 className="text-sm sm:text-base font-bold text-white">Cambizzle</h1>
-              <p className="text-xs text-gray-400">Admin Panel</p>
+              <p className="text-xs text-gray-400">{t('admin.sidebar.adminPanel')}</p>
             </div>
           </NavLink>
         </div>
@@ -147,7 +155,7 @@ const AdminLayout = ({ children }) => {
             </NavLink>
           ))}
           {/* Content Management Section */}
-          <div className="mt-4 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">Content Management</div>
+          <div className="mt-4 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">{t('admin.sidebar.contentManagement')}</div>
           {[navigation[5], navigation[6], navigation[7], navigation[8], navigation[9]].map((item) => (
             <NavLink
               key={item.name}
@@ -176,7 +184,7 @@ const AdminLayout = ({ children }) => {
             </NavLink>
           ))}
           {/* Promotion, Reports, Moderation, Referral Section */}
-          <div className="mt-4 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">Promotion & Reports</div>
+          <div className="mt-4 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">{t('admin.sidebar.promotionReports')}</div>
           {[navigation[10], navigation[11], navigation[12], navigation[13]].map((item) => (
             <NavLink
               key={item.name}
@@ -228,7 +236,7 @@ const AdminLayout = ({ children }) => {
                     isActive ? "text-gray-900" : "text-gray-400"
                   )}
                 />
-                Settings
+                {t('admin.sidebar.settings')}
               </>
             )}
           </NavLink>
@@ -238,7 +246,7 @@ const AdminLayout = ({ children }) => {
             aria-label="Log out"
           >
             <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
-            Log Out
+            {t('admin.sidebar.logOut')}
           </button>
         </div>
       </aside>

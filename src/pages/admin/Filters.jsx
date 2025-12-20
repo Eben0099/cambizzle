@@ -1,5 +1,6 @@
 // Filters.jsx
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import logger from "../../utils/logger";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -57,32 +58,33 @@ import adminService from "@/services/adminService";
  * deleteFilter, createFilterOption, deleteFilterOption
  */
 
-const typeLabel = (type) => {
-  const map = {
-    select: "Select",
-    multiselect: "Multi-select",
-    text: "Text",
-    number: "Number",
-    boolean: "Boolean",
-    date: "Date",
-  };
-  return map[type] || type;
-};
-
-const getTypeBadge = (type) => (
-  <Badge className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
-    {typeLabel(type)}
-  </Badge>
-);
-
 const SORT_OPTIONS = [
-  { id: "name_asc", label: "Name ▲" },
-  { id: "name_desc", label: "Name ▼" },
-  { id: "subcategory_asc", label: "Subcategory ▲" },
-  { id: "subcategory_desc", label: "Subcategory ▼" },
+  { id: "name_asc", labelKey: "sortNameAsc" },
+  { id: "name_desc", labelKey: "sortNameDesc" },
+  { id: "subcategory_asc", labelKey: "sortSubcategoryAsc" },
+  { id: "subcategory_desc", labelKey: "sortSubcategoryDesc" },
 ];
 
 const Filters = () => {
+  const { t } = useTranslation();
+
+  const typeLabel = (type) => {
+    const map = {
+      select: t('admin.filters.typeSelect'),
+      multiselect: t('admin.filters.typeMultiselect'),
+      text: t('admin.filters.typeText'),
+      number: t('admin.filters.typeNumber'),
+      boolean: t('admin.filters.typeBoolean'),
+      date: t('admin.filters.typeDate'),
+    };
+    return map[type] || type;
+  };
+
+  const getTypeBadge = (type) => (
+    <Badge className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
+      {typeLabel(type)}
+    </Badge>
+  );
   const [filtersData, setFiltersData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -123,8 +125,8 @@ const Filters = () => {
     } catch (error) {
       logger.error("Error loading filters:", error);
       toast({
-        title: "Error",
-        description: "Unable to load filters",
+        title: t('admin.filters.error'),
+        description: t('admin.filters.loadError'),
         variant: "destructive",
       });
     } finally {
@@ -226,10 +228,10 @@ const Filters = () => {
       logger.log("Filter created:", response);
       await loadFilters();
       setCreateOpen(false);
-      toast({ description: "Filter created successfully." });
+      toast({ description: t('admin.filters.createSuccess') });
     } catch (err) {
       logger.error("Error creating filter:", err);
-      toast({ description: "Error creating filter.", variant: "destructive" });
+      toast({ description: t('admin.filters.createError'), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -266,10 +268,10 @@ const Filters = () => {
       logger.log("Filter updated");
       await loadFilters();
       setEditOpen(false);
-      toast({ description: "Filter updated successfully." });
+      toast({ description: t('admin.filters.updateSuccess') });
     } catch (err) {
       logger.error("Error updating filter:", err);
-      toast({ description: "Error updating filter.", variant: "destructive" });
+      toast({ description: t('admin.filters.updateError'), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -288,10 +290,10 @@ const Filters = () => {
       logger.log("Filter deleted");
       await loadFilters();
       setDeleteCandidate(null);
-      toast({ description: "Filter deleted successfully." });
+      toast({ description: t('admin.filters.deleteSuccess') });
     } catch (err) {
       logger.error("Error deleting filter:", err);
-      toast({ description: "Error deleting filter.", variant: "destructive" });
+      toast({ description: t('admin.filters.deleteError'), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -307,7 +309,7 @@ const Filters = () => {
     if (!valuesOpenFor) return;
     const v = (newVal || "").trim();
     if (!v) {
-      toast({ description: "Value cannot be empty.", variant: "destructive" });
+      toast({ description: t('admin.filters.valueEmpty'), variant: "destructive" });
       return;
     }
 
@@ -327,10 +329,10 @@ const Filters = () => {
         if (updatedFilter) setValuesOpenFor(updatedFilter);
       }
 
-      toast({ description: "Option added successfully." });
+      toast({ description: t('admin.filters.optionAdded') });
     } catch (err) {
       logger.error("Error adding option:", err);
-      toast({ description: "Error adding option.", variant: "destructive" });
+      toast({ description: t('admin.filters.optionAddError'), variant: "destructive" });
     }
   };
 
@@ -350,17 +352,17 @@ const Filters = () => {
         if (updatedFilter) setValuesOpenFor(updatedFilter);
       }
 
-      toast({ description: "Option removed successfully." });
+      toast({ description: t('admin.filters.optionRemoved') });
     } catch (err) {
       logger.error("Error removing option:", err);
-      toast({ description: "Error removing option.", variant: "destructive" });
+      toast({ description: t('admin.filters.optionRemoveError'), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
   };
 
   if (loading) {
-    return <Loader text="Loading filters..." />;
+    return <Loader text={t('admin.filters.loading')} />;
   }
 
   return (
@@ -369,15 +371,15 @@ const Filters = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Filters Management</h1>
-            <p className="text-sm text-gray-600 mt-1">Manage dynamic fields by subcategory</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('admin.filters.title')}</h1>
+            <p className="text-sm text-gray-600 mt-1">{t('admin.filters.subtitle')}</p>
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
             {/* Search */}
             <div className="relative w-full sm:w-auto">
               <Input
-                placeholder="Search..."
+                placeholder={t('admin.filters.search')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10 h-9 w-full sm:w-64 text-sm rounded-lg border-gray-200 focus:ring-[#D6BA69]"
@@ -388,10 +390,10 @@ const Filters = () => {
             {/* Subcategory filter */}
             <Select value={selectedSubcategoryFilter} onValueChange={setSelectedSubcategoryFilter}>
               <SelectTrigger className="h-9 w-full sm:w-44 text-sm rounded-lg border-gray-200 focus:ring-[#D6BA69] bg-white">
-                <SelectValue placeholder="Subcategory" />
+                <SelectValue placeholder={t('admin.filters.subcategory')} />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                <SelectItem value="all" className="hover:bg-gray-100">All</SelectItem>
+                <SelectItem value="all" className="hover:bg-gray-100">{t('admin.filters.all')}</SelectItem>
                 {subcategoryOptions.map((sub) => (
                   <SelectItem key={sub.id} value={sub.id.toString()} className="hover:bg-gray-100">
                     {sub.name} ({sub.category_name})
@@ -403,12 +405,12 @@ const Filters = () => {
             {/* Sort */}
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="h-9 w-full sm:w-40 text-sm rounded-lg border-gray-200 focus:ring-[#D6BA69] bg-white">
-                <SelectValue placeholder="Sort" />
+                <SelectValue placeholder={t('admin.filters.sort')} />
               </SelectTrigger>
               <SelectContent className="bg-white">
                 {SORT_OPTIONS.map((opt) => (
                   <SelectItem key={opt.id} value={opt.id} className="hover:bg-gray-100">
-                    {opt.label}
+                    {t(`admin.filters.${opt.labelKey}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -420,7 +422,7 @@ const Filters = () => {
               className="h-9 px-4 bg-[#D6BA69] hover:bg-[#C5A952] text-white rounded-lg transition-colors duration-200 w-full sm:w-auto"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Create
+              {t('admin.filters.create')}
             </Button>
           </div>
         </div>
@@ -430,28 +432,28 @@ const Filters = () => {
           <Card className="border-gray-200">
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-gray-900">{totalFilters}</div>
-              <div className="text-sm text-gray-600">Total Filters</div>
+              <div className="text-sm text-gray-600">{t('admin.filters.totalFilters')}</div>
             </CardContent>
           </Card>
 
           <Card className="border-gray-200">
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-gray-900">{subcategoryOptions.length}</div>
-              <div className="text-sm text-gray-600">Subcategories</div>
+              <div className="text-sm text-gray-600">{t('admin.filters.subcategories')}</div>
             </CardContent>
           </Card>
 
           <Card className="border-gray-200">
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-gray-900">{displayedCount}</div>
-              <div className="text-sm text-gray-600">Displayed</div>
+              <div className="text-sm text-gray-600">{t('admin.filters.displayed')}</div>
             </CardContent>
           </Card>
         </div>
 
         {/* Groups */}
         {filteredData.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">No filters found</div>
+          <div className="text-center py-8 text-gray-500">{t('admin.filters.noFiltersFound')}</div>
         ) : (
           <Accordion type="single" collapsible className="w-full border border-gray-200 rounded-lg">
             {filteredData.map((group, index) => (
@@ -460,24 +462,24 @@ const Filters = () => {
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-gray-900">{group.subcategory.name}</span>
                     <span className="text-sm text-gray-600">{group.subcategory.category_name}</span>
-                    <span className="text-sm text-gray-600">- {group.filters.length} filters</span>
+                    <span className="text-sm text-gray-600">- {group.filters.length} {t('admin.filters.filters')}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
                   <Table>
                     <TableHeader>
                       <TableRow className="border-gray-200">
-                        <TableHead className="font-semibold text-gray-900">Name</TableHead>
-                        <TableHead className="font-semibold text-gray-900">Type</TableHead>
-                        <TableHead className="font-semibold text-gray-900">Options</TableHead>
-                        <TableHead className="font-semibold text-gray-900 text-right">Actions</TableHead>
+                        <TableHead className="font-semibold text-gray-900">{t('admin.filters.name')}</TableHead>
+                        <TableHead className="font-semibold text-gray-900">{t('admin.filters.type')}</TableHead>
+                        <TableHead className="font-semibold text-gray-900">{t('admin.filters.options')}</TableHead>
+                        <TableHead className="font-semibold text-gray-900 text-right">{t('admin.filters.actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {group.filters.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={4} className="text-center py-4 text-gray-500">
-                            No filters in this subcategory
+                            {t('admin.filters.noFiltersInSubcategory')}
                           </TableCell>
                         </TableRow>
                       ) : (
@@ -496,7 +498,7 @@ const Filters = () => {
                               <TableCell>
                                 <div className="flex items-center gap-2">
                                   <span className="text-sm text-gray-600">
-                                    {augFilter.options.length} option(s)
+                                    {augFilter.options.length} {t('admin.filters.optionCount')}
                                   </span>
                                   <Button
                                     variant="outline"
@@ -544,30 +546,30 @@ const Filters = () => {
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogContent className="bg-white max-w-md sm:max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Create a Filter</DialogTitle>
+              <DialogTitle>{t('admin.filters.createFilter')}</DialogTitle>
             </DialogHeader>
 
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <Label htmlFor="name">Filter name</Label>
+                <Label htmlFor="name">{t('admin.filters.filterName')}</Label>
                 <Input
                   id="name"
                   value={form.name}
                   onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                  placeholder="Ex: Brand, Condition..."
+                  placeholder={t('admin.filters.filterNamePlaceholder')}
                   className="mt-1"
                   required
                 />
               </div>
 
               <div>
-                <Label htmlFor="subcategory">Subcategory</Label>
+                <Label htmlFor="subcategory">{t('admin.filters.subcategory')}</Label>
                 <Select
                   value={form.subcategory_id}
                   onValueChange={(value) => setForm((prev) => ({ ...prev, subcategory_id: value }))}
                 >
                   <SelectTrigger className="mt-1 h-9 w-full bg-white">
-                    <SelectValue placeholder="Select a subcategory" />
+                    <SelectValue placeholder={t('admin.filters.selectSubcategory')} />
                   </SelectTrigger>
                   <SelectContent className="bg-white">
                     {subcategoryOptions.map((sub) => (
@@ -580,7 +582,7 @@ const Filters = () => {
               </div>
 
               <div>
-                <Label htmlFor="type">Type</Label>
+                <Label htmlFor="type">{t('admin.filters.type')}</Label>
                 <Select
                   value={form.type}
                   onValueChange={(value) => setForm((prev) => ({ ...prev, type: value }))}
@@ -589,23 +591,23 @@ const Filters = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-white">
-                    <SelectItem value="select">Select</SelectItem>
-                    <SelectItem value="multiselect">Multi-select</SelectItem>
-                    <SelectItem value="text">Text</SelectItem>
-                    <SelectItem value="number">Number</SelectItem>
-                    <SelectItem value="boolean">Boolean</SelectItem>
-                    <SelectItem value="date">Date</SelectItem>
+                    <SelectItem value="select">{t('admin.filters.typeSelect')}</SelectItem>
+                    <SelectItem value="multiselect">{t('admin.filters.typeMultiselect')}</SelectItem>
+                    <SelectItem value="text">{t('admin.filters.typeText')}</SelectItem>
+                    <SelectItem value="number">{t('admin.filters.typeNumber')}</SelectItem>
+                    <SelectItem value="boolean">{t('admin.filters.typeBoolean')}</SelectItem>
+                    <SelectItem value="date">{t('admin.filters.typeDate')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <Label htmlFor="options">Options (comma separated)</Label>
+                <Label htmlFor="options">{t('admin.filters.optionsCommaSeparated')}</Label>
                 <Textarea
                   id="options"
                   value={form.optionsText}
                   onChange={(e) => setForm((prev) => ({ ...prev, optionsText: e.target.value }))}
-                  placeholder="Option 1, Option 2, Option 3..."
+                  placeholder={t('admin.filters.optionsPlaceholder')}
                   className="mt-1"
                   rows={3}
                 />
@@ -617,7 +619,7 @@ const Filters = () => {
                   variant="outline"
                   onClick={() => setCreateOpen(false)}
                 >
-                  Cancel
+                  {t('admin.filters.cancel')}
                 </Button>
 
                 <Button
@@ -628,10 +630,10 @@ const Filters = () => {
                   {submitting ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Creating...
+                      {t('admin.filters.creating')}
                     </>
                   ) : (
-                    "Create"
+                    t('admin.filters.create')
                   )}
                 </Button>
               </div>
@@ -643,12 +645,12 @@ const Filters = () => {
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
           <DialogContent className="bg-white max-w-md sm:max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Edit Filter</DialogTitle>
+              <DialogTitle>{t('admin.filters.editFilter')}</DialogTitle>
             </DialogHeader>
 
             <form onSubmit={handleUpdate} className="space-y-4">
               <div>
-                <Label htmlFor="edit-name">Filter name</Label>
+                <Label htmlFor="edit-name">{t('admin.filters.filterName')}</Label>
                 <Input
                   id="edit-name"
                   value={form.name}
@@ -659,7 +661,7 @@ const Filters = () => {
               </div>
 
               <div>
-                <Label htmlFor="edit-subcategory">Subcategory</Label>
+                <Label htmlFor="edit-subcategory">{t('admin.filters.subcategory')}</Label>
                 <Select
                   value={form.subcategory_id}
                   onValueChange={(value) => setForm((prev) => ({ ...prev, subcategory_id: value }))}
@@ -678,7 +680,7 @@ const Filters = () => {
               </div>
 
               <div>
-                <Label htmlFor="edit-type">Type</Label>
+                <Label htmlFor="edit-type">{t('admin.filters.type')}</Label>
                 <Select
                   value={form.type}
                   onValueChange={(value) => setForm((prev) => ({ ...prev, type: value }))}
@@ -687,12 +689,12 @@ const Filters = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-white">
-                    <SelectItem value="select">Select</SelectItem>
-                    <SelectItem value="multiselect">Multi-select</SelectItem>
-                    <SelectItem value="text">Text</SelectItem>
-                    <SelectItem value="number">Number</SelectItem>
-                    <SelectItem value="boolean">Boolean</SelectItem>
-                    <SelectItem value="date">Date</SelectItem>
+                    <SelectItem value="select">{t('admin.filters.typeSelect')}</SelectItem>
+                    <SelectItem value="multiselect">{t('admin.filters.typeMultiselect')}</SelectItem>
+                    <SelectItem value="text">{t('admin.filters.typeText')}</SelectItem>
+                    <SelectItem value="number">{t('admin.filters.typeNumber')}</SelectItem>
+                    <SelectItem value="boolean">{t('admin.filters.typeBoolean')}</SelectItem>
+                    <SelectItem value="date">{t('admin.filters.typeDate')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -703,7 +705,7 @@ const Filters = () => {
                   variant="outline"
                   onClick={() => setEditOpen(false)}
                 >
-                  Cancel
+                  {t('admin.filters.cancel')}
                 </Button>
 
                 <Button
@@ -714,10 +716,10 @@ const Filters = () => {
                   {submitting ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Updating...
+                      {t('admin.filters.updating')}
                     </>
                   ) : (
-                    "Update"
+                    t('admin.filters.update')
                   )}
                 </Button>
               </div>
@@ -730,13 +732,13 @@ const Filters = () => {
           <Dialog open={!!valuesOpenFor} onOpenChange={() => setValuesOpenFor(null)}>
             <DialogContent className="bg-white max-w-md">
               <DialogHeader>
-                <DialogTitle>Options - {valuesOpenFor.name}</DialogTitle>
+                <DialogTitle>{t('admin.filters.optionsFor')} {valuesOpenFor.name}</DialogTitle>
               </DialogHeader>
 
               <div className="space-y-4">
                 <div className="space-y-2">
                   {valuesOpenFor.options.length === 0 ? (
-                    <div className="text-sm text-gray-500">No options</div>
+                    <div className="text-sm text-gray-500">{t('admin.filters.noOptions')}</div>
                   ) : (
                     valuesOpenFor.options.map((option) => (
                       <div key={option.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
@@ -756,7 +758,7 @@ const Filters = () => {
 
                 <div className="flex gap-2">
                   <Input
-                    placeholder="New option..."
+                    placeholder={t('admin.filters.newOption')}
                     onKeyPress={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
@@ -782,7 +784,7 @@ const Filters = () => {
                 </div>
 
                 <div className="flex justify-end">
-                  <Button variant="outline" onClick={() => setValuesOpenFor(null)}>Close</Button>
+                  <Button variant="outline" onClick={() => setValuesOpenFor(null)}>{t('admin.filters.close')}</Button>
                 </div>
               </div>
             </DialogContent>
@@ -794,17 +796,17 @@ const Filters = () => {
           <Dialog open={!!deleteCandidate} onOpenChange={() => setDeleteCandidate(null)}>
             <DialogContent className="bg-white max-w-md">
               <DialogHeader>
-                <DialogTitle>Confirm Delete</DialogTitle>
+                <DialogTitle>{t('admin.filters.confirmDelete')}</DialogTitle>
               </DialogHeader>
 
               <div className="space-y-4">
                 <p className="text-sm text-gray-600">
-                  Are you sure you want to delete the filter "<strong>{deleteCandidate.name}</strong>"?
-                  This action cannot be undone.
+                  {t('admin.filters.deleteConfirmMessage')} "<strong>{deleteCandidate.name}</strong>"?
+                  {t('admin.filters.deleteWarning')}
                 </p>
 
                 <div className="flex justify-end gap-3">
-                  <Button variant="outline" onClick={() => setDeleteCandidate(null)}>Cancel</Button>
+                  <Button variant="outline" onClick={() => setDeleteCandidate(null)}>{t('admin.filters.cancel')}</Button>
                   <Button
                     onClick={handleDelete}
                     disabled={submitting}
@@ -813,10 +815,10 @@ const Filters = () => {
                     {submitting ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Deleting...
+                        {t('admin.filters.deleting')}
                       </>
                     ) : (
-                      "Delete"
+                      t('admin.filters.delete')
                     )}
                   </Button>
                 </div>
