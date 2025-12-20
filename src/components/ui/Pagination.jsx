@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import Button from './Button';
 
 const Pagination = ({
@@ -9,6 +10,8 @@ const Pagination = ({
   onPageChange,
   className = ''
 }) => {
+  const { t } = useTranslation();
+
   const generatePageNumbers = () => {
     const pages = [];
     const delta = 2; // Number of pages around the current page
@@ -56,10 +59,10 @@ const Pagination = ({
           onClick={() => onPageChange(currentPage - 1)}
           disabled={!hasPrevious}
           className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-[#D6BA69]/10 hover:border-[#D6BA69] hover:text-[#D6BA69] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#D6BA69]"
-          aria-label="Previous page"
+          aria-label={t('pagination.previous')}
         >
           <ChevronLeft className="w-5 h-5 mr-2" />
-          Previous
+          {t('pagination.previous')}
         </Button>
         <Button
           variant="outline"
@@ -67,9 +70,9 @@ const Pagination = ({
           onClick={() => onPageChange(currentPage + 1)}
           disabled={!hasNext}
           className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-[#D6BA69]/10 hover:border-[#D6BA69] hover:text-[#D6BA69] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#D6BA69]"
-          aria-label="Next page"
+          aria-label={t('pagination.next')}
         >
-          Next
+          {t('pagination.next')}
           <ChevronRight className="w-5 h-5 ml-2" />
         </Button>
       </div>
@@ -135,28 +138,11 @@ const Pagination = ({
 
         <div>
           <p className="text-sm text-gray-600 font-medium">
-            Page <span className="font-semibold text-[#D6BA69]">{currentPage}</span> of{' '}
+            {t('pagination.page')} <span className="font-semibold text-[#D6BA69]">{currentPage}</span> {t('pagination.of')}{' '}
             <span className="font-semibold text-[#D6BA69]">{totalPages}</span>
           </p>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease forwards;
-        }
-      `}</style>
     </nav>
   );
 };

@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Zap, Check } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { adsService } from '../services/adsService';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import logger from '../utils/logger';
 
 const StepBoostPlan = ({ formData, setFormData, errors, setErrors }) => {
+  const { t } = useTranslation();
   const [boostPlans, setBoostPlans] = useState([]);
   const [isLoadingPlans, setIsLoadingPlans] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -17,10 +20,10 @@ const StepBoostPlan = ({ formData, setFormData, errors, setErrors }) => {
     try {
       setIsLoadingPlans(true);
       const response = await adsService.getPromotionPacks();
-      console.log('📡 Réponse API plans boost:', response);
-      
+      logger.log('Réponse API plans boost:', response);
+
       let plans = [];
-      
+
       // Gérer différents formats de réponse
       if (Array.isArray(response)) {
         plans = response;
@@ -33,7 +36,7 @@ const StepBoostPlan = ({ formData, setFormData, errors, setErrors }) => {
         // Si la réponse directe est un objet plan
         plans = [response];
       }
-      
+
       // Adapter la structure des données
       const adaptedPlans = plans.map(plan => ({
         id: parseInt(plan.id),
@@ -42,14 +45,14 @@ const StepBoostPlan = ({ formData, setFormData, errors, setErrors }) => {
         duration_days: parseInt(plan.durationDays || plan.duration_days) || 0,
         description: plan.description
       }));
-      
-      console.log('🔧 Plans adaptés:', adaptedPlans);
-      
-      setBoostPlans([{ id: null, name: 'No boost', price: 0, duration_days: 0, description: 'Publish without boost' }, ...adaptedPlans]);
+
+      logger.log('Plans adaptés:', adaptedPlans);
+
+      setBoostPlans([{ id: null, name: t('boost.noBoost'), price: 0, duration_days: 0, description: t('boost.publishWithoutBoost') }, ...adaptedPlans]);
     } catch (error) {
-      console.error('Erreur chargement plans boost:', error);
+      logger.error('Erreur chargement plans boost:', error);
       // Still allow continuing without boost
-      setBoostPlans([{ id: null, name: 'No boost', price: 0, duration_days: 0, description: 'Publish without boost' }]);
+      setBoostPlans([{ id: null, name: t('boost.noBoost'), price: 0, duration_days: 0, description: t('boost.publishWithoutBoost') }]);
     } finally {
       setIsLoadingPlans(false);
     }
@@ -71,20 +74,20 @@ const StepBoostPlan = ({ formData, setFormData, errors, setErrors }) => {
 
   if (isLoadingPlans) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8" data-wg-notranslate="true">
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#D6BA69]"></div>
-          <span className="ml-3 text-gray-600">Loading boost plans...</span>
+          <span className="ml-3 text-gray-600">{t('boost.loadingPromotionPacks')}</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8" data-wg-notranslate="true">
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Boost Your Ad</h2>
-        <p className="text-gray-600">Choose a boost plan to increase visibility of your ad</p>
+        <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('boost.boostYourAd')}</h2>
+        <p className="text-gray-600">{t('boost.chooseBoostPlan')}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -115,14 +118,14 @@ const StepBoostPlan = ({ formData, setFormData, errors, setErrors }) => {
                     {plan.price.toLocaleString('fr-FR')} XAF
                   </span>
                 ) : (
-                  <span className="text-sm text-gray-500">Free</span>
+                  <span className="text-sm text-gray-500">{t('boost.free')}</span>
                 )}
               </div>
             </div>
 
             {plan.duration_days > 0 && (
               <p className="text-sm text-gray-600 mb-2">
-                {plan.duration_days} days visibility
+                {plan.duration_days} {t('boost.daysVisibility')}
               </p>
             )}
 
@@ -133,11 +136,11 @@ const StepBoostPlan = ({ formData, setFormData, errors, setErrors }) => {
 
       {selectedPlan && selectedPlan.price > 0 && (
         <div className="mt-6 p-4 bg-[#D6BA69]/10 rounded-lg border border-[#D6BA69]/20">
-          <h3 className="font-medium text-gray-900 mb-4">Payment Information</h3>
+          <h3 className="font-medium text-gray-900 mb-4">{t('boost.paymentInfo')}</h3>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Phone Number <span className="text-red-500">*</span>
+                {t('payment.phoneNumber')} <span className="text-red-500">*</span>
               </label>
               <PhoneInput
                 international
@@ -159,7 +162,7 @@ const StepBoostPlan = ({ formData, setFormData, errors, setErrors }) => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Payment Method <span className="text-red-500">*</span>
+                {t('payment.paymentMethod')} <span className="text-red-500">*</span>
               </label>
               <select
                 name="payment_method"
@@ -176,7 +179,7 @@ const StepBoostPlan = ({ formData, setFormData, errors, setErrors }) => {
             </div>
           </div>
           <p className="text-sm text-gray-600 mt-3">
-            For paid boosts, you'll need to provide your phone number for mobile payment after submission.
+            {t('boost.paidBoostNote')}
           </p>
         </div>
       )}

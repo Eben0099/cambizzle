@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, User, Mail, Phone, Lock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../components/toast/useToast';
 import { isValidEmail, isValidPhone } from '../utils/helpers';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -9,6 +11,7 @@ import Card from '../components/ui/Card';
 import Loader from '../components/ui/Loader';
 
 const Register = () => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -24,10 +27,12 @@ const Register = () => {
   const [errors, setErrors] = useState({});
 
   const { register, error, clearError } = useAuth();
-      if (isLoading) {
-        return <Loader text="Registering..." />;
-      }
+  const { showToast } = useToast();
   const navigate = useNavigate();
+
+  if (isLoading) {
+    return <Loader text={t('auth.registering')} />;
+  }
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -48,43 +53,43 @@ const Register = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.firstName.trim()) {
-      newErrors.firstName = 'First name is required';
+      newErrors.firstName = t('auth.firstNameRequired');
     }
-    
+
     if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
+      newErrors.lastName = t('auth.lastNameRequired');
     }
-    
+
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t('auth.emailRequired');
     } else if (!isValidEmail(formData.email)) {
-      newErrors.email = 'Invalid email format';
+      newErrors.email = t('auth.invalidEmail');
     }
-    
+
     if (!formData.phone) {
-      newErrors.phone = 'Phone is required';
+      newErrors.phone = t('auth.phoneRequired');
     } else if (!isValidPhone(formData.phone)) {
-      newErrors.phone = 'Invalid phone format';
+      newErrors.phone = t('auth.invalidPhone');
     }
-    
+
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = t('auth.passwordRequired');
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must contain at least 6 characters';
+      newErrors.password = t('auth.passwordMin6');
     }
-    
+
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Confirm your password';
+      newErrors.confirmPassword = t('auth.confirmPasswordRequired');
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = t('auth.passwordsDontMatch');
     }
-    
+
     if (!formData.acceptTerms) {
-      newErrors.acceptTerms = 'You must accept the terms of use';
+      newErrors.acceptTerms = t('auth.acceptTermsRequired');
     }
-    
+
     return newErrors;
   };
 
@@ -104,17 +109,26 @@ const Register = () => {
       const { confirmPassword, acceptTerms, ...userData } = formData;
       const result = await register(userData);
       if (result.success) {
+        showToast({
+          type: 'success',
+          title: t('toast.welcome'),
+          message: t('toast.registerSuccess')
+        });
         navigate('/', { replace: true });
       }
     } catch (err) {
-      // Error is handled by context
+      showToast({
+        type: 'error',
+        title: t('toast.error'),
+        message: t('toast.registerFailed')
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8" data-wg-notranslate="true">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link to="/" className="flex justify-center items-center space-x-2 mb-6">
           <div className="w-10 h-10 bg-[#D6BA69] rounded-lg flex items-center justify-center">
@@ -122,14 +136,14 @@ const Register = () => {
           </div>
           <span className="text-2xl font-bold text-black">Cambizzle</span>
         </Link>
-        
+
         <h2 className="text-center text-3xl font-bold text-gray-900">
-          Create your account
+          {t('auth.createAccount')}
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          Or{' '}
+          {t('auth.or')}{' '}
           <Link to="/login" className="font-medium text-[#D6BA69] hover:underline">
-            sign in to your existing account
+            {t('auth.signInNow')}
           </Link>
         </p>
       </div>
@@ -145,7 +159,7 @@ const Register = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <Input
-                label="First Name"
+                label={t('auth.firstName')}
                 type="text"
                 name="firstName"
                 value={formData.firstName}
@@ -155,9 +169,9 @@ const Register = () => {
                 placeholder="John"
                 autoComplete="given-name"
               />
-              
+
               <Input
-                label="Last Name"
+                label={t('auth.lastName')}
                 type="text"
                 name="lastName"
                 value={formData.lastName}
@@ -170,7 +184,7 @@ const Register = () => {
             </div>
 
             <Input
-              label="Email Address"
+              label={t('auth.email')}
               type="email"
               name="email"
               value={formData.email}
@@ -182,31 +196,31 @@ const Register = () => {
             />
 
             <Input
-              label="Phone"
+              label={t('auth.phone')}
               type="tel"
               name="phone"
               value={formData.phone}
               onChange={handleChange}
               error={errors.phone}
               required
-              placeholder="06 12 34 56 78"
+              placeholder="+237 6XX XXX XXX"
               autoComplete="tel"
-              helperText="Format: 06 12 34 56 78 or +33 6 12 34 56 78"
+              helperText={t('auth.phoneFormatHelper')}
             />
 
             <div className="relative">
               <Input
-                label="Password"
+                label={t('auth.password')}
                 type={showPassword ? 'text' : 'password'}
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
                 error={errors.password}
                 required
-                placeholder="Minimum 6 characters"
+                placeholder={t('auth.minSixCharacters')}
                 autoComplete="new-password"
                 className="pr-10"
-                helperText="At least 6 characters"
+                helperText={t('auth.atLeastSixChars')}
               />
               <button
                 type="button"
@@ -219,14 +233,14 @@ const Register = () => {
 
             <div className="relative">
               <Input
-                label="Confirm Password"
+                label={t('auth.confirmPassword')}
                 type={showConfirmPassword ? 'text' : 'password'}
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 error={errors.confirmPassword}
                 required
-                placeholder="Repeat your password"
+                placeholder={t('auth.repeatPassword')}
                 autoComplete="new-password"
                 className="pr-10"
               />
@@ -252,13 +266,13 @@ const Register = () => {
               </div>
               <div className="ml-3 text-sm">
                 <label htmlFor="acceptTerms" className="text-gray-700">
-                  I accept the{' '}
+                  {t('auth.agreeTerms')}{' '}
                   <Link to="/terms" className="text-[#D6BA69] hover:underline">
-                    terms of use
+                    {t('auth.termsOfService')}
                   </Link>
-                  {' '}and the{' '}
+                  {' '}{t('auth.and')}{' '}
                   <Link to="/privacy" className="text-[#D6BA69] hover:underline">
-                    privacy policy
+                    {t('auth.privacyPolicy')}
                   </Link>
                 </label>
                 {errors.acceptTerms && (
@@ -275,7 +289,7 @@ const Register = () => {
               loading={isLoading}
               disabled={isLoading}
             >
-              Create my account
+              {t('auth.createMyAccount')}
             </Button>
           </form>
 
@@ -285,22 +299,22 @@ const Register = () => {
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Account Benefits</span>
+                <span className="px-2 bg-white text-gray-500">{t('auth.accountBenefits')}</span>
               </div>
             </div>
 
             <div className="mt-4 space-y-2 text-sm text-gray-600">
               <div className="flex items-center space-x-2">
                 <User className="w-4 h-4 text-[#D6BA69]" />
-                <span>Personalized profile</span>
+                <span>{t('auth.personalizedProfile')}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Mail className="w-4 h-4 text-[#D6BA69]" />
-                <span>Email notifications</span>
+                <span>{t('auth.emailNotifications')}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Phone className="w-4 h-4 text-[#D6BA69]" />
-                <span>Direct contact with sellers</span>
+                <span>{t('auth.directContactSellers')}</span>
               </div>
             </div>
           </div>

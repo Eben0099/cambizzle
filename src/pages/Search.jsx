@@ -1,8 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Filter, Grid, List, SlidersHorizontal, MapPin, DollarSign } from 'lucide-react';
+import { useWeglotTranslate } from '../hooks/useWeglotRetranslate';
 import { useAds } from '../contexts/AdsContext';
 import { adsService } from '../services/adsService';
+import { useAdCreationData } from '../hooks/useAdsQuery';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
@@ -19,8 +22,14 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 
+// Composant pour traduire le titre dynamique
+const TranslatedTitle = ({ title }) => {
+  const { translatedText } = useWeglotTranslate(title || '');
+  return <>{translatedText || title}</>;
+};
+
 const Search = () => {
-  const [creationData, setCreationData] = useState({ categories: [], locations: [] });
+  const { t } = useTranslation();
   const [categoryAds, setCategoryAds] = useState(null);
   const [subcategoryAds, setSubcategoryAds] = useState(null);
   const [categoryLoading, setCategoryLoading] = useState(false);
@@ -41,41 +50,40 @@ const Search = () => {
     location: searchParams.get('location') || 'all'
   });
 
-  const { 
-    ads, 
-    searchResults, 
-    isLoading, 
-    searchAds, 
-    fetchAds, 
+  const {
+    ads,
+    searchResults,
+    isLoading,
+    searchAds,
+    fetchAds,
     setFilters,
-    pagination 
+    pagination
   } = useAds();
 
   const navigate = useNavigate();
   const query = searchParams.get('q') || '';
 
-  // Fetch creation data for filters
-  useEffect(() => {
-    async function fetchCreationData() {
-      try {
-        const data = await adsService.getAdCreationData();
-        
-        // Sort categories alphabetically
-        if (data.categories) {
-          data.categories.sort((a, b) => a.name.localeCompare(b.name));
-        }
-        
-        // Sort locations alphabetically
-        if (data.locations) {
-          data.locations.sort((a, b) => a.city.localeCompare(b.city));
-        }
+  // Utiliser React Query pour les données de création
+  const { data: rawCreationData } = useAdCreationData();
 
-        setCreationData(data);
-      } catch (e) {
-      }
-    }
-    fetchCreationData();
-  }, []);
+  // Trier les données de création avec useMemo
+  const creationData = useMemo(() => {
+    if (!rawCreationData) return { categories: [], locations: [] };
+
+    const sortedCategories = rawCreationData.categories
+      ? [...rawCreationData.categories].sort((a, b) => a.name.localeCompare(b.name))
+      : [];
+
+    const sortedLocations = rawCreationData.locations
+      ? [...rawCreationData.locations].sort((a, b) => a.city.localeCompare(b.city))
+      : [];
+
+    return {
+      ...rawCreationData,
+      categories: sortedCategories,
+      locations: sortedLocations
+    };
+  }, [rawCreationData]);
 
   // Function to fetch ads for a specific category
   const fetchCategoryAds = async (categoryId, filters = {}) => {
@@ -266,10 +274,10 @@ const Search = () => {
   };
 
   const sortOptions = [
-    { value: 'recent', label: 'Most recent' },
-    { value: 'price-asc', label: 'Price ascending' },
-    { value: 'price-desc', label: 'Price descending' },
-    { value: 'popular', label: 'Most popular' }
+    { value: 'recent', label: t('filters.newest') },
+    { value: 'price-asc', label: t('filters.priceLowHigh') },
+    { value: 'price-desc', label: t('filters.priceHighLow') },
+    { value: 'popular', label: t('filters.mostPopular') }
   ];
 
 
@@ -313,11 +321,12 @@ const Search = () => {
     };
   } else if (subcategoryParam) {
     rawAds = [];
-    currentLoading = subcategoryLoading || !creationData.categories.length;
+    currentLoading = true;
     displayInfo = {
-      title: subcategoryLoading ? `Loading ads in "${subcategoryParam}"...` : `Looking for "${subcategoryParam}"...`,
+      title: subcategoryParam,
       count: 0,
-      type: 'subcategory-loading'
+      type: 'subcategory-loading',
+      isLoading: true
     };
   } else if (categoryParam && categoryAds) {
     rawAds = categoryAds.ads || [];
@@ -330,11 +339,12 @@ const Search = () => {
     };
   } else if (categoryParam) {
     rawAds = [];
-    currentLoading = categoryLoading || !creationData.categories.length;
+    currentLoading = true;
     displayInfo = {
-      title: categoryLoading ? `Loading ads in "${categoryParam}"...` : `Looking for "${categoryParam}"...`,
+      title: categoryParam,
       count: 0,
-      type: 'category-loading'
+      type: 'category-loading',
+      isLoading: true
     };
   } else {
     rawAds = query ? searchResults : ads;
@@ -415,11 +425,15 @@ const Search = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {displayInfo.title}
+            <TranslatedTitle title={displayInfo.title} />
           </h1>
-          <p className="text-gray-600">
-            {keywordFilter ? filteredAds.length : displayInfo.count} ad{(keywordFilter ? filteredAds.length : displayInfo.count) !== 1 ? 's' : ''} found
-          </p>
+          {currentLoading ? (
+            <p className="text-gray-500 italic">{t('common.loading')}</p>
+          ) : (
+            <p className="text-gray-600">
+              {keywordFilter ? filteredAds.length : displayInfo.count} {t('filters.adsFound', { count: keywordFilter ? filteredAds.length : displayInfo.count })}
+            </p>
+          )}
         </div>
 
         {/* Keyword Search */}
@@ -435,7 +449,7 @@ const Search = () => {
             {keywordFilter && (
               <button
                 onClick={() => setKeywordFilter('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
               >
                 ✕
               </button>
@@ -443,7 +457,7 @@ const Search = () => {
           </div>
           {keywordFilter && (
             <p className="text-sm text-gray-500 mt-2">
-              Showing {filteredAds.length} of {rawAds.length} ads matching "{keywordFilter}"
+              {t('filters.showingResults', { count: filteredAds.length, total: rawAds.length, keyword: keywordFilter })}
             </p>
           )}
         </div>
@@ -457,7 +471,7 @@ const Search = () => {
               className="flex items-center space-x-2 w-full sm:w-auto"
             >
               <SlidersHorizontal className="w-4 h-4" />
-              <span>Filters</span>
+              <span>{t('filters.filters')}</span>
             </Button>
 
             <Select value={sortBy} onValueChange={handleSortChange}>
@@ -497,7 +511,7 @@ const Search = () => {
           <Card className="mb-6 p-6 bg-white shadow-sm rounded-xl">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category">{t('filters.category')}</Label>
                 <Select
                   value={localFilters.category}
                   onValueChange={(value) => handleFilterChange('category', value)}
@@ -520,7 +534,7 @@ const Search = () => {
 
 
               <div className="space-y-2">
-                <Label htmlFor="priceMin">Minimum price</Label>
+                <Label htmlFor="priceMin">{t('filters.minPrice')}</Label>
                 <Input
                   id="priceMin"
                   type="number"
@@ -531,7 +545,7 @@ const Search = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="priceMax">Maximum price</Label>
+                <Label htmlFor="priceMax">{t('filters.maxPrice')}</Label>
                 <Input
                   id="priceMax"
                   type="number"
@@ -542,7 +556,7 @@ const Search = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="location">Location</Label>
+                <Label htmlFor="location">{t('filters.location')}</Label>
                 <Select
                   value={localFilters.location}
                   onValueChange={(value) => handleFilterChange('location', value)}
@@ -563,10 +577,10 @@ const Search = () => {
 
             <div className="flex justify-end space-x-4 mt-6">
               <Button variant="outline" onClick={clearFilters}>
-                Clear
+                {t('filters.clearFilters')}
               </Button>
               <Button onClick={applyFilters}>
-                Apply filters
+                {t('filters.applyFilters')}
               </Button>
             </div>
           </Card>
@@ -574,7 +588,7 @@ const Search = () => {
 
         {/* Results */}
         {currentLoading ? (
-          <Loader text="Loading ads..." />
+          <Loader text={t('common.loading')} />
         ) : displayedAds.length > 0 ? (
           <>
             <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
@@ -595,10 +609,10 @@ const Search = () => {
                     }}
                     disabled={pagination.currentPage === 1}
                   >
-                    Previous
+                    {t('pagination.previous')}
                   </Button>
                   <span className="text-sm text-gray-600">
-                    Page {pagination.currentPage} of {pagination.totalPages}
+                    {t('pagination.page')} {pagination.currentPage} {t('pagination.of')} {pagination.totalPages}
                   </span>
                   <Button
                     variant="ghost"
@@ -608,7 +622,7 @@ const Search = () => {
                     }}
                     disabled={pagination.currentPage === pagination.totalPages}
                   >
-                    Next
+                    {t('pagination.next')}
                   </Button>
                 </div>
               </div>
@@ -618,13 +632,13 @@ const Search = () => {
           <div className="text-center py-20 bg-white rounded-xl shadow-sm">
             <Filter className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              No ads found
+              {t('home.noAdsFound')}
             </h3>
             <p className="text-gray-600 mb-6 max-w-md mx-auto">
-              Try adjusting your search criteria or removing some filters to see more results.
+              {t('common.noResults')}
             </p>
             <Button onClick={clearFilters}>
-              Clear all filters
+              {t('filters.clearAllFilters')}
             </Button>
           </div>
         )}

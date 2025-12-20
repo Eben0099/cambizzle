@@ -43,6 +43,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import adminService from "@/services/adminService";
 import { toast } from "sonner";
+import storageService from "@/services/storageService";
 
 const Categories = () => {
   // States
@@ -112,7 +113,7 @@ const Categories = () => {
       form.append('is_active', formData.is_active ? '1' : '0');
       form.append('display_order', formData.display_order);
       if (iconFile) form.append('icon', iconFile);
-      const token = localStorage.getItem('token');
+      const token = storageService.getToken();
       const response = await fetch(`${API_BASE_URL}/admin/referentials/categories`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
@@ -163,7 +164,7 @@ const Categories = () => {
       form.append('display_order', formData.display_order);
       if (iconFile) form.append('icon', iconFile);
 
-      const token = localStorage.getItem('token');
+      const token = storageService.getToken();
       const response = await fetch(`${API_BASE_URL}/admin/referentials/categories/${selectedCategory.id}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
@@ -205,9 +206,23 @@ const Categories = () => {
         setSelectedCategory(null);
         fetchCategories();
         toast.success("Category deleted successfully.");
+      } else {
+        if (response.status === 422) {
+          toast.error("You cannot delete a non-empty category.");
+          setShowDeleteDialog(false);
+          setSelectedCategory(null);
+        } else {
+          toast.error(response.message || "Error deleting category.");
+        }
       }
     } catch (err) {
-      toast.error(err.message || "Error deleting category.");
+      if (err.response?.status === 422) {
+        toast.error("You cannot delete a non-empty category.");
+        setShowDeleteDialog(false);
+        setSelectedCategory(null);
+      } else {
+        toast.error(err.message || "Error deleting category.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -331,16 +346,22 @@ const Categories = () => {
                         <img
                           src={(() => {
                             if (category.iconPath.startsWith('http')) return category.iconPath;
-                            // Toujours préfixer SERVER_BASE_URL (qui inclut /api en prod)
                             return SERVER_BASE_URL.replace(/\/$/, '') + '/' + category.iconPath.replace(/^\//, '');
                           })()}
                           alt={category.name}
                           className="w-10 h-10 object-cover rounded-md border"
                           style={{ background: '#f9fafb' }}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
                         />
-                      ) : (
-                        <span className="text-xs text-gray-400">No icon</span>
-                      )}
+                      ) : null}
+                      <div
+                        className={`w-10 h-10 bg-gray-100 rounded-md border items-center justify-center ${category.iconPath ? 'hidden' : 'flex'}`}
+                      >
+                        <span className="text-xs text-gray-400">{(category.name || 'C')[0]}</span>
+                      </div>
                     </TableCell>
                     <TableCell className="px-4 py-3">
                       <Badge

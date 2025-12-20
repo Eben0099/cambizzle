@@ -6,10 +6,12 @@ import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import './index.css'
 // Importer la configuration API en premier pour initialiser les intercepteurs axios
 import './config/api'
+// Initialiser i18n pour les traductions
+import './i18n'
 import App from './App.jsx'
 
-// REMPLACEZ PAR VOTRE CLIENT ID GOOGLE
-const GOOGLE_CLIENT_ID = "428598840929-uvv36a24eop1ni3incpj5lbs08egafj0.apps.googleusercontent.com";
+// Google Client ID from environment variables
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 // Configuration React Query
 const queryClient = new QueryClient({

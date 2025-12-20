@@ -4,6 +4,9 @@ import Button from "../../components/ui/Button";
 import Loader from "../../components/ui/Loader";
 import { API_BASE_URL } from "../../config/api";
 import { useToast } from "../../components/toast/useToast";
+import storageService from "../../services/storageService";
+import { Download } from "lucide-react";
+import { exportToExcel } from "../../utils/exportToExcel";
 import {
   LineChart,
   Line,
@@ -49,7 +52,7 @@ export default function Payments() {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem("token");
+      const token = storageService.getToken();
       const params = new URLSearchParams();
       if (statsStart) params.append("start_date", statsStart);
       if (statsEnd) params.append("end_date", statsEnd);
@@ -100,7 +103,7 @@ export default function Payments() {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem("token");
+      const token = storageService.getToken();
       const qs = new URLSearchParams({
         page: String(txPage),
         per_page: String(txPerPage),
@@ -327,6 +330,8 @@ export default function Payments() {
                 <thead>
                   <tr className="border-b">
                     <th className="text-left py-2">Ad ID</th>
+                    <th className="text-left py-2">Title</th>
+                    <th className="text-left py-2">User</th>
                     <th className="text-left py-2">Boosts</th>
                     <th className="text-left py-2">Revenue</th>
                   </tr>
@@ -335,6 +340,8 @@ export default function Payments() {
                   {stats.top_boosted_ads.map((ad) => (
                     <tr key={ad.ad_id} className="border-b">
                       <td className="py-1">{ad.ad_id}</td>
+                      <td className="py-1">{ad.ad_title ?? ad.title ?? "-"}</td>
+                      <td className="py-1">{ad.user_name ?? ad.user?.name ?? ad.user_email ?? "-"}</td>
                       <td className="py-1">{ad.payments_count}</td>
                       <td className="py-1">{ad.revenue} FCFA</td>
                     </tr>
@@ -356,6 +363,8 @@ export default function Payments() {
                     <th className="text-left py-2">Status</th>
                     <th className="text-left py-2">Method</th>
                     <th className="text-left py-2">Date</th>
+                    <th className="text-left py-2">Ad Title</th>
+                    <th className="text-left py-2">User</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -363,9 +372,25 @@ export default function Payments() {
                     <tr key={tx.id} className="border-b">
                       <td className="py-1">{tx.reference}</td>
                       <td className="py-1">{tx.amount} FCFA</td>
-                      <td className="py-1">{tx.status}</td>
+                      <td className="py-1">
+                        <span
+                          className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                            tx.status === "paid"
+                              ? "bg-green-100 text-green-800"
+                              : tx.status === "pending"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : tx.status === "failed"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {tx.status}
+                        </span>
+                      </td>
                       <td className="py-1">{tx.payment_method}</td>
                       <td className="py-1">{tx.created_at}</td>
+                      <td className="py-1">{tx.ad_title ?? tx.ad?.title ?? "-"}</td>
+                      <td className="py-1">{tx.user_name ?? tx.user?.name ?? tx.user_email ?? tx.user?.email ?? "-"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -427,6 +452,29 @@ export default function Payments() {
             >
               Filter
             </Button>
+
+            <Button
+              type="button"
+              onClick={() => exportToExcel(transactions, 'payments', {
+                columns: [
+                  { header: 'Reference', key: 'reference' },
+                  { header: 'Amount (FCFA)', key: 'amount' },
+                  { header: 'Phone', key: 'phone' },
+                  { header: 'Method', key: 'payment_method' },
+                  { header: 'Status', key: 'status' },
+                  { header: 'Description', key: 'description' },
+                  { header: 'Date', key: 'created_at' },
+                  { header: 'Ad Title', key: 'ad_title' },
+                  { header: 'User Email', key: 'user_email' },
+                ],
+                sheetName: 'Payments'
+              })}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded flex items-center gap-1 cursor-pointer"
+              disabled={transactions.length === 0}
+            >
+              <Download className="h-4 w-4" />
+              Export Excel
+            </Button>
           </form>
 
           {/* Table */}
@@ -435,15 +483,14 @@ export default function Payments() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-gray-50">
-                    <th className="text-left py-2 px-3">Ref.</th>
-                    <th className="text-left py-2 px-3">Amount</th>
-                    <th className="text-left py-2 px-3">Phone</th>
-                    <th className="text-left py-2 px-3">Method</th>
-                    <th className="text-left py-2 px-3">Status</th>
+                    <th className="text-left py-2 px-3">Référence</th>
+                    <th className="text-left py-2 px-3">Montant</th>
+                    <th className="text-left py-2 px-3">Téléphone</th>
+                    <th className="text-left py-2 px-3">Méthode de paiement</th>
+                    <th className="text-left py-2 px-3">Statut</th>
                     <th className="text-left py-2 px-3">Description</th>
                     <th className="text-left py-2 px-3">Date</th>
-                    <th className="text-left py-2 px-3">Ad Title</th>
-                    <th className="text-left py-2 px-3">User Email</th>
+                    <th className="text-left py-2 px-3">Titre de l'annonce</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -452,7 +499,7 @@ export default function Payments() {
                       <td className="py-2 px-3">{tx.reference}</td>
                       <td className="py-2 px-3">{tx.amount} FCFA</td>
                       <td className="py-2 px-3">{tx.phone ?? "-"}</td>
-                      <td className="py-2 px-3">{tx.payment_method}</td>
+                      <td className="py-2 px-3">{tx.paymentMethod ?? tx.payment_method ?? "-"}</td>
                       <td className="py-2 px-3">
                         <span
                           className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
@@ -469,9 +516,8 @@ export default function Payments() {
                         </span>
                       </td>
                       <td className="py-2 px-3">{tx.description ?? "-"}</td>
-                      <td className="py-2 px-3">{tx.created_at}</td>
-                      <td className="py-2 px-3">{tx.ad_title ?? "-"}</td>
-                      <td className="py-2 px-3">{tx.user_email ?? "-"}</td>
+                      <td className="py-2 px-3">{tx.date ?? tx.createdAt ?? tx.created_at ?? "-"}</td>
+                      <td className="py-2 px-3">{tx.adTitle ?? tx.ad_title ?? "-"}</td>
                     </tr>
                   ))}
                 </tbody>

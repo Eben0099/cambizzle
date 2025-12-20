@@ -20,7 +20,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, MapPin, Search } from "lucide-react";
+import { Plus, Edit, Trash2, MapPin, Search, Download } from "lucide-react";
+import { exportToExcel } from "../../utils/exportToExcel";
 import { useToast } from "@/components/ui/use-toast";
 
 const Locations = () => {
@@ -115,15 +116,39 @@ const Locations = () => {
             Manage regions and their respective cities
           </p>
         </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button
-              className="bg-[#D6BA69] text-white hover:bg-[#c3a55d] transition-colors"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              New Region
-            </Button>
-          </DialogTrigger>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => exportToExcel(
+              locations.flatMap(loc => loc.cities.map(city => ({
+                region: loc.region,
+                city: city,
+                adsCount: loc.adsCount,
+              }))),
+              'locations',
+              {
+                columns: [
+                  { header: 'Region', key: 'region' },
+                  { header: 'City', key: 'city' },
+                  { header: 'Ads Count', key: 'adsCount' },
+                ],
+                sheetName: 'Locations'
+              }
+            )}
+            className="bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center gap-1 cursor-pointer"
+            disabled={locations.length === 0}
+          >
+            <Download className="h-4 w-4" />
+            Export
+          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                className="bg-[#D6BA69] text-white hover:bg-[#c3a55d] transition-colors"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                New Region
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-md bg-white rounded-xl p-6">
             <DialogHeader>
               <DialogTitle className="text-lg font-semibold">Add New Region</DialogTitle>
@@ -147,6 +172,7 @@ const Locations = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Search Bar */}

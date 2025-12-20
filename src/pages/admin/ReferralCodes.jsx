@@ -5,18 +5,20 @@ import Loader from "../../components/ui/Loader";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/Button";
 import { useToast } from "../../components/toast/useToast";
-import { 
-  Users, 
-  Search as SearchIcon, 
-  CheckCircle, 
+import {
+  Users,
+  Search as SearchIcon,
+  CheckCircle,
   XCircle,
   ChevronDown,
   ChevronUp,
   User,
   Mail,
   Phone,
-  Calendar
+  Calendar,
+  Download
 } from "lucide-react";
+import { exportToExcel } from "../../utils/exportToExcel";
 import adminService from "../../services/adminService";
 
 const ReferralCodes = () => {
@@ -84,9 +86,32 @@ const ReferralCodes = () => {
           <h1 className="text-3xl font-bold text-gray-900">Referral Codes</h1>
           <p className="text-gray-600 mt-1">Manage all referral codes and track referrals</p>
         </div>
-        <div className="text-right">
-          <div className="text-sm text-gray-600">Total Codes</div>
-          <div className="text-2xl font-bold text-[#D6BA69]">{codes.length}</div>
+        <div className="flex items-center gap-4">
+          <Button
+            onClick={() => exportToExcel(filteredCodes, 'referral_codes', {
+              columns: [
+                { header: 'Code', key: 'code' },
+                { header: 'First Name', key: 'firstName' },
+                { header: 'Last Name', key: 'lastName' },
+                { header: 'Email', key: 'email' },
+                { header: 'Phone', key: 'phone' },
+                { header: 'Current Uses', key: 'currentUses' },
+                { header: 'Max Uses', key: 'maxUses' },
+                { header: 'Active', key: 'isActive' },
+                { header: 'Created At', key: 'createdAt' },
+              ],
+              sheetName: 'ReferralCodes'
+            })}
+            className="bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center gap-1 cursor-pointer"
+            disabled={filteredCodes.length === 0}
+          >
+            <Download className="h-4 w-4" />
+            Export
+          </Button>
+          <div className="text-right">
+            <div className="text-sm text-gray-600">Total Codes</div>
+            <div className="text-2xl font-bold text-[#D6BA69]">{codes.length}</div>
+          </div>
         </div>
       </div>
 

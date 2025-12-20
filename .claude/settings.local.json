@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git pull:*)",
+      "Bash(git checkout:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm install)",
+      "Bash(find:*)",
+      "Bash(npm install:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: Add i18n translation system with react-i18next\n\n- Install i18next, react-i18next, i18next-browser-languagedetector\n- Create translation files (en.json, fr.json) for UI interfaces\n- Refactor LanguageSwitcher to use i18n instead of Weglot for UI\n- Move LanguageSwitcher from Header to Footer\n- Add useTranslation hook to Header and Footer\n- Add data-wg-notranslate attribute to prevent Weglot interference\n- Add cursor-pointer to clickable elements in ads pages\nEOF\n)\")",
+      "Bash(git commit:*)",
+      "Bash(npm run build:*)",
+      "Bash(cat:*)",
+      "Bash(curl:*)",
+      "WebSearch",
+      "WebFetch(domain:support.weglot.com)",
+      "WebFetch(domain:developers.weglot.com)"
+    ]
+  }
+}

@@ -48,7 +48,7 @@ const ToastItem = ({ toast, onDismiss }) => {
           setVisible(false);
           setTimeout(() => onDismiss(toast.id), 300);
         }}
-        className="ml-2 text-white/80 hover:text-white transition-colors"
+        className="ml-2 text-white/80 hover:text-white transition-colors cursor-pointer"
         aria-label="Dismiss"
       >
         <X className="w-4 h-4" />

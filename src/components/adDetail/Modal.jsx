@@ -27,7 +27,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
       <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         {/* Overlay */}
         <div
-          className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
+          className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75 cursor-pointer"
           onClick={onClose}
         ></div>
 
@@ -37,7 +37,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
             <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
             >
               <X className="w-6 h-6" />
             </button>

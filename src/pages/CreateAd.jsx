@@ -1,6 +1,7 @@
 import Select from 'react-select';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Tag, Camera, Loader2, MapPin, Zap } from 'lucide-react';
 import { FaWallet } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
@@ -15,8 +16,194 @@ import useAdCreation from '../hooks/useAdCreation';
 import { adsService } from '../services/adsService';
 import StepBoostPlan from '../components/StepBoostPlan';
 import PaymentModal from '../components/PaymentModal';
+import logger from '../utils/logger';
+import { useWeglotTranslate, useWeglotTranslateArray } from '../hooks/useWeglotRetranslate';
+
+// Fonction pour traduire les erreurs API
+const translateApiError = (errorMessage, t) => {
+  if (!errorMessage) return errorMessage;
+
+  // Vérifier si c'est un message d'erreur connu (format "field: message")
+  const colonIndex = errorMessage.indexOf(':');
+  if (colonIndex > 0) {
+    const field = errorMessage.substring(0, colonIndex).trim();
+    const message = errorMessage.substring(colonIndex + 1).trim();
+
+    // Traduire le nom du champ
+    const translatedField = t(`errors.apiFields.${field}`, { defaultValue: field });
+
+    // Essayer de traduire le message complet d'abord
+    const fullMessageKey = `errors.apiMessages.${message}`;
+    const translatedFullMessage = t(fullMessageKey, { defaultValue: '' });
+
+    if (translatedFullMessage) {
+      return `${translatedField}: ${translatedFullMessage}`;
+    }
+
+    // Sinon, essayer de traduire des parties du message
+    let translatedMessage = message;
+    if (message.toLowerCase().includes('required')) {
+      translatedMessage = t('errors.apiMessages.required');
+    } else if (message.toLowerCase().includes('min') || message.toLowerCase().includes('short')) {
+      translatedMessage = t('errors.apiMessages.min');
+    } else if (message.toLowerCase().includes('max') || message.toLowerCase().includes('long')) {
+      translatedMessage = t('errors.apiMessages.max');
+    } else if (message.toLowerCase().includes('invalid')) {
+      translatedMessage = t('errors.apiMessages.invalid');
+    }
+
+    return `${translatedField} ${translatedMessage}`;
+  }
+
+  // Essayer de traduire le message complet
+  const directTranslation = t(`errors.apiMessages.${errorMessage}`, { defaultValue: '' });
+  if (directTranslation) {
+    return directTranslation;
+  }
+
+  return errorMessage;
+};
+
+// Composant pour traduire un texte inline (pour les labels de filtres)
+const TranslatedText = ({ text, className }) => {
+  const { translatedText } = useWeglotTranslate(text || '');
+  return <span className={className}>{translatedText || text}</span>;
+};
+
+// Composant pour traduire une option de filtre
+const TranslatedOption = ({ text }) => {
+  const { translatedText } = useWeglotTranslate(text || '');
+  return <>{translatedText || text}</>;
+};
+
+// Composant Select avec options traduites
+const TranslatedFilterSelectField = ({ filter, value, onChange, error }) => {
+  const { translatedItems } = useWeglotTranslateArray(
+    (filter.options || []).map(opt => ({ value: opt, displayLabel: opt })),
+    'displayLabel'
+  );
+
+  const optionsToDisplay = translatedItems.length > 0 ? translatedItems : (filter.options || []).map(opt => ({ value: opt, displayLabel: opt }));
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        <TranslatedText text={filter.name} /> <span className="text-red-500">*</span>
+      </label>
+      <select
+        name={`filters.${filter.id}`}
+        value={value || ''}
+        onChange={(e) => onChange(filter.id, e.target.value)}
+        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
+      >
+        <option value=""></option>
+        {[...optionsToDisplay]
+          .sort((a, b) => {
+            const aNum = Number(a.value), bNum = Number(b.value);
+            if (!isNaN(aNum) && !isNaN(bNum)) {
+              return aNum - bNum;
+            }
+            return a.displayLabel.localeCompare(b.displayLabel);
+          })
+          .map(option => (
+            <option key={option.value} value={option.value}>
+              {option.displayLabel}
+            </option>
+          ))}
+      </select>
+      {error && (
+        <p className="text-sm text-red-600 mt-1">{error}</p>
+      )}
+    </div>
+  );
+};
+
+// Composant Multi-Select (checkbox) avec options traduites
+const TranslatedFilterMultiSelect = ({ filter, value, onChange, error, Select: SelectComponent }) => {
+  const { translatedItems } = useWeglotTranslateArray(
+    (filter.options || []).map(opt => ({ value: opt, displayLabel: opt })),
+    'displayLabel'
+  );
+
+  const optionsToDisplay = translatedItems.length > 0 ? translatedItems : (filter.options || []).map(opt => ({ value: opt, displayLabel: opt }));
+
+  const selectOptions = [...optionsToDisplay]
+    .sort((a, b) => {
+      const aNum = Number(a.value), bNum = Number(b.value);
+      if (!isNaN(aNum) && !isNaN(bNum)) {
+        return aNum - bNum;
+      }
+      return a.displayLabel.localeCompare(b.displayLabel);
+    })
+    .map(option => ({ value: option.value, label: option.displayLabel }));
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        <TranslatedText text={filter.name} /> <span className="text-red-500">*</span>
+      </label>
+      <SelectComponent
+        isMulti
+        closeMenuOnSelect={false}
+        hideSelectedOptions={false}
+        isClearable={true}
+        name={`filters.${filter.id}`}
+        options={selectOptions}
+        value={(value || []).map(val => {
+          const found = selectOptions.find(opt => opt.value === val);
+          return found || { value: val, label: val };
+        })}
+        onChange={selected => onChange(filter.id, selected ? selected.map(opt => opt.value) : [])}
+        classNamePrefix="react-select"
+        menuPlacement="auto"
+        menuShouldScrollIntoView={false}
+        styles={{
+          control: (base) => ({
+            ...base,
+            borderColor: '#D6BA69',
+            minHeight: 44,
+            borderRadius: '8px',
+            boxShadow: 'none',
+            '&:focus': { borderColor: '#D6BA69' }
+          }),
+          multiValue: (base) => ({ ...base, backgroundColor: '#F3F4F6' }),
+          option: (base, state) => ({
+            ...base,
+            backgroundColor: state.isSelected ? '#D6BA69' : '#fff',
+            color: state.isSelected ? 'white' : '#222',
+            '&:hover': { backgroundColor: state.isSelected ? '#D6BA69' : '#f9fafb' },
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8
+          })
+        }}
+        formatOptionLabel={(option, { context, isSelected }) =>
+          context === 'menu' ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input
+                type="checkbox"
+                checked={isSelected}
+                tabIndex={-1}
+                readOnly
+                style={{ accentColor: '#D6BA69', marginRight: 8, pointerEvents: 'none' }}
+                onClick={e => e.stopPropagation()}
+              />
+              <span>{option.label}</span>
+            </div>
+          ) : (
+            <span>{option.label}</span>
+          )
+        }
+      />
+      {error && (
+        <p className="text-sm text-red-600 mt-1">{error}</p>
+      )}
+    </div>
+  );
+};
 
 const CreateAd = () => {
+  const { t } = useTranslation();
   const { showToast } = useToast();
   const [formData, setFormData] = useState({
     title: '',
@@ -59,6 +246,13 @@ const CreateAd = () => {
     loadSubcategoryFields
   } = useAdCreation();
 
+  // Traduire les données dynamiques avec Weglot
+  const { translatedItems: translatedCategories } = useWeglotTranslateArray(creationData.categories || [], 'name');
+  const { translatedItems: translatedSubcategories } = useWeglotTranslateArray(subcategories, 'name');
+  const { translatedItems: translatedLocations } = useWeglotTranslateArray(creationData.locations || [], 'city');
+  const { translatedItems: translatedBrands } = useWeglotTranslateArray(subcategoryFields.brands || [], 'name');
+  const { translatedItems: translatedFilters } = useWeglotTranslateArray(subcategoryFields.filters || [], 'name');
+
   // Vérifier l'authentification
   useEffect(() => {
     if (!isAuthenticated) {
@@ -90,7 +284,7 @@ const CreateAd = () => {
   }, [formData, images, currentStep]);
 
   const handleImagesChange = (newImages) => {
-    console.log('📸 CreateAd: Changement d\'images', {
+    logger.debug('CreateAd: Changement d\'images', {
       previous: images.length,
       new: newImages.length,
       images: newImages.map((img, idx) => ({
@@ -145,7 +339,7 @@ const CreateAd = () => {
           }
         } catch (err) {
           setSubcategories([]);
-          console.error('Erreur chargement sous-catégories:', err);
+          logger.error('Erreur chargement sous-catégories:', err);
         }
       }
       return;
@@ -189,52 +383,52 @@ const CreateAd = () => {
 
   const validateStep = (step) => {
     const newErrors = {};
-    
+
     if (step === 1) {
       if (!formData.title.trim()) {
-        newErrors.title = 'Title is required';
+        newErrors.title = t('createAd.validation.titleRequired');
       } else if (formData.title.length < 10) {
-        newErrors.title = 'Title must be at least 10 characters';
+        newErrors.title = t('createAd.validation.titleMinLength');
       }
       if (!formData.description.trim()) {
-        newErrors.description = 'Description is required';
+        newErrors.description = t('createAd.validation.descriptionRequired');
       } else if (formData.description.length < 20) {
-        newErrors.description = 'Description must be at least 20 characters';
+        newErrors.description = t('createAd.validation.descriptionMinLength');
       }
       if (!formData.category) {
-        newErrors.category = 'Please select a category';
+        newErrors.category = t('createAd.validation.categoryRequired');
       }
       if (!formData.type) {
-        newErrors.type = 'Please select an ad type';
+        newErrors.type = t('createAd.validation.adTypeRequired');
       }
       if (!formData.subcategory) {
-        newErrors.subcategory = 'Subcategory is required';
+        newErrors.subcategory = t('createAd.validation.subcategoryRequired');
       }
     }
     if (step === 2) {
       if (!formData.price) {
-        newErrors.price = 'Price is required';
+        newErrors.price = t('createAd.validation.priceRequired');
       } else {
         const priceRaw = formData.price.replace(/\s/g, '');
         if (parseFloat(priceRaw) <= 0) {
-          newErrors.price = 'Price must be greater than 0';
+          newErrors.price = t('createAd.validation.priceGreaterThanZero');
         }
       }
       if (formData.originalPrice) {
         const originalPriceRaw = formData.originalPrice.replace(/\s/g, '');
         const priceRaw = formData.price.replace(/\s/g, '');
         if (parseFloat(originalPriceRaw) <= parseFloat(priceRaw)) {
-          newErrors.originalPrice = 'Original price must be greater than selling price';
+          newErrors.originalPrice = t('createAd.validation.originalPriceMustBeHigher');
         }
       }
       if (!formData.locationId) {
-        newErrors.locationId = 'Location is required';
+        newErrors.locationId = t('createAd.validation.locationRequired');
       }
     }
     if (step === 3) {
       if (subcategoryFields.brands && subcategoryFields.brands.length > 0) {
         if (!formData.brandId) {
-          newErrors.brandId = 'Brand is required';
+          newErrors.brandId = t('createAd.validation.brandRequired');
         }
       }
       if (subcategoryFields.filters) {
@@ -247,7 +441,7 @@ const CreateAd = () => {
             hasValue = !!(value && typeof value === 'string' && value.trim() !== '');
           }
           if (filter.isRequired && !hasValue) {
-            newErrors[`filters.${filter.id}`] = `${filter.name} is required`;
+            newErrors[`filters.${filter.id}`] = t('createAd.validation.filterRequired', { filterName: filter.name });
           }
         });
       }
@@ -256,19 +450,19 @@ const CreateAd = () => {
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
       const maxSize = 5 * 1024 * 1024;
       if (images.length < 3) {
-        newErrors.images = 'At least 3 photos are required';
+        newErrors.images = t('createAd.validation.minPhotosRequired');
       } else if (images.length > 10) {
-        newErrors.images = 'Maximum 10 photos allowed';
+        newErrors.images = t('createAd.validation.maxPhotosExceeded');
       } else {
         for (let i = 0; i < images.length; i++) {
           const img = images[i];
           if (img.file) {
             if (!allowedTypes.includes(img.file.type)) {
-              newErrors.images = `Photo format not allowed (photo ${i + 1}). Accepted formats: JPG, PNG, WEBP.`;
+              newErrors.images = t('createAd.validation.photoFormatNotAllowed', { index: i + 1 });
               break;
             }
             if (img.file.size > maxSize) {
-              newErrors.images = `Photo too large (photo ${i + 1}). Max size: 5MB.`;
+              newErrors.images = t('createAd.validation.photoTooLarge', { index: i + 1 });
               break;
             }
           }
@@ -281,17 +475,17 @@ const CreateAd = () => {
         // If a paid plan is selected, validate phone and payment method
         if (formData.selectedPlan && formData.selectedPlan.price > 0) {
           if (!formData.phone.trim()) {
-            newErrors.phone = 'Phone number is required for paid boosts';
+            newErrors.phone = t('createAd.validation.phoneRequiredForBoost');
           } else if (formData.phone.length < 10) {
-            newErrors.phone = 'Please enter a valid phone number';
+            newErrors.phone = t('createAd.validation.invalidPhoneNumber');
           }
           if (!formData.payment_method) {
-            newErrors.payment_method = 'Payment method is required for paid boosts';
+            newErrors.payment_method = t('createAd.validation.paymentMethodRequired');
           }
         }
       }
     }
-    
+
     return newErrors;
   };
 
@@ -343,22 +537,22 @@ const CreateAd = () => {
 
     if (isLoading || !canSubmit) return;
 
-    console.log('🚀 Début soumission formulaire');
-    
+    logger.log('Début soumission formulaire');
+
     const allErrors = {
       ...validateStep(1),
       ...validateStep(2),
       ...validateStep(3),
       ...validateStep(4)
     };
-    
+
     if (Object.keys(allErrors).length > 0) {
-      console.log('❌ Validation échouée - Arrêt soumission');
+      logger.log('Validation échouée - Arrêt soumission');
       setErrors(allErrors);
       return;
     }
 
-    console.log('✅ Validation réussie - Lancement création annonce');
+    logger.log('Validation réussie - Lancement création annonce');
 
     setIsLoading(true);
 
@@ -425,19 +619,24 @@ const CreateAd = () => {
         }
       }
 
-      console.log('📤 Envoi des données...');
+      logger.log('Envoi des données...');
       const result = await adsService.createAd(formDataToSend);
-      console.log('📡 Réponse API reçue:', result);
+      logger.log('Réponse API reçue:', result);
 
       if (result.status === 'success') {
         // Ad created successfully without payment
+        showToast({
+          type: 'success',
+          title: t('toast.success'),
+          message: t('toast.adCreated')
+        });
         navigate('/profile');
       } else if (result.status === 'payment_pending') {
         // Check if required data exists - be more flexible
         const adId = result.adId || result.ad_id || result.id || result.ad?.id;
         const paymentInfo = result.payment_info || result.paymentInfo;
 
-        console.log('💳 Payment pending - extracted data:', { adId, paymentInfo, fullResult: result });
+        logger.log('Payment pending - extracted data:', { adId, paymentInfo, fullResult: result });
 
         // Show payment modal even if adId is missing (we mainly need paymentInfo)
         setPaymentModal({
@@ -447,22 +646,24 @@ const CreateAd = () => {
         });
       } else {
         // Handle unexpected status
-        setErrors({ submit: result.message || 'Unexpected response from server' });
+        const errorMsg = result.message || t('errors.somethingWentWrong');
+        setErrors({ submit: translateApiError(errorMsg, t) });
       }
     } catch (err) {
-      console.error('Erreur création annonce:', err);
-      setErrors({ submit: err.message || 'Erreur lors de la création de l\'annonce' });
+      logger.error('Erreur création annonce:', err);
+      const errorMsg = err.message || t('errors.somethingWentWrong');
+      setErrors({ submit: translateApiError(errorMsg, t) });
     } finally {
       setIsLoading(false);
     }
   };
 
   const steps = [
-    { number: 1, title: 'General Information', icon: Tag },
-    { number: 2, title: 'Price and Location', icon: FaWallet },
-    { number: 3, title: 'Specific Characteristics', icon: MapPin },
-    { number: 4, title: 'Photos', icon: Camera },
-    { number: 5, title: 'Boost Plan', icon: Zap }
+    { number: 1, title: t('createAd.step1'), icon: Tag },
+    { number: 2, title: t('createAd.step2'), icon: FaWallet },
+    { number: 3, title: t('createAd.step3'), icon: MapPin },
+    { number: 4, title: t('createAd.step4'), icon: Camera },
+    { number: 5, title: t('createAd.step5'), icon: Zap }
   ];
 
   if (!isAuthenticated) {
@@ -483,7 +684,7 @@ const CreateAd = () => {
           </Button>
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-              Create an Ad
+              {t('createAd.title')}
             </h1>
           </div>
         </div>
@@ -512,7 +713,7 @@ const CreateAd = () => {
                     <p className={`text-sm font-medium ${
                       isActive ? 'text-[#D6BA69]' : 'text-gray-500'
                     }`}>
-                      Step {step.number}
+                      {t('createAd.step')} {step.number}
                     </p>
                     <p className={`text-xs ${
                       isActive ? 'text-gray-900' : 'text-gray-500'
@@ -539,7 +740,7 @@ const CreateAd = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Ad Type
+                      {t('createAd.adType')}
                     </label>
                     <select
                       name="type"
@@ -547,8 +748,8 @@ const CreateAd = () => {
                       onChange={handleChange}
                       className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                     >
-                      <option value="sell">Sell</option>
-                      <option value="rent">Rent</option>
+                      <option value="sell">{t('createAd.sell')}</option>
+                      <option value="rent">{t('createAd.rent')}</option>
                     </select>
                     {errors.type && (
                       <p className="text-sm text-red-600 mt-1">{errors.type}</p>
@@ -556,12 +757,12 @@ const CreateAd = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Category <span className="text-red-500">*</span>
+                      {t('createAd.category')} <span className="text-red-500">*</span>
                     </label>
                     {creationLoading ? (
                       <div className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 flex items-center">
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                        Loading categories...
+                        {t('createAd.loadingCategories')}
                       </div>
                     ) : (
                       <select
@@ -571,7 +772,7 @@ const CreateAd = () => {
                         className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                       >
                         <option value=""></option>
-                        {creationData.categories?.map(category => (
+                        {(translatedCategories.length > 0 ? translatedCategories : creationData.categories || []).map(category => (
                           <option key={category.id} value={category.id}>
                             {category.name}
                           </option>
@@ -585,7 +786,7 @@ const CreateAd = () => {
                   {/* Subcategory */}
                   <div className="lg:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Subcategory <span className="text-red-500">*</span>
+                      {t('createAd.subcategory')} <span className="text-red-500">*</span>
                     </label>
                     <select
                       name="subcategory"
@@ -595,7 +796,7 @@ const CreateAd = () => {
                       className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] disabled:bg-gray-100 disabled:cursor-not-allowed transition-all bg-white"
                     >
                       <option value=""></option>
-                      {formData.category && subcategories.length > 0 && [...subcategories]
+                      {formData.category && subcategories.length > 0 && [...(translatedSubcategories.length > 0 ? translatedSubcategories : subcategories)]
                         .sort((a, b) => a.name.localeCompare(b.name))
                         .map(subcategory => (
                           <option key={subcategory.id} value={subcategory.slug}>
@@ -609,18 +810,20 @@ const CreateAd = () => {
                   </div>
                   <div className="lg:col-span-2">
                     <Input
-                      label={<span>Ad Title <span className="text-red-500">*</span></span>}
+                      label={<span>{t('createAd.adTitle')} <span className="text-red-500">*</span></span>}
                       name="title"
                       value={formData.title}
                       onChange={handleChange}
                       error={errors.title}
-                      helperText="Be precise and attractive (min. 10 characters)"
                       className="w-full"
                     />
+                    <p className="text-sm text-gray-500 mt-1">
+                      {formData.title.length} {t('createAd.characters')} (min. 10)
+                    </p>
                   </div>
                   <div className="lg:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Description <span className="text-red-500">*</span>
+                      {t('createAd.description')} <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       name="description"
@@ -633,16 +836,15 @@ const CreateAd = () => {
                       <p className="text-sm text-red-600 mt-1">{errors.description}</p>
                     )}
                     <p className="text-sm text-gray-500 mt-1">
-                      {formData.description.length} characters (min. 20)
+                      {formData.description.length} {t('createAd.characters')} (min. 20)
                     </p>
                   </div>
                   <div className="lg:col-span-2">
                     <Input
-                      label="Keywords (optional)"
+                      label={t('createAd.tags')}
                       name="tags"
                       value={formData.tags}
                       onChange={handleChange}
-                      helperText="Add keywords to improve visibility"
                       className="w-full"
                     />
                   </div>
@@ -657,7 +859,7 @@ const CreateAd = () => {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Input
-                    label={<span>Selling Price <span className="text-red-500">*</span></span>}
+                    label={<span>{t('createAd.price')} (in FCFA) <span className="text-red-500">*</span></span>}
                     type="text"
                     name="price"
                     value={formData.price}
@@ -676,10 +878,10 @@ const CreateAd = () => {
                   <Input
                     label={
                       <span>
-                        Original Price (optional)
+                        {t('createAd.originalPrice')}
                         {formData.price && (
                           <span className="text-red-500 text-xs ml-2">
-                            (must be higher than selling price)
+                            ({t('createAd.mustBeHigher')})
                           </span>
                         )}
                       </span>
@@ -701,7 +903,7 @@ const CreateAd = () => {
                     error={errors.originalPrice}
                   />
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Negotiable price</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('createAd.isNegotiable')}</label>
                     <select
                       name="isNegotiable"
                       value={formData.isNegotiable ? '1' : '0'}
@@ -713,26 +915,26 @@ const CreateAd = () => {
                       }}
                       className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                     >
-                      <option value="0">No</option>
-                      <option value="1">Yes</option>
+                      <option value="0">{t('common.no')}</option>
+                      <option value="1">{t('common.yes')}</option>
                     </select>
                   </div>
                 </div>
                 {formData.discountPercent > 0 && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                     <p className="text-green-800 font-medium">
-                      {formData.discountPercent}% discount displayed!
+                      {formData.discountPercent}% {t('createAd.discountDisplayed')}
                     </p>
                   </div>
                 )}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Location <span className="text-red-500">*</span>
+                    {t('createAd.location')} <span className="text-red-500">*</span>
                   </label>
                   {creationLoading ? (
                     <div className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 flex items-center">
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      Loading locations...
+                      {t('createAd.loadingLocations')}
                     </div>
                   ) : (
                     <select
@@ -742,7 +944,7 @@ const CreateAd = () => {
                       className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                     >
                       <option value=""></option>
-                      {creationData.locations?.map(location => (
+                      {(translatedLocations.length > 0 ? translatedLocations : creationData.locations || []).map(location => (
                         <option key={location.id} value={location.id}>
                           {location.city}
                         </option>
@@ -765,12 +967,12 @@ const CreateAd = () => {
                 {subcategoryFields.brands && subcategoryFields.brands.length > 0 && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Brand <span className="text-red-500">*</span>
+                      {t('createAd.brand')} <span className="text-red-500">*</span>
                     </label>
                     {fieldsLoading ? (
                       <div className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 flex items-center">
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                        Loading brands...
+                        {t('createAd.loadingBrands')}
                       </div>
                   ) : (
                       <select
@@ -780,7 +982,7 @@ const CreateAd = () => {
                         className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                       >
                         <option value=""></option>
-                        {[...subcategoryFields.brands]
+                        {[...(translatedBrands.length > 0 ? translatedBrands : subcategoryFields.brands || [])]
                           .sort((a, b) => a.name.localeCompare(b.name))
                           .map(brand => (
                             <option key={brand.id} value={brand.id}>
@@ -797,51 +999,47 @@ const CreateAd = () => {
                 {/* Dynamic Filters */}
                 {subcategoryFields.filters && subcategoryFields.filters.length > 0 && (
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-gray-900">Technical Characteristics</h3>
+                    <h3 className="text-lg font-medium text-gray-900">{t('createAd.technicalCharacteristics')}</h3>
                     {fieldsLoading ? (
                       <div className="flex items-center justify-center py-8">
                         <Loader2 className="w-6 h-6 animate-spin mr-2" />
-                        Loading characteristics...
+                        {t('createAd.loadingFilters')}
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {subcategoryFields.filters.map(filter => (
-                          <div key={filter.id}>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              {filter.name} <span className="text-red-500">*</span>
-                            </label>
-                            {filter.type === 'select' && filter.options.length > 0 ? (
-                              <select
-                                name={`filters.${filter.id}`}
-                                value={formData.filters[filter.id] || ''}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  setFormData(prev => ({
-                                    ...prev,
-                                    filters: {
-                                      ...prev.filters,
-                                      [filter.id]: value
-                                    }
-                                  }));
-                                }}
-                                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
-                              >
-                                <option value=""></option>
-                                {[...filter.options]
-                                  .sort((a, b) => {
-                                    const aNum = Number(a), bNum = Number(b);
-                                    if (!isNaN(aNum) && !isNaN(bNum)) {
-                                      return aNum - bNum;
-                                    }
-                                    return a.localeCompare(b);
-                                  })
-                                  .map(option => (
-                                    <option key={option} value={option}>
-                                      {option}
-                                    </option>
-                                  ))}
-                              </select>
-                            ) : filter.type === 'number' ? (
+                          filter.type === 'select' && filter.options && filter.options.length > 0 ? (
+                            <TranslatedFilterSelectField
+                              key={filter.id}
+                              filter={filter}
+                              value={formData.filters[filter.id]}
+                              onChange={(filterId, value) => {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  filters: { ...prev.filters, [filterId]: value }
+                                }));
+                              }}
+                              error={errors[`filters.${filter.id}`]}
+                            />
+                          ) : filter.type === 'checkbox' && filter.options && filter.options.length > 0 ? (
+                            <TranslatedFilterMultiSelect
+                              key={filter.id}
+                              filter={filter}
+                              value={formData.filters[filter.id]}
+                              onChange={(filterId, value) => {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  filters: { ...prev.filters, [filterId]: value }
+                                }));
+                              }}
+                              error={errors[`filters.${filter.id}`]}
+                              Select={Select}
+                            />
+                          ) : filter.type === 'number' ? (
+                            <div key={filter.id}>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <TranslatedText text={filter.name} /> <span className="text-red-500">*</span>
+                              </label>
                               <input
                                 type="number"
                                 name={`filters.${filter.id}`}
@@ -850,15 +1048,20 @@ const CreateAd = () => {
                                   const value = e.target.value;
                                   setFormData(prev => ({
                                     ...prev,
-                                    filters: {
-                                      ...prev.filters,
-                                      [filter.id]: value
-                                    }
+                                    filters: { ...prev.filters, [filter.id]: value }
                                   }));
                                 }}
                                 className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                               />
-                            ) : filter.type === 'date' ? (
+                              {errors[`filters.${filter.id}`] && (
+                                <p className="text-sm text-red-600 mt-1">{errors[`filters.${filter.id}`]}</p>
+                              )}
+                            </div>
+                          ) : filter.type === 'date' ? (
+                            <div key={filter.id}>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <TranslatedText text={filter.name} /> <span className="text-red-500">*</span>
+                              </label>
                               <input
                                 type="date"
                                 name={`filters.${filter.id}`}
@@ -867,82 +1070,20 @@ const CreateAd = () => {
                                   const value = e.target.value;
                                   setFormData(prev => ({
                                     ...prev,
-                                    filters: {
-                                      ...prev.filters,
-                                      [filter.id]: value
-                                    }
+                                    filters: { ...prev.filters, [filter.id]: value }
                                   }));
                                 }}
                                 className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                               />
-                            ) : filter.type === 'checkbox' && filter.options.length > 0 ? (
-                              <Select
-                                isMulti
-                                closeMenuOnSelect={false}
-                                hideSelectedOptions={false}
-                                isClearable={true}
-                                name={`filters.${filter.id}`}
-                                options={[...filter.options]
-                                  .sort((a, b) => {
-                                    const aNum = Number(a), bNum = Number(b);
-                                    if (!isNaN(aNum) && !isNaN(bNum)) {
-                                      return aNum - bNum;
-                                    }
-                                    return a.localeCompare(b);
-                                  })
-                                  .map(option => ({ value: option, label: option }))}
-                                value={(formData.filters[filter.id] || []).map(val => ({ value: val, label: val }))}
-                                onChange={selected => {
-                                  setFormData(prev => ({
-                                    ...prev,
-                                    filters: {
-                                      ...prev.filters,
-                                      [filter.id]: selected ? selected.map(opt => opt.value) : []
-                                    }
-                                  }));
-                                }}
-                                classNamePrefix="react-select"
-                                menuPlacement="auto"
-                                menuShouldScrollIntoView={false}
-                                styles={{
-                                  control: (base) => ({ 
-                                    ...base, 
-                                    borderColor: '#D6BA69', 
-                                    minHeight: 44,
-                                    borderRadius: '8px',
-                                    boxShadow: 'none',
-                                    '&:focus': { borderColor: '#D6BA69' }
-                                  }),
-                                  multiValue: (base) => ({ ...base, backgroundColor: '#F3F4F6' }),
-                                  option: (base, state) => ({ 
-                                    ...base, 
-                                    backgroundColor: state.isSelected ? '#D6BA69' : '#fff', 
-                                    color: state.isSelected ? 'white' : '#222',
-                                    '&:hover': { backgroundColor: state.isSelected ? '#D6BA69' : '#f9fafb' },
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 8
-                                  })
-                                }}
-                                formatOptionLabel={(option, { context, isSelected }) =>
-                                  context === 'menu' ? (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                      <input
-                                        type="checkbox"
-                                        checked={isSelected}
-                                        tabIndex={-1}
-                                        readOnly
-                                        style={{ accentColor: '#D6BA69', marginRight: 8, pointerEvents: 'none' }}
-                                        onClick={e => e.stopPropagation()}
-                                      />
-                                      <span>{option.label}</span>
-                                    </div>
-                                  ) : (
-                                    <span>{option.label}</span>
-                                  )
-                                }
-                              />
-                            ) : filter.type === 'text' ? (
+                              {errors[`filters.${filter.id}`] && (
+                                <p className="text-sm text-red-600 mt-1">{errors[`filters.${filter.id}`]}</p>
+                              )}
+                            </div>
+                          ) : filter.type === 'text' ? (
+                            <div key={filter.id}>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <TranslatedText text={filter.name} /> <span className="text-red-500">*</span>
+                              </label>
                               <input
                                 type="text"
                                 name={`filters.${filter.id}`}
@@ -951,19 +1092,16 @@ const CreateAd = () => {
                                   const value = e.target.value;
                                   setFormData(prev => ({
                                     ...prev,
-                                    filters: {
-                                      ...prev.filters,
-                                      [filter.id]: value
-                                    }
+                                    filters: { ...prev.filters, [filter.id]: value }
                                   }));
                                 }}
                                 className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                               />
-                            ) : null}
-                            {errors[`filters.${filter.id}`] && (
-                              <p className="text-sm text-red-600 mt-1">{errors[`filters.${filter.id}`]}</p>
-                            )}
-                          </div>
+                              {errors[`filters.${filter.id}`] && (
+                                <p className="text-sm text-red-600 mt-1">{errors[`filters.${filter.id}`]}</p>
+                              )}
+                            </div>
+                          ) : null
                         ))}
                       </div>
                     )}
@@ -971,7 +1109,7 @@ const CreateAd = () => {
                 )}
                 {!formData.subcategory && (
                   <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
-                    <p>Select a category and subcategory first to see specific characteristics.</p>
+                    <p>{t('createAd.selectCategoryFirst')}</p>
                   </div>
                 )}
               </div>
@@ -984,10 +1122,10 @@ const CreateAd = () => {
               <div className="space-y-6">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                    Ad Photos
+                    {t('createAd.uploadPhotos')}
                   </h2>
                   <p className="text-gray-600">
-                    Add quality photos to attract more buyers
+                    {t('createAd.uploadPhotosHint')}
                   </p>
                 </div>
                 <ImageUpload
@@ -999,16 +1137,16 @@ const CreateAd = () => {
                   <p className="text-sm text-red-600">{errors.images}</p>
                 )}
                 <div className={`p-4 rounded-lg ${
-                  images.length >= 3 
-                    ? 'bg-green-50 border border-green-200' 
+                  images.length >= 3
+                    ? 'bg-green-50 border border-green-200'
                     : 'bg-yellow-50 border border-yellow-200'
                 }`}>
                   <p className={`text-sm font-medium ${
                     images.length >= 3 ? 'text-green-800' : 'text-yellow-800'
                   }`}>
-                    {images.length >= 3 
-                      ? 'Minimum 3 photos requirement met!' 
-                      : `${3 - images.length} more photo(s) needed (minimum 3 required)`
+                    {images.length >= 3
+                      ? t('createAd.photosRequirementMet')
+                      : t('createAd.morePhotosNeeded', { count: 3 - images.length })
                     }
                   </p>
                 </div>
@@ -1035,7 +1173,7 @@ const CreateAd = () => {
                 onClick={handlePrevious}
                 className="bg-white border-black text-black hover:bg-gray-50 hover:border-gray-300 px-6 py-3 rounded-lg font-medium transition-colors"
               >
-                Previous
+                {t('createAd.previous')}
               </Button>
             )}
             {currentStep === 1 && (
@@ -1048,7 +1186,7 @@ const CreateAd = () => {
                 onClick={handleNext}
                 className="bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
               >
-                Next
+                {t('createAd.next')}
               </Button>
             ) : (
               <Button
@@ -1058,7 +1196,7 @@ const CreateAd = () => {
                 disabled={!canSubmit || isLoading}
                 className="bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] px-6 py-3 rounded-lg font-medium transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Publishing...' : 'Publish'}
+                {isLoading ? t('createAd.publishing') : t('createAd.publish')}
               </Button>
             )}
           </div>
@@ -1078,7 +1216,7 @@ const CreateAd = () => {
             onClose={() => setPaymentModal({ show: false, paymentInfo: null, adId: null })}
             onSuccess={() => {
               setPaymentModal({ show: false, paymentInfo: null, adId: null });
-              showToast({ type: 'success', message: 'Payment successful! Your ad is now active.' });
+              showToast({ type: 'success', title: t('toast.success'), message: t('toast.paymentSuccess') });
               setTimeout(() => {
                 navigate('/profile/ads');
               }, 1500);

@@ -1,27 +1,31 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { Grid, List, SlidersHorizontal } from 'lucide-react';
 import AdCard from '../components/ads/AdCard';
 import Button from '../components/ui/Button';
-import Card from '../components/ui/Card';
-import { adsService } from '../services/adsService';
+import { useAdsByCategory } from '../hooks/useAdsQuery';
 
 const CategoryAds = () => {
-  const { categoryId } = useParams(); // Changé de 'category' à 'categoryId'
+  const { categoryId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [ads, setAds] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [categoryInfo, setCategoryInfo] = useState(null);
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    total: 0
-  });
   const [viewMode, setViewMode] = useState('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState('recent');
+
+  const page = parseInt(searchParams.get('page') || '1', 10);
+
+  // Utilisation du hook React Query
+  const { data, isLoading, error, refetch } = useAdsByCategory(categoryId, { page });
+
+  const ads = data?.ads || [];
+  const categoryInfo = data?.category || null;
+  const pagination = data?.pagination || {
+    currentPage: 1,
+    totalPages: 1,
+    total: 0,
+    hasNext: false,
+    hasPrevious: false
+  };
 
   const sortOptions = [
     { value: 'recent', label: 'Most recent' },
@@ -30,12 +34,12 @@ const CategoryAds = () => {
     { value: 'popular', label: 'Most popular' }
   ];
 
-  // Fonction de tri côté frontend
-  const sortAds = (adsArray, sortBy) => {
-    if (!adsArray || adsArray.length === 0) return adsArray;
-    
-    const sortedAds = [...adsArray];
-    
+  // Tri des annonces avec useMemo pour éviter les recalculs inutiles
+  const displayedAds = useMemo(() => {
+    if (!ads || ads.length === 0) return [];
+
+    const sortedAds = [...ads];
+
     switch (sortBy) {
       case 'price-asc':
         return sortedAds.sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
@@ -47,54 +51,15 @@ const CategoryAds = () => {
       default:
         return sortedAds.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
+  }, [ads, sortBy]);
+
+  const goToPage = (pageNumber) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('page', pageNumber);
+    setSearchParams(newParams);
+    // Scroll vers le haut de la page
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  useEffect(() => {
-    async function fetchCategoryAds() {
-      setLoading(true);
-      setError(null);
-      try {
-        console.log('🔍 Fetching category ads for category:', categoryId);
-        const page = searchParams.get('page') || 1;
-        const response = await adsService.getAdsByCategory(categoryId, { page });
-        
-        console.log('📦 Category ads response:', response);
-        
-        // Gestion du format de réponse API
-        const adsData = response.ads || [];
-        const categoryData = response.category || null;
-        const paginationData = response.pagination || { 
-          currentPage: 1, 
-          totalPages: 1, 
-          total: 0,
-          hasNext: false,
-          hasPrevious: false
-        };
-
-        setAds(adsData);
-        setCategoryInfo(categoryData);
-        setPagination(paginationData);
-        
-        console.log('✅ Category ads loaded:', {
-          adsCount: adsData.length,
-          category: categoryData?.name,
-          pagination: paginationData
-        });
-        
-      } catch (e) {
-        console.error('❌ Error fetching category ads:', e);
-        setError(e.message || 'Failed to load ads for this category.');
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    if (categoryId) {
-      fetchCategoryAds();
-    }
-  }, [categoryId, searchParams]);
-
-  const displayedAds = sortAds(ads, sortBy);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -107,11 +72,6 @@ const CategoryAds = () => {
           <p className="text-gray-600">
             {pagination.total} ad{pagination.total > 1 ? 's' : ''} found
           </p>
-          {categoryInfo && (
-            <div className="mt-2 text-sm text-gray-500">
-              Category ID: {categoryInfo.id} | Slug: {categoryInfo.slug}
-            </div>
-          )}
         </div>
 
         {/* Controls */}
@@ -130,7 +90,7 @@ const CategoryAds = () => {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
+                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] cursor-pointer"
               >
                 {sortOptions.map(option => (
                   <option key={option.value} value={option.value}>
@@ -165,7 +125,7 @@ const CategoryAds = () => {
         </div>
 
         {/* Results */}
-        {loading ? (
+        {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="animate-pulse">
@@ -186,11 +146,11 @@ const CategoryAds = () => {
               Error loading ads
             </h3>
             <p className="text-gray-600 mb-6">
-              {error}
+              {error.message || 'Failed to load ads for this category.'}
             </p>
-            <Button 
-              variant="primary" 
-              onClick={() => window.location.reload()}
+            <Button
+              variant="primary"
+              onClick={() => refetch()}
             >
               Try again
             </Button>
@@ -198,8 +158,8 @@ const CategoryAds = () => {
         ) : displayedAds.length > 0 ? (
           <>
             <div className={`grid gap-6 ${
-              viewMode === 'grid' 
-                ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' 
+              viewMode === 'grid'
+                ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'
                 : 'grid-cols-1'
             }`}>
               {displayedAds.map((ad) => (
@@ -215,11 +175,7 @@ const CategoryAds = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      const newParams = new URLSearchParams(searchParams);
-                      newParams.set('page', pagination.previousPage || pagination.currentPage - 1);
-                      setSearchParams(newParams);
-                    }}
+                    onClick={() => goToPage(pagination.previousPage || pagination.currentPage - 1)}
                   >
                     ← Previous
                   </Button>
@@ -234,7 +190,7 @@ const CategoryAds = () => {
                     } else {
                       const current = pagination.currentPage;
                       const total = pagination.totalPages;
-                      
+
                       if (current <= 3) {
                         pageNumber = i + 1;
                       } else if (current >= total - 2) {
@@ -249,11 +205,7 @@ const CategoryAds = () => {
                         key={pageNumber}
                         variant={pagination.currentPage === pageNumber ? 'primary' : 'ghost'}
                         size="sm"
-                        onClick={() => {
-                          const newParams = new URLSearchParams(searchParams);
-                          newParams.set('page', pageNumber);
-                          setSearchParams(newParams);
-                        }}
+                        onClick={() => goToPage(pageNumber)}
                       >
                         {pageNumber}
                       </Button>
@@ -266,11 +218,7 @@ const CategoryAds = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      const newParams = new URLSearchParams(searchParams);
-                      newParams.set('page', pagination.nextPage || pagination.currentPage + 1);
-                      setSearchParams(newParams);
-                    }}
+                    onClick={() => goToPage(pagination.nextPage || pagination.currentPage + 1)}
                   >
                     Next →
                   </Button>

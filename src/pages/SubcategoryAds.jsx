@@ -1,288 +1,149 @@
-
-import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Grid, List, SlidersHorizontal } from 'lucide-react';
-import { adsService } from '../services/adsService';
 import AdCard from '../components/ads/AdCard';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import FilterSidebar from '../components/filters/FilterSidebar';
 import ActiveFilterBadges from '../components/filters/ActiveFilterBadges';
 import { buildFilterQueryParams, parseFiltersFromURL, resetFilters, countActiveFilters } from '../utils/filterHelpers';
+import { useAdsBySubcategory, useSubcategoryFilters, useAdCreationData } from '../hooks/useAdsQuery';
 
 const SubcategoryAds = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const [subcategoryAds, setSubcategoryAds] = useState(null);
-  const [filters, setFilters] = useState([]);
-  const [filterMetadata, setFilterMetadata] = useState({ locations: [], priceRange: null });
   const [selectedFilters, setSelectedFilters] = useState({});
-  const [creationData, setCreationData] = useState({ categories: [], locations: [] });
-  const [loading, setLoading] = useState(false);
-  const [filtersLoading, setFiltersLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [viewMode, setViewMode] = useState('grid');
   const [sortBy, setSortBy] = useState('recent');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  const lastRequestRef = useRef(null);
 
   const categoryParam = searchParams.get('category');
   const subcategoryParam = searchParams.get('subcategory');
 
-  // Récupère les données de création pour les filtres
-  useEffect(() => {
-    async function fetchCreationData() {
-      try {
-        const data = await adsService.getAdCreationData();
-        setCreationData(data);
-        console.log('📋 Données de création chargées:', data);
-      } catch (e) {
-        console.error('Erreur lors du chargement des données de création:', e);
-      }
-    }
-    fetchCreationData();
-  }, []);
+  // Construire les paramètres pour l'API (filtres backend seulement)
+  const frontendFilters = ['location', 'price'];
+  const backendFilters = useMemo(() => {
+    return Object.fromEntries(
+      Object.entries(selectedFilters).filter(([key]) => !frontendFilters.includes(key))
+    );
+  }, [selectedFilters]);
 
-  // Récupère les filtres disponibles pour la sous-catégorie
-  useEffect(() => {
-    async function fetchFilters() {
-      if (!subcategoryParam) return;
-      
-      try {
-        setFiltersLoading(true);
-        console.log('🔧 Récupération des filtres pour:', subcategoryParam);
-        const filtersData = await adsService.getFiltersBySubcategory(subcategoryParam);
-        console.log('📦 Données filtres reçues:', filtersData);
-        
-        // Support du nouveau format avec metadata
-        if (filtersData && typeof filtersData === 'object') {
-          if (Array.isArray(filtersData)) {
-            // Ancien format : tableau direct
-            setFilters(filtersData);
-            setFilterMetadata({ locations: [], priceRange: null });
-            console.log('✅ Filtres chargés (ancien format):', filtersData.length, 'filtres');
-          } else if (filtersData.filters && Array.isArray(filtersData.filters)) {
-            // Nouveau format : objet avec filters et metadata
-            const newFilters = filtersData.filters;
-            const newMetadata = {
-              locations: filtersData.metadata?.locations || [],
-              priceRange: filtersData.metadata?.priceRange || null
-            };
-            setFilters(newFilters);
-            setFilterMetadata(newMetadata);
-            console.log('✅ Filtres chargés (nouveau format):', newFilters.length, 'filtres');
-            console.log('✅ Métadonnées:', newMetadata);
-          } else {
-            setFilters([]);
-            setFilterMetadata({ locations: [], priceRange: null });
-            console.log('⚠️ Format de filtres non reconnu');
-          }
-        } else {
-          setFilters([]);
-          setFilterMetadata({ locations: [], priceRange: null });
-          console.log('⚠️ Aucune donnée de filtres reçue');
-        }
-      } catch (e) {
-        console.error('❌ Erreur lors du chargement des filtres:', e);
-        setFilters([]);
-        setFilterMetadata({ locations: [], priceRange: null });
-      } finally {
-        setFiltersLoading(false);
-      }
+  const queryParams = useMemo(() => ({
+    page: 1,
+    per_page: 20,
+    ...buildFilterQueryParams(backendFilters)
+  }), [backendFilters]);
+
+  // React Query hooks
+  const { data: creationData } = useAdCreationData();
+
+  const {
+    data: filtersData,
+    isLoading: filtersLoading
+  } = useSubcategoryFilters(subcategoryParam);
+
+  const {
+    data: subcategoryAds,
+    isLoading: loading,
+    error,
+    refetch
+  } = useAdsBySubcategory(subcategoryParam, queryParams);
+
+  // Parser les filtres depuis les données API
+  const { filters, filterMetadata } = useMemo(() => {
+    if (!filtersData) {
+      return { filters: [], filterMetadata: { locations: [], priceRange: null } };
     }
-    
-    fetchFilters();
-  }, [subcategoryParam]);
+
+    if (Array.isArray(filtersData)) {
+      // Ancien format : tableau direct
+      return {
+        filters: filtersData,
+        filterMetadata: { locations: [], priceRange: null }
+      };
+    } else if (filtersData.filters && Array.isArray(filtersData.filters)) {
+      // Nouveau format : objet avec filters et metadata
+      return {
+        filters: filtersData.filters,
+        filterMetadata: {
+          locations: filtersData.metadata?.locations || [],
+          priceRange: filtersData.metadata?.priceRange || null
+        }
+      };
+    }
+
+    return { filters: [], filterMetadata: { locations: [], priceRange: null } };
+  }, [filtersData]);
 
   // Initialise les filtres sélectionnés depuis l'URL au chargement
   useEffect(() => {
     const filtersFromURL = parseFiltersFromURL(searchParams);
-    console.log('🔍 Filtres parsés depuis URL:', filtersFromURL);
     setSelectedFilters(filtersFromURL);
   }, []); // Ne s'exécute qu'une fois au montage
 
-  // Fonction pour récupérer les annonces d'une sous-catégorie
-  const fetchSubcategoryAds = async (subcategorySlug, filters = {}) => {
-    const requestKey = `subcategory-${subcategorySlug}-${JSON.stringify(filters)}`;
-    
-    if (lastRequestRef.current === requestKey) {
-      console.log('⏭️ Appel sous-catégorie identique ignoré');
-      return;
-    }
-    
-    lastRequestRef.current = requestKey;
-    
-    try {
-      console.log('📊 DÉBUT - Récupération des annonces de la sous-catégorie (slug):', subcategorySlug, filters);
-      setLoading(true);
-      setError(null);
-      
-      // Construire les query params avec les filtres
-      const filterParams = buildFilterQueryParams(filters);
-      const allParams = { 
-        page: 1, 
-        per_page: 20,
-        ...filterParams
-      };
-      
-      console.log('🔗 Paramètres de requête:', allParams);
-      
-      const response = await adsService.getAdsBySubcategory(subcategorySlug, allParams);
-      
-      console.log('✅ SUCCÈS - Annonces de sous-catégorie chargées:', response.ads?.length || 0, response);
-      setSubcategoryAds(response);
-    } catch (error) {
-      console.error('❌ ERREUR - Lors du chargement des annonces de sous-catégorie:', error);
-      setError(error.message);
-      setSubcategoryAds(null);
-    } finally {
-      setLoading(false);
-      console.log('🏁 FIN - fetchSubcategoryAds');
-    }
-  };
-
   // Gère le changement d'un filtre
   const handleFilterChange = (filterId, value) => {
-    console.log('🔄 Changement de filtre:', { filterId, value });
-    
     const newSelectedFilters = {
       ...selectedFilters,
       [filterId]: value
     };
-    
+
     // Supprimer le filtre si la valeur est vide
     if (!value || value === '' || (Array.isArray(value) && value.length === 0)) {
       delete newSelectedFilters[filterId];
     }
-    
+
     setSelectedFilters(newSelectedFilters);
-    
-    // Mettre à jour l'URL
     updateURLWithFilters(newSelectedFilters);
-    
-    // Filtres frontend (location, price) - pas d'appel API
-    const frontendFilters = ['location', 'price'];
-    const isBackendFilter = !frontendFilters.includes(filterId);
-    
-    // Récupérer les annonces avec les nouveaux filtres SEULEMENT si c'est un filtre backend
-    if (isBackendFilter && subcategoryParam) {
-      // Ne passer que les filtres backend à l'API
-      const backendFilters = Object.fromEntries(
-        Object.entries(newSelectedFilters).filter(([key]) => !frontendFilters.includes(key))
-      );
-      fetchSubcategoryAds(subcategoryParam, backendFilters);
-    }
-    // Sinon, le filtrage frontend se fera automatiquement via le re-render
   };
 
   // Réinitialise tous les filtres
   const handleResetFilters = () => {
-    console.log('🔄 Réinitialisation des filtres');
     const emptyFilters = resetFilters();
     setSelectedFilters(emptyFilters);
-    
+
     // Nettoyer l'URL
     const newParams = new URLSearchParams();
     if (subcategoryParam) newParams.set('subcategory', subcategoryParam);
     if (categoryParam) newParams.set('category', categoryParam);
     setSearchParams(newParams);
-    
-    // Récupérer les annonces sans filtres (même pas besoin car emptyFilters est vide)
-    if (subcategoryParam) {
-      fetchSubcategoryAds(subcategoryParam, {});
-    }
   };
 
   // Supprime un filtre individuel
   const handleRemoveFilter = (filterId) => {
-    console.log('🗑️ Suppression du filtre:', filterId);
     const newSelectedFilters = { ...selectedFilters };
     delete newSelectedFilters[filterId];
     setSelectedFilters(newSelectedFilters);
-    
-    // Mettre à jour l'URL
     updateURLWithFilters(newSelectedFilters);
-    
-    // Filtres frontend (location, price) - pas d'appel API
-    const frontendFilters = ['location', 'price'];
-    const isBackendFilter = !frontendFilters.includes(filterId);
-    
-    // Récupérer les annonces SEULEMENT si c'est un filtre backend
-    if (isBackendFilter && subcategoryParam) {
-      const backendFilters = Object.fromEntries(
-        Object.entries(newSelectedFilters).filter(([key]) => !frontendFilters.includes(key))
-      );
-      fetchSubcategoryAds(subcategoryParam, backendFilters);
-    }
   };
 
   // Met à jour l'URL avec les filtres sélectionnés
   const updateURLWithFilters = (filters) => {
     const newParams = new URLSearchParams();
-    
+
     // Conserver les paramètres de base
     if (subcategoryParam) newParams.set('subcategory', subcategoryParam);
     if (categoryParam) newParams.set('category', categoryParam);
-    
+
     // Ajouter les filtres
     const filterParams = buildFilterQueryParams(filters);
     Object.entries(filterParams).forEach(([key, value]) => {
       newParams.set(key, value);
     });
-    
+
     setSearchParams(newParams);
   };
-
-  useEffect(() => {
-    console.log('🔄 useEffect SubcategoryAds déclenché');
-    
-    if (!subcategoryParam) {
-      console.log('❌ Pas de paramètre subcategory');
-      setError('Subcategory parameter is required');
-      return;
-    }
-
-    console.log('🎯 Appel direct avec slug subcategory:', subcategoryParam);
-    console.log('🔍 Filtres sélectionnés:', selectedFilters);
-    
-    // APPEL DIRECT AVEC LE SLUG ET LES FILTRES
-    console.log('🚀 Appel API avec slug:', subcategoryParam, selectedFilters);
-    fetchSubcategoryAds(subcategoryParam, selectedFilters);
-  }, [subcategoryParam]); // Ne recharger que si la sous-catégorie change, pas les filtres
 
   // Fonction de filtrage côté frontend pour location et price
   const filterAds = (adsArray, filters) => {
     if (!adsArray || adsArray.length === 0) return [];
     if (!filters || Object.keys(filters).length === 0) return adsArray;
 
-    console.log('🔍 FILTRAGE FRONTEND - Filtres actifs:', filters);
-    console.log('📦 FILTRAGE FRONTEND - Nombre d\'annonces avant filtrage:', adsArray.length);
-
-    const filtered = adsArray.filter(ad => {
+    return adsArray.filter(ad => {
       // Filtre localisation
       if (filters.location) {
         const locationQuery = filters.location.toLowerCase().trim();
-        
-        // Logs pour debug
-        console.log('🏙️ Recherche location:', locationQuery);
-        console.log('📍 Annonce #' + ad.id + ' - Données location:', {
-          locationName: ad.locationName,
-          locationId: ad.locationId
-        });
-        
-        // Le backend retourne "locationName" qui contient "Ville, Région" (ex: "Yaoundé, Centre")
         const adLocationName = (ad.locationName || '').toLowerCase();
-        
-        // Vérifier si la recherche matche dans locationName
-        const matchesLocation = adLocationName.includes(locationQuery);
-        
-        console.log('✅ Match?', matchesLocation, '- Comparaison:', {
-          locationName: adLocationName,
-          recherche: locationQuery,
-          resultat: adLocationName + ' includes ' + locationQuery + '? => ' + matchesLocation
-        });
-        
-        if (!matchesLocation) {
+        if (!adLocationName.includes(locationQuery)) {
           return false;
         }
       }
@@ -307,17 +168,17 @@ const SubcategoryAds = () => {
 
       return true;
     });
-
-    console.log('✅ FILTRAGE FRONTEND - Nombre d\'annonces après filtrage:', filtered.length);
-    return filtered;
   };
 
-  // Fonction de tri côté frontend
-  const sortAds = (adsArray, sortBy) => {
-    if (!adsArray || adsArray.length === 0) return adsArray;
-    
-    const sortedAds = [...adsArray];
-    
+  // Tri et filtrage des annonces avec useMemo
+  const displayedAds = useMemo(() => {
+    const rawAds = subcategoryAds?.ads || [];
+    const filteredAds = filterAds(rawAds, selectedFilters);
+
+    if (!filteredAds || filteredAds.length === 0) return [];
+
+    const sortedAds = [...filteredAds];
+
     switch (sortBy) {
       case 'price-asc':
         return sortedAds.sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
@@ -329,11 +190,7 @@ const SubcategoryAds = () => {
       default:
         return sortedAds.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
-  };
-
-  const rawAds = subcategoryAds?.ads || [];
-  const filteredAds = filterAds(rawAds, selectedFilters);
-  const displayedAds = sortAds(filteredAds, sortBy);
+  }, [subcategoryAds?.ads, selectedFilters, sortBy]);
 
   const displayInfo = {
     title: subcategoryAds?.subcategory?.name || `Ads in "${subcategoryParam}"`,
@@ -353,20 +210,10 @@ const SubcategoryAds = () => {
           <p className="text-gray-600">
             {displayInfo.count} ad{displayInfo.count > 1 ? 's' : ''} found
           </p>
-          
-          {/* Debug info */}
-          {displayInfo.subcategoryInfo && (
-            <div className="mt-2 text-sm text-gray-500 bg-green-50 p-2 rounded">
-              📊 Subcategory: {displayInfo.subcategoryInfo.name} (ID: {displayInfo.subcategoryInfo.id}, Slug: {displayInfo.subcategoryInfo.slug})
-              {displayInfo.categoryInfo && (
-                <span className="block text-gray-400">in Category: {displayInfo.categoryInfo.name}</span>
-              )}
-            </div>
-          )}
-          
+
           {error && (
             <div className="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded">
-              ❌ Error: {error}
+              Error: {error.message || 'Failed to load ads'}
             </div>
           )}
         </div>
@@ -420,7 +267,7 @@ const SubcategoryAds = () => {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
+                    className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] cursor-pointer"
                   >
                     <option value="recent">Most recent</option>
                     <option value="price-asc">Price ascending</option>
@@ -466,11 +313,11 @@ const SubcategoryAds = () => {
                     Error loading ads
                   </h3>
                   <p className="text-gray-600 mb-6">
-                    {error}
+                    {error.message || 'Failed to load ads'}
                   </p>
-                  <Button 
-                    variant="primary" 
-                    onClick={() => window.location.reload()}
+                  <Button
+                    variant="primary"
+                    onClick={() => refetch()}
                   >
                     Try again
                   </Button>
@@ -479,8 +326,8 @@ const SubcategoryAds = () => {
             ) : displayedAds.length > 0 ? (
               <>
                 <div className={`grid gap-6 ${
-                  viewMode === 'grid' 
-                    ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
+                  viewMode === 'grid'
+                    ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
                     : 'grid-cols-1'
                 }`}>
                   {displayedAds.map((ad) => (
@@ -495,7 +342,7 @@ const SubcategoryAds = () => {
                     No ads found
                   </h3>
                   <p className="text-gray-600 mb-4">
-                    {countActiveFilters(selectedFilters) > 0 
+                    {countActiveFilters(selectedFilters) > 0
                       ? 'No ads match your selected filters. Try adjusting your criteria.'
                       : 'There are no ads in this subcategory yet.'}
                   </p>

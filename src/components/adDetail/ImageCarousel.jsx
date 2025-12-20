@@ -40,14 +40,14 @@ const ImageCarousel = ({ images }) => {
             <>
               <button
                 onClick={prevImage}
-                className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70 cursor-pointer"
                 aria-label="Previous image"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <button
                 onClick={nextImage}
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70 cursor-pointer"
                 aria-label="Next image"
               >
                 <ChevronRight className="w-5 h-5" />
@@ -58,7 +58,7 @@ const ImageCarousel = ({ images }) => {
           {/* Fullscreen button */}
           <button
             onClick={() => setIsFullscreen(true)}
-            className="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+            className="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70 cursor-pointer"
             aria-label="View in fullscreen"
           >
             <Expand className="w-5 h-5" />
@@ -79,7 +79,7 @@ const ImageCarousel = ({ images }) => {
               <button
                 key={index}
                 onClick={() => goToImage(index)}
-                className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
                   index === currentIndex
                     ? 'border-[#d6ba69] opacity-100'
                     : 'border-gray-200 opacity-60 hover:opacity-80'
@@ -108,7 +108,7 @@ const ImageCarousel = ({ images }) => {
             />
             <button
               onClick={() => setIsFullscreen(false)}
-              className="absolute top-4 right-4 text-white hover:text-gray-300 text-2xl"
+              className="absolute top-4 right-4 text-white hover:text-gray-300 text-2xl cursor-pointer"
               aria-label="Close fullscreen"
             >
               ×
@@ -117,14 +117,14 @@ const ImageCarousel = ({ images }) => {
               <>
                 <button
                   onClick={prevImage}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 p-2"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 p-2 cursor-pointer"
                   aria-label="Previous image"
                 >
                   <ChevronLeft className="w-8 h-8" />
                 </button>
                 <button
                   onClick={nextImage}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 p-2"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 p-2 cursor-pointer"
                   aria-label="Next image"
                 >
                   <ChevronRight className="w-8 h-8" />

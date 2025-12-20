@@ -1,5 +1,6 @@
 import { createContext, useContext, useReducer, useCallback } from 'react';
 import { adsService } from '../services/adsService';
+import logger from '../utils/logger';
 
 const AdsContext = createContext();
 
@@ -225,7 +226,7 @@ export const useAds = () => {
   if (!context) {
     // Pendant le développement avec React Fast Refresh, le contexte peut ne pas être disponible temporairement
     // Retourner une valeur par défaut au lieu de lancer une erreur
-    console.warn('useAds: Context not available, using default values');
+    logger.warn('useAds: Context not available, using default values');
     return {
       ads: [],
       currentAd: null,

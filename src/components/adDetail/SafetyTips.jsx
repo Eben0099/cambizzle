@@ -1,30 +1,33 @@
+import { useTranslation } from 'react-i18next';
 import { Shield, AlertTriangle, Eye, CreditCard, Users } from 'lucide-react';
 
 const SafetyTips = () => {
+  const { t } = useTranslation();
+
   const tips = [
     {
       icon: Users,
-      text: "Meet the seller in a safe, public place",
+      textKey: "adDetail.safetyTip1",
       color: "text-green-600"
     },
     {
       icon: Eye,
-      text: "Carefully inspect the item before purchasing",
+      textKey: "adDetail.safetyTip2",
       color: "text-blue-600"
     },
     {
       icon: CreditCard,
-      text: "Never pay in advance without seeing the item",
+      textKey: "adDetail.safetyTip3",
       color: "text-orange-600"
     },
     {
       icon: AlertTriangle,
-      text: "Be cautious of unusually low prices",
+      textKey: "adDetail.safetyTip4",
       color: "text-red-600"
     },
     {
       icon: Shield,
-      text: "Report suspicious ads",
+      textKey: "adDetail.safetyTip5",
       color: "text-purple-600"
     }
   ];
@@ -36,8 +39,8 @@ const SafetyTips = () => {
           <Shield className="w-6 h-6 text-green-600" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Safety Tips</h3>
-          <p className="text-sm text-gray-600">Shop with Confidence</p>
+          <h3 className="text-lg font-semibold text-gray-900">{t('adDetail.safetyTipsTitle')}</h3>
+          <p className="text-sm text-gray-600">{t('adDetail.shopWithConfidence')}</p>
         </div>
       </div>
 
@@ -47,14 +50,14 @@ const SafetyTips = () => {
             <div className={`p-1 rounded ${tip.color}`}>
               <tip.icon className="w-4 h-4" />
             </div>
-            <p className="text-sm text-gray-700 leading-relaxed">{tip.text}</p>
+            <p className="text-sm text-gray-700 leading-relaxed">{t(tip.textKey)}</p>
           </div>
         ))}
       </div>
 
       <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
         <p className="text-xs text-blue-800 font-medium">
-          💡 Tip: Trust your instincts. If something feels suspicious, don’t hesitate to cancel the transaction.
+          {t('adDetail.safetyTipNote')}
         </p>
       </div>
     </div>

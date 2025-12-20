@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import logger from '../../utils/logger';
 import {
   Car,
   Home,
@@ -123,7 +124,7 @@ const CategorySidebar = ({ className = '' }) => {
   };
 
   const handleCategoryClick = (categorySlug) => {
-    console.log('Category clicked:', categorySlug);
+    logger.debug('Category clicked:', categorySlug);
     navigate(`/search?category=${categorySlug}`);
   };
 

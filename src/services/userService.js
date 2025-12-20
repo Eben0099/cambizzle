@@ -1,9 +1,10 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
+import storageService from './storageService';
 
 class UserService {
   setAuthHeader() {
-    const currentToken = localStorage.getItem('token');
+    const currentToken = storageService.getToken();
     if (currentToken) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${currentToken}`;
     } else {

@@ -1,5 +1,6 @@
 // Brands.jsx
 import React, { useState, useEffect, useMemo } from "react";
+import logger from '../../utils/logger';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +18,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Plus, Edit, Trash2, Search as IconSearch, Loader2 } from "lucide-react";
+import { Plus, Edit, Trash2, Search as IconSearch, Loader2, Download } from "lucide-react";
+import { exportToExcel } from "../../utils/exportToExcel";
 import {
   Dialog,
   DialogContent,
@@ -110,6 +112,16 @@ const Brands = () => {
     return subs.sort((a, b) => a.name.localeCompare(b.name));
   }, [brandsData]);
 
+  // Flatten brands for export
+  const allBrandsFlat = useMemo(() => {
+    return brandsData.flatMap((group) =>
+      group.brands.map((b) => ({
+        ...b,
+        subcategoryName: group.subcategory?.name || '',
+      }))
+    );
+  }, [brandsData]);
+
   // Filter and search pipeline
   const filteredData = useMemo(() => {
     let data = brandsData.slice();
@@ -155,12 +167,12 @@ const Brands = () => {
         is_active: form.is_active ? 1 : 0,
       };
       const response = await adminService.createBrand(brandData);
-      console.log("✅ Brand created:", response);
+      logger.log("Brand created:", response);
       await loadBrands();
       setCreateOpen(false);
       toast({ description: "Brand created successfully." });
     } catch (err) {
-      console.error("❌ Error creating brand:", err);
+      logger.error("Error creating brand:", err);
       toast({ description: "Error creating brand.", variant: "destructive" });
     } finally {
       setSubmitting(false);
@@ -192,12 +204,12 @@ const Brands = () => {
         is_active: form.is_active ? 1 : 0,
       };
       await adminService.updateBrand(form.id, brandData);
-      console.log("✅ Brand updated");
+      logger.log("Brand updated");
       await loadBrands();
       setEditOpen(false);
       toast({ description: "Brand updated successfully." });
     } catch (err) {
-      console.error("❌ Error updating brand:", err);
+      logger.error("Error updating brand:", err);
       toast({ description: "Error updating brand.", variant: "destructive" });
     } finally {
       setSubmitting(false);
@@ -214,12 +226,12 @@ const Brands = () => {
     setSubmitting(true);
     try {
       await adminService.deleteBrand(deleteCandidate.id);
-      console.log("✅ Brand deleted");
+      logger.log("Brand deleted");
       await loadBrands();
       setDeleteCandidate(null);
       toast({ description: "Brand deleted successfully." });
     } catch (err) {
-      console.error("❌ Error deleting brand:", err);
+      logger.error("Error deleting brand:", err);
       toast({ description: "Error deleting brand.", variant: "destructive" });
     } finally {
       setSubmitting(false);
@@ -251,6 +263,24 @@ const Brands = () => {
               />
               <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             </div>
+
+            {/* Export button */}
+            <Button
+              onClick={() => exportToExcel(allBrandsFlat, 'brands', {
+                columns: [
+                  { header: 'ID', key: 'id' },
+                  { header: 'Name', key: 'name' },
+                  { header: 'Subcategory', key: 'subcategoryName' },
+                  { header: 'Ads Count', key: 'adsCount' },
+                ],
+                sheetName: 'Brands'
+              })}
+              className="h-9 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200 flex items-center gap-1 cursor-pointer"
+              disabled={allBrandsFlat.length === 0}
+            >
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
 
             {/* Create button */}
             <Button

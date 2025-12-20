@@ -1,14 +1,17 @@
 import { Store, MapPin, Phone, Mail, Clock, Globe, Facebook, Instagram, Truck, Edit, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import Button from '../ui/Button';
 
 const ProfileBusiness = ({ sellerProfile, onEditBusiness, onDeleteBusiness }) => {
+  const { t } = useTranslation();
+
   if (!sellerProfile) {
     return (
       <div className="bg-white rounded-xl shadow-sm">
         <div className="p-6 sm:p-12 flex flex-col items-center text-center">
           <Store className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-gray-300" />
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">No Business Profile</h3>
-          <p className="text-sm sm:text-base text-gray-500">You haven't created a business profile yet</p>
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">{t('profileBusiness.noBusinessProfile')}</h3>
+          <p className="text-sm sm:text-base text-gray-500">{t('profileBusiness.noBusinessProfileYet')}</p>
         </div>
       </div>
     );
@@ -17,40 +20,30 @@ const ProfileBusiness = ({ sellerProfile, onEditBusiness, onDeleteBusiness }) =>
   // Order of days of the week
   const weekOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
-  const daysOfWeek = {
-    monday: 'Monday',
-    tuesday: 'Tuesday',
-    wednesday: 'Wednesday',
-    thursday: 'Thursday',
-    friday: 'Friday',
-    saturday: 'Saturday',
-    sunday: 'Sunday'
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-        <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Business Profile</h3>
+        <h3 className="text-lg sm:text-xl font-semibold text-gray-900">{t('profileBusiness.title')}</h3>
         <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
             className="py-2 sm:py-3 text-sm sm:text-base"
             onClick={onEditBusiness}
-            aria-label="Edit business profile"
+            aria-label={t('profileBusiness.editAria')}
           >
             <Edit className="w-4 h-4 mr-2" />
-            Edit
+            {t('common.edit')}
           </Button>
           <Button
             variant="outline"
             size="sm"
             className="text-red-600 hover:bg-red-50 py-2 sm:py-3 text-sm sm:text-base"
             onClick={onDeleteBusiness}
-            aria-label="Delete business profile"
+            aria-label={t('profileBusiness.deleteAria')}
           >
             <Trash2 className="w-4 h-4 mr-2" />
-            Delete
+            {t('common.delete')}
           </Button>
         </div>
       </div>
@@ -61,9 +54,9 @@ const ProfileBusiness = ({ sellerProfile, onEditBusiness, onDeleteBusiness }) =>
           <div className="p-4 sm:p-6">
             <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <Store className="w-5 h-5 mr-2 text-[#D6BA69]" />
-              General Information
+              {t('profileBusiness.generalInfo')}
             </h4>
-            
+
             <div className="space-y-4">
               <div>
                 <h5 className="font-semibold text-gray-900 text-sm sm:text-base">{sellerProfile.businessName}</h5>
@@ -75,7 +68,7 @@ const ProfileBusiness = ({ sellerProfile, onEditBusiness, onDeleteBusiness }) =>
                   <div className="flex items-start gap-3">
                     <MapPin className="w-4 h-4 text-gray-400 mt-1" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Address</p>
+                      <p className="text-sm font-medium text-gray-900">{t('profileBusiness.address')}</p>
                       <p className="text-sm text-gray-600">{sellerProfile.businessAddress}</p>
                     </div>
                   </div>
@@ -85,7 +78,7 @@ const ProfileBusiness = ({ sellerProfile, onEditBusiness, onDeleteBusiness }) =>
                   <div className="flex items-center gap-3">
                     <Phone className="w-4 h-4 text-gray-400" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Phone</p>
+                      <p className="text-sm font-medium text-gray-900">{t('profileBusiness.phone')}</p>
                       <p className="text-sm text-gray-600">{sellerProfile.businessPhone}</p>
                     </div>
                   </div>
@@ -95,7 +88,7 @@ const ProfileBusiness = ({ sellerProfile, onEditBusiness, onDeleteBusiness }) =>
                   <div className="flex items-center gap-3">
                     <Mail className="w-4 h-4 text-gray-400" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Email</p>
+                      <p className="text-sm font-medium text-gray-900">{t('profileBusiness.email')}</p>
                       <p className="text-sm text-gray-600">{sellerProfile.businessEmail}</p>
                     </div>
                   </div>
@@ -105,7 +98,7 @@ const ProfileBusiness = ({ sellerProfile, onEditBusiness, onDeleteBusiness }) =>
               {/* Social Media */}
               {(sellerProfile.websiteUrl || sellerProfile.facebookUrl || sellerProfile.instagramUrl) && (
                 <div className="pt-4 border-t border-gray-200">
-                  <p className="text-sm font-medium text-gray-900 mb-3">Social Media</p>
+                  <p className="text-sm font-medium text-gray-900 mb-3">{t('profileBusiness.socialMedia')}</p>
                   <div className="flex gap-3">
                     {sellerProfile.websiteUrl && (
                       <a href={sellerProfile.websiteUrl} target="_blank" rel="noopener noreferrer" 
@@ -139,19 +132,19 @@ const ProfileBusiness = ({ sellerProfile, onEditBusiness, onDeleteBusiness }) =>
             <div className="p-4 sm:p-6">
               <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <Clock className="w-5 h-5 mr-2 text-[#D6BA69]" />
-                Opening Hours
+                {t('profileBusiness.openingHours')}
               </h4>
-              
+
               <div className="space-y-2 max-h-48 sm:max-h-none overflow-y-auto">
                 {weekOrder.map(day => {
                   const hours = sellerProfile.openingHours?.[day];
                   return (
                     <div key={day} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
                       <span className="text-sm font-medium text-gray-900">
-                        {daysOfWeek[day]}
+                        {t(`auth.${day}`)}
                       </span>
                       <span className="text-sm text-gray-600">
-                        {hours?.closed ? 'Closed' : hours ? `${hours.open} - ${hours.close}` : 'Not specified'}
+                        {hours?.closed ? t('auth.closed') : hours ? `${hours.open} - ${hours.close}` : t('profileBusiness.notSpecified')}
                       </span>
                     </div>
                   );
@@ -165,26 +158,26 @@ const ProfileBusiness = ({ sellerProfile, onEditBusiness, onDeleteBusiness }) =>
             <div className="p-4 sm:p-6">
               <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <Truck className="w-5 h-5 mr-2 text-[#D6BA69]" />
-                Delivery Options
+                {t('profileBusiness.deliveryOptions')}
               </h4>
-              
+
               <div className="space-y-3">
                 {sellerProfile.deliveryOptions?.pickup && (
                   <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm font-medium text-green-800">In-Store Pickup</span>
+                    <span className="text-sm font-medium text-green-800">{t('profileBusiness.inStorePickup')}</span>
                   </div>
                 )}
                 {sellerProfile.deliveryOptions?.delivery && (
                   <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
                     <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span className="text-sm font-medium text-blue-800">Local Delivery</span>
+                    <span className="text-sm font-medium text-blue-800">{t('profileBusiness.localDelivery')}</span>
                   </div>
                 )}
                 {sellerProfile.deliveryOptions?.shipping && (
                   <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
                     <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                    <span className="text-sm font-medium text-purple-800">Nationwide Shipping</span>
+                    <span className="text-sm font-medium text-purple-800">{t('profileBusiness.nationwideShipping')}</span>
                   </div>
                 )}
               </div>

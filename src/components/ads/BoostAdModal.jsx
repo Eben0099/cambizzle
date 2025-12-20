@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { X, Zap, CreditCard, Clock, CheckCircle, AlertCircle, Loader } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import Button from '../ui/Button';
 import boostService from '../../services/boostService';
+import logger from '../../utils/logger';
 
 const BoostAdModal = ({ isOpen, onClose, ad, user }) => {
+  const { t } = useTranslation();
   const [promotionPacks, setPromotionPacks] = useState([]);
   const [selectedPack, setSelectedPack] = useState(null);
   const [phone, setPhone] = useState(user?.phone || '');
@@ -27,50 +30,50 @@ const BoostAdModal = ({ isOpen, onClose, ad, user }) => {
     setLoadingPacks(true);
     setError(null);
     try {
-      console.log('🔄 Step 1: Fetching promotion packs from API...');
+      logger.log('Fetching promotion packs from API...');
       const response = await boostService.getPromotionPacks();
-      console.log('✅ Step 1 Complete: Promotion packs received:', response);
-      
+      logger.log('Promotion packs received:', response);
+
       // Extract packs from different possible response structures
       const packs = response.data || response.packs || response || [];
-      console.log('📦 Extracted packs:', packs);
-      
+      logger.log('Extracted packs:', packs);
+
       if (Array.isArray(packs) && packs.length > 0) {
         setPromotionPacks(packs);
-        console.log(`✅ ${packs.length} promotion pack(s) loaded successfully`);
+        logger.log(`${packs.length} promotion pack(s) loaded successfully`);
       } else {
-        console.warn('⚠️ No promotion packs found in response');
+        logger.warn('No promotion packs found in response');
         setPromotionPacks([]);
       }
     } catch (err) {
-      console.error('❌ Step 1 Failed: Error loading promotion packs:', err);
-      setError(err.message || 'Failed to load promotion packs');
+      logger.error('Error loading promotion packs:', err);
+      setError(err.message || t('boost.failedToLoadPacks'));
     } finally {
       setLoadingPacks(false);
     }
   };
 
   const handleSelectPack = (pack) => {
-    console.log('🎯 User selected pack:', pack);
+    logger.log('User selected pack:', pack);
     setSelectedPack(pack);
     setError(null);
   };
 
   const handleBoost = async () => {
     if (!selectedPack) {
-      setError('Please select a promotion pack');
+      setError(t('boost.selectPackError'));
       return;
     }
 
     if (!phone) {
-      setError('Please enter your phone number');
+      setError(t('boost.phoneRequiredError'));
       return;
     }
 
     // Get user ID
     const userId = user?.idUser || user?.id || user?._id;
     if (!userId) {
-      setError('User ID is missing. Please reconnect.');
+      setError(t('boost.userIdMissingError'));
       return;
     }
 
@@ -86,35 +89,35 @@ const BoostAdModal = ({ isOpen, onClose, ad, user }) => {
         payment_method: paymentMethod
       };
 
-      console.log('🚀 Initiating boost for ad:', ad.slug, boostData);
+      logger.log('Initiating boost for ad:', ad.slug, boostData);
       const response = await boostService.boostExistingAd(ad.slug, boostData);
-      
-      setPollingMessage(response.message || 'Payment initiated. Waiting for confirmation...');
-      
+
+      setPollingMessage(response.message || t('boost.paymentInitiated'));
+
       // Get payment ID from response
       const paymentIdFromResponse = response.payment_id || response.data?.payment_id || response.paymentId;
-      
+
       if (!paymentIdFromResponse) {
-        throw new Error('Payment ID not received from server');
+        throw new Error(t('boost.paymentIdNotReceived'));
       }
 
       setPaymentId(paymentIdFromResponse);
-      
+
       // Start polling for payment status
       try {
         await boostService.pollPaymentStatus(
           paymentIdFromResponse,
           (statusResult) => {
             setPaymentStatus(statusResult);
-            setPollingMessage(statusResult.message || 'Checking payment status...');
+            setPollingMessage(statusResult.message || t('boost.checkingPaymentStatus'));
           },
           5 * 60 * 1000 // 5 minutes timeout
         );
-        
+
         // Payment successful
         setStep('success');
-        setSuccess('Ad boosted successfully! Your ad is now promoted.');
-        
+        setSuccess(t('boost.adBoostedSuccessfully'));
+
         // Wait 2 seconds before closing
         setTimeout(() => {
           onClose();
@@ -123,15 +126,15 @@ const BoostAdModal = ({ isOpen, onClose, ad, user }) => {
             window.location.reload();
           }
         }, 2000);
-        
+
       } catch (pollError) {
         setStep('failed');
-        setError(pollError.message || 'Payment verification failed. Please check your payment status.');
+        setError(pollError.message || t('boost.paymentVerificationFailed'));
       }
-      
+
     } catch (err) {
       setStep('failed');
-      setError(err.message || 'Failed to boost ad');
+      setError(err.message || t('boost.failedToBoostAd'));
     } finally {
       setLoading(false);
     }
@@ -147,7 +150,7 @@ const BoostAdModal = ({ isOpen, onClose, ad, user }) => {
 
   const handleClose = () => {
     if (step === 'processing') {
-      if (!confirm('Payment is being processed. Are you sure you want to close?')) {
+      if (!confirm(t('boost.confirmCloseWhileProcessing'))) {
         return;
       }
     }
@@ -165,13 +168,13 @@ const BoostAdModal = ({ isOpen, onClose, ad, user }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" data-wg-notranslate="true">
         <div className="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10">
           <div className="flex items-center">
             <Zap className="w-6 h-6 text-[#D6BA69] mr-2" />
-            <h2 className="text-xl font-bold text-gray-900">Boost Your Ad</h2>
+            <h2 className="text-xl font-bold text-gray-900">{t('boost.boostYourAd')}</h2>
           </div>
-          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 cursor-pointer">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -189,12 +192,12 @@ const BoostAdModal = ({ isOpen, onClose, ad, user }) => {
               {loadingPacks ? (
                 <div className="flex items-center justify-center py-12">
                   <Loader className="w-8 h-8 text-[#D6BA69] animate-spin" />
-                  <span className="ml-3 text-gray-600">Loading promotion packs...</span>
+                  <span className="ml-3 text-gray-600">{t('boost.loadingPromotionPacks')}</span>
                 </div>
               ) : (
                 <>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Select a Promotion Pack</h3>
-                  
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('boost.selectPromotionPack')}</h3>
+
                   {error && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 flex items-start">
                       <AlertCircle className="w-5 h-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
@@ -216,7 +219,7 @@ const BoostAdModal = ({ isOpen, onClose, ad, user }) => {
                         <div className="flex items-start justify-between mb-2">
                           <div>
                             <h4 className="font-semibold text-gray-900 text-lg">{pack.name}</h4>
-                            <span className="text-xs text-gray-500">Type: {pack.type || 'boost'}</span>
+                            <span className="text-xs text-gray-500">{t('boost.type')}: {pack.type || 'boost'}</span>
                           </div>
                           <span className="text-lg font-bold text-[#D6BA69]">{pack.price} FCFA</span>
                         </div>
@@ -226,15 +229,15 @@ const BoostAdModal = ({ isOpen, onClose, ad, user }) => {
                         <div className="space-y-1 text-xs text-gray-500">
                           <div className="flex items-center">
                             <Clock className="w-3 h-3 mr-1" />
-                            <span className="font-medium">Duration: {pack.duration_days} days</span>
+                            <span className="font-medium">{t('boost.duration')}: {pack.duration_days} {t('boost.days')}</span>
                           </div>
                           <div className="flex items-center">
                             <CheckCircle className="w-3 h-3 mr-1 text-green-500" />
-                            <span>Active: {pack.is_active ? 'Yes' : 'No'}</span>
+                            <span>{t('boost.active')}: {pack.is_active ? t('common.yes') : t('common.no')}</span>
                           </div>
                           {pack.features && (
                             <div className="mt-2 space-y-1 border-t border-gray-200 pt-2">
-                              <p className="font-semibold text-gray-700">Features:</p>
+                              <p className="font-semibold text-gray-700">{t('boost.features')}:</p>
                               {pack.features.split(',').map((feature, idx) => (
                                 <div key={idx} className="flex items-start">
                                   <CheckCircle className="w-3 h-3 mr-1 text-green-500 flex-shrink-0 mt-0.5" />
@@ -246,7 +249,7 @@ const BoostAdModal = ({ isOpen, onClose, ad, user }) => {
                         </div>
                         {selectedPack?.id === pack.id && (
                           <div className="mt-3 pt-3 border-t border-[#D6BA69]">
-                            <p className="text-xs text-[#D6BA69] font-semibold">✓ Selected</p>
+                            <p className="text-xs text-[#D6BA69] font-semibold">✓ {t('boost.selected')}</p>
                           </div>
                         )}
                       </div>
@@ -256,13 +259,13 @@ const BoostAdModal = ({ isOpen, onClose, ad, user }) => {
                   {promotionPacks.length === 0 && !loadingPacks && (
                     <div className="text-center py-8">
                       <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                      <p className="text-gray-500">No promotion packs available at the moment.</p>
+                      <p className="text-gray-500">{t('payment.noPacksAvailable')}</p>
                       <Button
                         onClick={loadPromotionPacks}
                         variant="outline"
                         className="mt-4"
                       >
-                        Retry
+                        {t('payment.retry')}
                       </Button>
                     </div>
                   )}
@@ -270,29 +273,29 @@ const BoostAdModal = ({ isOpen, onClose, ad, user }) => {
                   {/* Payment details */}
                   {selectedPack && (
                     <div className="space-y-4 border-t border-gray-200 pt-6">
-                      <h3 className="text-lg font-semibold text-gray-900">Payment Details</h3>
-                      
+                      <h3 className="text-lg font-semibold text-gray-900">{t('boost.paymentDetails')}</h3>
+
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Phone Number *
+                          {t('payment.phoneNumber')} *
                         </label>
                         <input
                           type="tel"
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
-                          placeholder="Enter your phone number"
+                          placeholder={t('boost.enterPhoneNumber')}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D6BA69] focus:border-transparent"
                         />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Payment Method *
+                          {t('payment.paymentMethod')} *
                         </label>
                         <select
                           value={paymentMethod}
                           onChange={(e) => setPaymentMethod(e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D6BA69] focus:border-transparent"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D6BA69] focus:border-transparent cursor-pointer"
                         >
                           <option value="mtn_mobile_money">MTN Mobile Money</option>
                           <option value="orange_money">Orange Money</option>
@@ -301,7 +304,7 @@ const BoostAdModal = ({ isOpen, onClose, ad, user }) => {
 
                       <div className="flex items-center justify-between pt-4">
                         <div>
-                          <span className="text-sm text-gray-600">Total Amount:</span>
+                          <span className="text-sm text-gray-600">{t('payment.totalAmount')}:</span>
                           <span className="ml-2 text-xl font-bold text-gray-900">{selectedPack.price} FCFA</span>
                         </div>
                         <Button
@@ -310,7 +313,7 @@ const BoostAdModal = ({ isOpen, onClose, ad, user }) => {
                           className="bg-[#D6BA69] hover:bg-[#C5A952] text-black"
                         >
                           <Zap className="w-4 h-4 mr-2" />
-                          Boost Now
+                          {t('payment.boostNow')}
                         </Button>
                       </div>
                     </div>
@@ -326,22 +329,22 @@ const BoostAdModal = ({ isOpen, onClose, ad, user }) => {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
                 <Loader className="w-8 h-8 text-blue-600 animate-spin" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Processing Payment</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('payment.processingPayment')}</h3>
               <p className="text-gray-600 mb-4">{pollingMessage}</p>
               {paymentStatus && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
                   <p className="text-sm text-blue-700">
-                    {paymentStatus.message || 'Checking payment status...'}
+                    {paymentStatus.message || t('boost.checkingPaymentStatus')}
                   </p>
                   {paymentStatus.data?.status && (
                     <p className="text-xs text-blue-600 mt-1">
-                      Status: {paymentStatus.data.status}
+                      {t('boost.status')}: {paymentStatus.data.status}
                     </p>
                   )}
                 </div>
               )}
               <p className="text-xs text-gray-500 mt-4">
-                Please complete the payment on your phone. This may take a few minutes.
+                {t('payment.processingPaymentMessage')}
               </p>
             </div>
           )}
@@ -352,10 +355,10 @@ const BoostAdModal = ({ isOpen, onClose, ad, user }) => {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
                 <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Boost Successful!</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('payment.boostSuccessful')}</h3>
               <p className="text-gray-600 mb-4">{success}</p>
               <p className="text-sm text-gray-500">
-                Your ad is now promoted and will appear at the top of search results.
+                {t('payment.boostSuccessfulMessage')}
               </p>
             </div>
           )}
@@ -366,20 +369,20 @@ const BoostAdModal = ({ isOpen, onClose, ad, user }) => {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
                 <AlertCircle className="w-8 h-8 text-red-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Payment Failed</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('payment.paymentFailed')}</h3>
               <p className="text-gray-600 mb-6">{error}</p>
               <div className="flex items-center justify-center space-x-3">
                 <Button
                   onClick={handleRetryPayment}
                   className="bg-[#D6BA69] hover:bg-[#C5A952] text-black"
                 >
-                  Retry Payment
+                  {t('payment.retryPayment')}
                 </Button>
                 <Button
                   onClick={handleClose}
                   variant="outline"
                 >
-                  Close
+                  {t('common.close')}
                 </Button>
               </div>
             </div>

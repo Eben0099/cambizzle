@@ -1,36 +1,39 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Clock, CheckCircle, XCircle, Phone } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { adsService } from '../services/adsService';
+import logger from '../utils/logger';
 
 const PaymentModal = ({ paymentInfo, adId, onClose, onSuccess, onFailure }) => {
+  const { t } = useTranslation();
   const [status, setStatus] = useState('waiting'); // waiting, success, failed, timeout
   const [timeLeft, setTimeLeft] = useState(120); // 2 minutes in seconds
   const pollingIntervalIdRef = useRef(null);
   const timerIntervalIdRef = useRef(null);
 
   useEffect(() => {
-    console.log('🔄 PaymentModal useEffect - adId:', adId, 'paymentInfo:', paymentInfo);
+    logger.log('PaymentModal useEffect - adId:', adId, 'paymentInfo:', paymentInfo);
     if (paymentInfo && Object.keys(paymentInfo).length > 0) {
-      console.log('🚀 Starting payment polling and timer...');
+      logger.log('Starting payment polling and timer...');
       startPolling();
       startTimer();
     } else {
-      console.log('❌ No paymentInfo provided, skipping polling');
+      logger.log('No paymentInfo provided, skipping polling');
     }
     return () => {
       if (pollingIntervalIdRef.current) {
-        console.log('🛑 Clearing polling interval');
+        logger.log('Clearing polling interval');
         clearInterval(pollingIntervalIdRef.current);
       }
       if (timerIntervalIdRef.current) {
-        console.log('🛑 Clearing timer interval');
+        logger.log('Clearing timer interval');
         clearInterval(timerIntervalIdRef.current);
       }
     };
   }, [paymentInfo]);
 
   const startTimer = () => {
-    console.log('⏱️ Starting real-time countdown timer');
+    logger.log('Starting real-time countdown timer');
     // Clear any existing timer
     if (timerIntervalIdRef.current) {
       clearInterval(timerIntervalIdRef.current);
@@ -38,9 +41,8 @@ const PaymentModal = ({ paymentInfo, adId, onClose, onSuccess, onFailure }) => {
     const id = setInterval(() => {
       setTimeLeft(prev => {
         const newTime = prev - 1;
-        console.log('⏱️ Countdown:', formatTime(newTime));
         if (newTime <= 0) {
-          console.log('⏰ Timeout reached!');
+          logger.log('Timeout reached!');
           setStatus('timeout');
           if (timerIntervalIdRef.current) {
             clearInterval(timerIntervalIdRef.current);
@@ -55,35 +57,33 @@ const PaymentModal = ({ paymentInfo, adId, onClose, onSuccess, onFailure }) => {
   };
 
   const startPolling = () => {
-    console.log('🎯 startPolling called with paymentInfo:', paymentInfo);
-    console.log('🔍 paymentInfo keys:', Object.keys(paymentInfo || {}));
-    console.log('🔍 paymentInfo values:', paymentInfo);
+    logger.log('startPolling called with paymentInfo:', paymentInfo);
+    logger.debug('paymentInfo keys:', Object.keys(paymentInfo || {}));
 
     // Prioritize paymentId over reference
     const paymentId = paymentInfo?.paymentId || paymentInfo?.id || paymentInfo?.reference;
-    console.log('🔍 Extracted paymentId:', paymentId, 'from field priority: paymentId -> id -> reference');
+    logger.log('Extracted paymentId:', paymentId);
 
     if (!paymentId) {
-      console.error('❌ Payment ID not found in paymentInfo. Available fields:', paymentInfo);
+      logger.error('Payment ID not found in paymentInfo. Available fields:', paymentInfo);
       setStatus('failed');
       return;
     }
 
-    console.log('✅ Using paymentId for API call:', paymentId);
-    console.log('⏰ Starting polling every 15 seconds for paymentId:', paymentId);
-    
+    logger.log('Starting polling every 15 seconds for paymentId:', paymentId);
+
     // Clear any existing polling
     if (pollingIntervalIdRef.current) {
       clearInterval(pollingIntervalIdRef.current);
     }
-    
+
     const id = setInterval(async () => {
       try {
         const response = await adsService.checkPaymentStatus(paymentId);
-        console.log('📡 Backend response:', response);
+        logger.log('Backend response:', response);
 
         if (response.status === 'payment_success' || response.status === 'success' || response.status === 'paid') {
-          console.log('✅ Payment successful!');
+          logger.log('Payment successful!');
           setStatus('success');
           if (pollingIntervalIdRef.current) {
             clearInterval(pollingIntervalIdRef.current);
@@ -97,7 +97,7 @@ const PaymentModal = ({ paymentInfo, adId, onClose, onSuccess, onFailure }) => {
             onSuccess && onSuccess();
           }, 2000);
         } else if (response.status === 'payment_failed' || response.status === 'failed') {
-          console.log('❌ Payment failed!');
+          logger.log('Payment failed!');
           setStatus('failed');
           if (pollingIntervalIdRef.current) {
             clearInterval(pollingIntervalIdRef.current);
@@ -109,7 +109,7 @@ const PaymentModal = ({ paymentInfo, adId, onClose, onSuccess, onFailure }) => {
           }
           onFailure && onFailure();
         } else if (response.status === 'published') {
-          console.log('📝 Ad published!');
+          logger.log('Ad published!');
           setStatus('success');
           if (pollingIntervalIdRef.current) {
             clearInterval(pollingIntervalIdRef.current);
@@ -123,16 +123,16 @@ const PaymentModal = ({ paymentInfo, adId, onClose, onSuccess, onFailure }) => {
             onSuccess && onSuccess();
           }, 2000);
         } else {
-          console.log('⏳ Payment still pending, status:', response.status);
+          logger.log('Payment still pending, status:', response.status);
         }
         // Continue polling for other statuses like 'pending', 'processing', etc.
       } catch (error) {
-        console.error('❌ Error during payment check:', error);
+        logger.error('Error during payment check:', error);
       }
     }, 15000); // 15 seconds interval
 
     pollingIntervalIdRef.current = id;
-    console.log('✅ Polling started with interval ID:', id);
+    logger.log('Polling started with interval ID:', id);
   };
 
   const formatTime = (seconds) => {
@@ -149,23 +149,24 @@ const PaymentModal = ({ paymentInfo, adId, onClose, onSuccess, onFailure }) => {
   };
 
   const handleCancel = () => {
-    if (intervalId) clearInterval(intervalId);
+    if (pollingIntervalIdRef.current) clearInterval(pollingIntervalIdRef.current);
+    if (timerIntervalIdRef.current) clearInterval(timerIntervalIdRef.current);
     onClose && onClose();
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto" data-wg-notranslate="true">
         <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900">
-              {status === 'success' ? 'Payment Successful!' : 'Complete Payment'}
+              {status === 'success' ? t('payment.paymentSuccessful') : t('payment.completePayment')}
             </h2>
             {status !== 'success' && (
               <button
                 onClick={handleCancel}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 cursor-pointer"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -178,11 +179,11 @@ const PaymentModal = ({ paymentInfo, adId, onClose, onSuccess, onFailure }) => {
               <div className="mb-6">
                 <Clock className="w-16 h-16 text-[#D6BA69] mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Payment in Progress
+                  {t('payment.paymentInProgress')}
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  Please complete the payment using the instructions below
-                  {!adId && <span className="block text-sm text-orange-600 mt-2">(Ad ID not available - payment tracking may be limited)</span>}
+                  {t('payment.completePaymentInstructions')}
+                  {!adId && <span className="block text-sm text-orange-600 mt-2">({t('payment.adIdNotAvailable')})</span>}
                 </p>
               </div>
 
@@ -190,7 +191,7 @@ const PaymentModal = ({ paymentInfo, adId, onClose, onSuccess, onFailure }) => {
               <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
                 <div className="flex items-center mb-3">
                   <Phone className="w-5 h-5 text-gray-600 mr-2" />
-                  <span className="font-medium text-gray-900">Payment Instructions</span>
+                  <span className="font-medium text-gray-900">{t('payment.paymentInstructions')}</span>
                 </div>
                 {paymentInfo ? (
                   <>
@@ -198,25 +199,25 @@ const PaymentModal = ({ paymentInfo, adId, onClose, onSuccess, onFailure }) => {
                       {paymentInfo.instructions}
                     </p>
                     <p className="text-sm text-gray-700">
-                      <strong>USSD Code:</strong> {paymentInfo.ussd_code}
+                      <strong>{t('payment.ussdCode')}:</strong> {paymentInfo.ussd_code}
                     </p>
                     <p className="text-sm text-gray-700">
-                      <strong>Amount:</strong> {paymentInfo.amount} {paymentInfo.currency}
+                      <strong>{t('payment.amount')}:</strong> {paymentInfo.amount} {paymentInfo.currency}
                     </p>
                     <p className="text-sm text-gray-700">
-                      <strong>Reference:</strong> {paymentInfo.reference}
+                      <strong>{t('payment.reference')}:</strong> {paymentInfo.reference}
                     </p>
                   </>
                 ) : (
                   <p className="text-sm text-gray-700">
-                    Loading payment instructions...
+                    {t('payment.loadingInstructions')}
                   </p>
                 )}
               </div>
 
               {/* Timer */}
               <div className="text-center">
-                <p className="text-sm text-gray-600 mb-2">Time remaining</p>
+                <p className="text-sm text-gray-600 mb-2">{t('payment.timeRemaining')}</p>
                 <div className="text-2xl font-mono font-bold text-[#D6BA69]">
                   {formatTime(timeLeft)}
                 </div>
@@ -228,10 +229,10 @@ const PaymentModal = ({ paymentInfo, adId, onClose, onSuccess, onFailure }) => {
             <div className="text-center">
               <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Payment Confirmed!
+                {t('payment.paymentConfirmed')}
               </h3>
               <p className="text-gray-600">
-                Your ad has been published successfully.
+                {t('payment.adPublishedSuccessfully')}
               </p>
             </div>
           )}
@@ -240,23 +241,23 @@ const PaymentModal = ({ paymentInfo, adId, onClose, onSuccess, onFailure }) => {
             <div className="text-center">
               <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Payment Failed
+                {t('payment.paymentFailed')}
               </h3>
               <p className="text-gray-600 mb-6">
-                The payment could not be processed. Please try again.
+                {t('payment.paymentFailedMessage')}
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={handleRetry}
-                  className="flex-1 bg-[#D6BA69] text-black px-4 py-2 rounded-lg font-medium hover:bg-[#D6BA69]/90"
+                  className="flex-1 bg-[#D6BA69] text-black px-4 py-2 rounded-lg font-medium hover:bg-[#D6BA69]/90 cursor-pointer"
                 >
-                  Try Again
+                  {t('payment.tryAgain')}
                 </button>
                 <button
                   onClick={handleCancel}
-                  className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50"
+                  className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 cursor-pointer"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
               </div>
             </div>
@@ -266,23 +267,23 @@ const PaymentModal = ({ paymentInfo, adId, onClose, onSuccess, onFailure }) => {
             <div className="text-center">
               <Clock className="w-16 h-16 text-orange-500 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Payment Timeout
+                {t('payment.paymentTimeout')}
               </h3>
               <p className="text-gray-600 mb-6">
-                Payment confirmation is taking longer than expected. Please check your account or contact support.
+                {t('payment.paymentTimeoutMessage')}
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={handleCancel}
-                  className="flex-1 bg-[#D6BA69] text-black px-4 py-2 rounded-lg font-medium hover:bg-[#D6BA69]/90"
+                  className="flex-1 bg-[#D6BA69] text-black px-4 py-2 rounded-lg font-medium hover:bg-[#D6BA69]/90 cursor-pointer"
                 >
-                  Check My Ads
+                  {t('payment.checkMyAds')}
                 </button>
                 <button
                   onClick={handleCancel}
-                  className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50"
+                  className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 cursor-pointer"
                 >
-                  Close
+                  {t('common.close')}
                 </button>
               </div>
             </div>

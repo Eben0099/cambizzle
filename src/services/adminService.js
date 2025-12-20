@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
+import storageService from './storageService';
 
 class AdminService {
   // Récupérer les codes de parrainage
@@ -10,7 +11,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -25,7 +26,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -41,7 +42,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -59,7 +60,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -73,7 +74,7 @@ class AdminService {
 
   // Set authorization header pour les requêtes admin
   setAuthHeader() {
-    const token = localStorage.getItem('token');
+    const token = storageService.getToken();
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     } else {
@@ -91,7 +92,7 @@ class AdminService {
       // Gestion spécifique des erreurs d'authentification
       if (error.response?.status === 401) {
         // Token expiré ou invalide
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -101,7 +102,7 @@ class AdminService {
 
   // Méthode utilitaire pour vérifier si l'utilisateur est admin
   isAuthenticated() {
-    return !!localStorage.getItem('token');
+    return !!storageService.getToken();
   }
 
   // Méthodes pour les autres endpoints admin (à ajouter plus tard)
@@ -117,7 +118,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -132,7 +133,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -149,7 +150,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -167,7 +168,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -185,7 +186,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -200,7 +201,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -218,7 +219,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -235,7 +236,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -252,7 +253,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -267,7 +268,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -282,7 +283,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -300,7 +301,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -318,7 +319,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -338,7 +339,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -354,7 +355,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -370,7 +371,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -386,7 +387,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -402,7 +403,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -420,7 +421,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -436,7 +437,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -452,7 +453,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -468,7 +469,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -484,7 +485,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -500,7 +501,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
@@ -516,7 +517,7 @@ class AdminService {
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
+        storageService.removeToken();
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }

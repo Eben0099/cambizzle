@@ -1,6 +1,7 @@
 import { useState } from "react";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import { useTranslation } from "react-i18next";
 import {
   X,
   Store,
@@ -12,6 +13,7 @@ import Button from "../ui/Button";
 import Input from "../ui/Input";
 
 const BusinessEditModal = ({ isOpen, onClose, sellerProfile, onSubmit }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     businessName: sellerProfile?.businessName || "",
     businessDescription: sellerProfile?.businessDescription || "",
@@ -41,15 +43,7 @@ const BusinessEditModal = ({ isOpen, onClose, sellerProfile, onSubmit }) => {
 
   const [errors, setErrors] = useState({});
 
-  const daysOfWeek = {
-    monday: "Monday",
-    tuesday: "Tuesday",
-    wednesday: "Wednesday",
-    thursday: "Thursday",
-    friday: "Friday",
-    saturday: "Saturday",
-    sunday: "Sunday",
-  };
+  const weekOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
@@ -91,27 +85,27 @@ const BusinessEditModal = ({ isOpen, onClose, sellerProfile, onSubmit }) => {
     const newErrors = {};
 
     if (!formData.businessName.trim()) {
-      newErrors.businessName = "Business name is required.";
+      newErrors.businessName = t('businessEditModal.businessNameRequired');
     }
 
     if (!formData.businessDescription.trim()) {
-      newErrors.businessDescription = "Description is required.";
+      newErrors.businessDescription = t('businessEditModal.descriptionRequired');
     }
 
     if (!formData.businessAddress.trim()) {
-      newErrors.businessAddress = "Address is required.";
+      newErrors.businessAddress = t('businessEditModal.addressRequired');
     }
 
     if (!formData.businessPhone.trim()) {
-      newErrors.businessPhone = "Phone number is required.";
+      newErrors.businessPhone = t('businessEditModal.phoneRequired');
     } else if (formData.businessPhone.replace(/\D/g, "").length < 8) {
-      newErrors.businessPhone = "Invalid phone number.";
+      newErrors.businessPhone = t('businessEditModal.invalidPhone');
     }
 
     if (!formData.businessEmail.trim()) {
-      newErrors.businessEmail = "Email is required.";
+      newErrors.businessEmail = t('businessEditModal.emailRequired');
     } else if (!/\S+@\S+\.\S+/.test(formData.businessEmail)) {
-      newErrors.businessEmail = "Invalid email format.";
+      newErrors.businessEmail = t('businessEditModal.invalidEmail');
     }
 
     setErrors(newErrors);
@@ -134,7 +128,7 @@ const BusinessEditModal = ({ isOpen, onClose, sellerProfile, onSubmit }) => {
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900 flex items-center">
             <Store className="w-5 h-5 mr-2 text-[#D6BA69]" />
-            Edit Business Information
+            {t('businessEditModal.title')}
           </h2>
           <button
             onClick={onClose}
@@ -150,12 +144,12 @@ const BusinessEditModal = ({ isOpen, onClose, sellerProfile, onSubmit }) => {
           <section>
             <h3 className="text-lg font-semibold text-gray-900 flex items-center mb-4">
               <Store className="w-5 h-5 mr-2 text-[#D6BA69]" />
-              General Information
+              {t('profileBusiness.generalInfo')}
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Business Name"
+                label={t('auth.businessName')}
                 value={formData.businessName}
                 onChange={(e) => handleInputChange("businessName", e.target.value)}
                 error={errors.businessName}
@@ -164,7 +158,7 @@ const BusinessEditModal = ({ isOpen, onClose, sellerProfile, onSubmit }) => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Business Phone
+                  {t('auth.businessPhone')}
                 </label>
                 <PhoneInput
                   country={"cm"}
@@ -189,7 +183,7 @@ const BusinessEditModal = ({ isOpen, onClose, sellerProfile, onSubmit }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Business Description
+                {t('auth.businessDescription')}
               </label>
               <textarea
                 value={formData.businessDescription}
@@ -211,7 +205,7 @@ const BusinessEditModal = ({ isOpen, onClose, sellerProfile, onSubmit }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Address"
+                label={t('profileBusiness.address')}
                 value={formData.businessAddress}
                 onChange={(e) =>
                   handleInputChange("businessAddress", e.target.value)
@@ -220,7 +214,7 @@ const BusinessEditModal = ({ isOpen, onClose, sellerProfile, onSubmit }) => {
                 required
               />
               <Input
-                label="Business Email"
+                label={t('auth.businessEmail')}
                 type="email"
                 value={formData.businessEmail}
                 onChange={(e) =>
@@ -236,12 +230,12 @@ const BusinessEditModal = ({ isOpen, onClose, sellerProfile, onSubmit }) => {
           <section>
             <h3 className="text-lg font-semibold text-gray-900 flex items-center mb-4">
               <Globe className="w-5 h-5 mr-2 text-[#D6BA69]" />
-              Online Presence
+              {t('auth.onlinePresence')}
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Input
-                label="Website"
+                label={t('auth.website')}
                 placeholder="https://..."
                 value={formData.websiteUrl}
                 onChange={(e) =>
@@ -271,16 +265,16 @@ const BusinessEditModal = ({ isOpen, onClose, sellerProfile, onSubmit }) => {
           <section>
             <h3 className="text-lg font-semibold text-gray-900 flex items-center mb-4">
               <Clock className="w-5 h-5 mr-2 text-[#D6BA69]" />
-              Opening Hours
+              {t('profileBusiness.openingHours')}
             </h3>
 
             <div className="space-y-3">
-              {Object.entries(daysOfWeek).map(([day, label]) => (
+              {weekOrder.map((day) => (
                 <div
                   key={day}
                   className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg"
                 >
-                  <div className="w-24 font-medium text-gray-900">{label}</div>
+                  <div className="w-24 font-medium text-gray-900">{t(`auth.${day}`)}</div>
                   <div className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -290,7 +284,7 @@ const BusinessEditModal = ({ isOpen, onClose, sellerProfile, onSubmit }) => {
                       }
                       className="text-[#D6BA69] border-gray-300 focus:ring-[#D6BA69]"
                     />
-                    <span className="text-sm text-gray-600">Open</span>
+                    <span className="text-sm text-gray-600">{t('businessEditModal.open')}</span>
                   </div>
                   {!formData.openingHours[day]?.closed && (
                     <>
@@ -302,7 +296,7 @@ const BusinessEditModal = ({ isOpen, onClose, sellerProfile, onSubmit }) => {
                         }
                         className="border border-gray-300 rounded px-2 py-1 text-sm"
                       />
-                      <span className="text-gray-500">to</span>
+                      <span className="text-gray-500">{t('businessEditModal.to')}</span>
                       <input
                         type="time"
                         value={formData.openingHours[day]?.close || "18:00"}
@@ -322,14 +316,14 @@ const BusinessEditModal = ({ isOpen, onClose, sellerProfile, onSubmit }) => {
           <section>
             <h3 className="text-lg font-semibold text-gray-900 flex items-center mb-4">
               <Truck className="w-5 h-5 mr-2 text-[#D6BA69]" />
-              Delivery Options
+              {t('profileBusiness.deliveryOptions')}
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
-                { key: "pickup", label: "Store Pickup" },
-                { key: "delivery", label: "Local Delivery" },
-                { key: "shipping", label: "National Shipping" },
+                { key: "pickup", labelKey: "auth.storePickup" },
+                { key: "delivery", labelKey: "auth.localDelivery" },
+                { key: "shipping", labelKey: "auth.nationalShipping" },
               ].map((opt) => (
                 <label
                   key={opt.key}
@@ -344,7 +338,7 @@ const BusinessEditModal = ({ isOpen, onClose, sellerProfile, onSubmit }) => {
                     className="text-[#D6BA69] border-gray-300 focus:ring-[#D6BA69]"
                   />
                   <span className="text-sm font-medium text-gray-900">
-                    {opt.label}
+                    {t(opt.labelKey)}
                   </span>
                 </label>
               ))}
@@ -359,13 +353,13 @@ const BusinessEditModal = ({ isOpen, onClose, sellerProfile, onSubmit }) => {
               onClick={onClose}
               className="border-gray-300 text-gray-700 hover:bg-gray-100"
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               type="submit"
               className="bg-[#D6BA69] hover:bg-[#c9a950] text-black font-medium"
             >
-              Save Changes
+              {t('profileSettings.saveChanges')}
             </Button>
           </div>
         </form>

@@ -2,6 +2,8 @@ import { generateId, formatPrice, calculateDiscount } from '../utils/helpers';
 import { AD_STATUS, CATEGORIES } from '../utils/constants';
 import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
+import logger from '../utils/logger';
+import storageService from './storageService';
 
 // Données mockées pour les annonces
 
@@ -14,7 +16,7 @@ class AdsService {
    */
   async getAdBySlug(slug) {
     try {
-      this.token = localStorage.getItem('token');
+      this.token = storageService.getToken();
       this.setAuthHeader();
       const response = await axios.get(`${API_BASE_URL}/ads/${slug}`);
       return response.data;
@@ -25,7 +27,7 @@ class AdsService {
   }
   async getSubcategoriesByCategory(categoryId) {
     try {
-      this.token = localStorage.getItem('token');
+      this.token = storageService.getToken();
       this.setAuthHeader();
       const response = await axios.get(`${API_BASE_URL}/categories/${categoryId}/subcategories`);
       return response.data;
@@ -35,7 +37,7 @@ class AdsService {
     }
   }
   constructor() {
-    this.token = localStorage.getItem('token');
+    this.token = storageService.getToken();
   }
 
   setAuthHeader() {
@@ -46,7 +48,7 @@ class AdsService {
 
   async getAdsFromAPI(page = 1, perPage = 8) {
     try {
-      this.token = localStorage.getItem('token');
+      this.token = storageService.getToken();
       this.setAuthHeader();
 
       const response = await axios.get(`${API_BASE_URL}/ads`, {
@@ -71,7 +73,7 @@ class AdsService {
 
   async getAdCreationData() {
     try {
-      this.token = localStorage.getItem('token');
+      this.token = storageService.getToken();
       this.setAuthHeader();
 
       const response = await axios.get(`${API_BASE_URL}/ads/creation-data`);
@@ -90,7 +92,7 @@ class AdsService {
 
   async getSubcategoryFields(subcategorySlug) {
     try {
-      this.token = localStorage.getItem('token');
+      this.token = storageService.getToken();
       this.setAuthHeader();
 
       const response = await axios.get(`${API_BASE_URL}/subcategories/${subcategorySlug}/fields`);
@@ -109,7 +111,7 @@ class AdsService {
 
   async createAd(adData) {
     try {
-      this.token = localStorage.getItem('token');
+      this.token = storageService.getToken();
       this.setAuthHeader();
 
       const response = await axios.post(`${API_BASE_URL}/ads`, adData, {
@@ -284,18 +286,18 @@ class AdsService {
 
   async getAds(params = {}) {
     try {
-      console.log('📊 Récupération des annonces avec filtres:', params);
-      this.token = localStorage.getItem('token');
+      logger.log('📊 Récupération des annonces avec filtres:', params);
+      this.token = storageService.getToken();
       this.setAuthHeader();
 
       const response = await axios.get(`${API_BASE_URL}/ads`, {
         params: params
       });
 
-      console.log('✅ Annonces récupérées avec filtres:', response.data);
+      logger.log('✅ Annonces récupérées avec filtres:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Erreur récupération annonces avec filtres:', error);
+      logger.error('❌ Erreur récupération annonces avec filtres:', error);
       
       const errorMessage = error.response?.data?.message ||
                           error.response?.data?.error ||
@@ -325,37 +327,37 @@ class AdsService {
 
   async updateAdBySlug(slug, adData) {
     try {
-      console.log('📝 Mise à jour d\'annonce - Service appelé depuis UpdateAd ✅');
-      console.log('🔍 Type des données reçues:', adData instanceof FormData ? 'FormData' : typeof adData);
+      logger.log('📝 Mise à jour d\'annonce - Service appelé depuis UpdateAd ✅');
+      logger.log('🔍 Type des données reçues:', adData instanceof FormData ? 'FormData' : typeof adData);
 
       if (adData instanceof FormData) {
-        console.log('📤 Contenu FormData envoyé:');
+        logger.log('📤 Contenu FormData envoyé:');
         for (let [key, value] of adData.entries()) {
           if (value instanceof File) {
-            console.log(`  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
+            logger.log(`  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
           } else {
-            console.log(`  ${key}: ${value}`);
+            logger.log(`  ${key}: ${value}`);
           }
         }
       }
 
-      this.token = localStorage.getItem('token');
+      this.token = storageService.getToken();
       this.setAuthHeader();
 
-      console.log('🚀 Envoi vers l\'API:', `${API_BASE_URL}/ads/${slug}`);
+      logger.log('🚀 Envoi vers l\'API:', `${API_BASE_URL}/ads/${slug}`);
 
       // Log final du contenu envoyé juste avant l'appel
-      console.log('📤 === CONTENU FINAL ENVOYÉ À L\'API ===');
+      logger.log('📤 === CONTENU FINAL ENVOYÉ À L\'API ===');
       if (adData instanceof FormData) {
         for (let [key, value] of adData.entries()) {
           if (value instanceof File) {
-            console.log(`  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
+            logger.log(`  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
           } else {
-            console.log(`  ${key}: "${value}"`);
+            logger.log(`  ${key}: "${value}"`);
           }
         }
       }
-      console.log('📤 === FIN CONTENU ===');
+      logger.log('📤 === FIN CONTENU ===');
 
       const response = await axios.post(`${API_BASE_URL}/ads/${slug}`, adData, {
         headers: {
@@ -363,18 +365,18 @@ class AdsService {
         }
       });
 
-      console.log('✅ Annonce mise à jour avec succès:', response.data);
+      logger.log('✅ Annonce mise à jour avec succès:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Erreur mise à jour annonce:', error);
-      console.error('📄 Status code:', error.response?.status);
-      console.error('📋 Response data complète:', error.response?.data);
+      logger.error('❌ Erreur mise à jour annonce:', error);
+      logger.error('📄 Status code:', error.response?.status);
+      logger.error('📋 Response data complète:', error.response?.data);
 
       // Log détaillé des messages d'erreur
       if (error.response?.data?.messages) {
-        console.error('📋 Messages d\'erreur détaillés:');
+        logger.error('📋 Messages d\'erreur détaillés:');
         Object.entries(error.response.data.messages).forEach(([field, messages]) => {
-          console.error(`  ${field}:`, Array.isArray(messages) ? messages.join(', ') : messages);
+          logger.error(`  ${field}:`, Array.isArray(messages) ? messages.join(', ') : messages);
         });
       }
 
@@ -409,8 +411,8 @@ class AdsService {
 
   async searchAds(query, filters = {}) {
     try {
-      console.log('🔍 Recherche d\'annonces:', { query, filters });
-      this.token = localStorage.getItem('token');
+      logger.log('🔍 Recherche d\'annonces:', { query, filters });
+      this.token = storageService.getToken();
       this.setAuthHeader();
 
       // Combine query et filtres dans les paramètres
@@ -423,10 +425,10 @@ class AdsService {
         params: params
       });
 
-      console.log('✅ Résultats de recherche récupérés:', response.data);
+      logger.log('✅ Résultats de recherche récupérés:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Erreur recherche d\'annonces:', error);
+      logger.error('❌ Erreur recherche d\'annonces:', error);
       
       const errorMessage = error.response?.data?.message ||
                           error.response?.data?.error ||
@@ -504,8 +506,8 @@ class AdsService {
   // Récupère les annonces d'une catégorie
   async getAdsByCategory(categoryId, params = {}) {
     try {
-      console.log('📊 Récupération des annonces par catégorie:', { categoryId, params });
-      this.token = localStorage.getItem('token');
+      logger.log('📊 Récupération des annonces par catégorie:', { categoryId, params });
+      this.token = storageService.getToken();
       this.setAuthHeader();
       
       // Construction des paramètres de requête
@@ -515,13 +517,13 @@ class AdsService {
         ...params
       };
       
-      console.log('🔗 URL appelée:', `${API_BASE_URL}/ads/category/${categoryId}`, queryParams);
+      logger.log('🔗 URL appelée:', `${API_BASE_URL}/ads/category/${categoryId}`, queryParams);
       
       const response = await axios.get(`${API_BASE_URL}/ads/category/${categoryId}`, {
         params: queryParams
       });
       
-      console.log('✅ Annonces de catégorie récupérées:', {
+      logger.log('✅ Annonces de catégorie récupérées:', {
         adsCount: response.data.ads?.length || 0,
         category: response.data.category?.name,
         pagination: response.data.pagination,
@@ -530,12 +532,12 @@ class AdsService {
       
       return response.data;
     } catch (error) {
-      console.error('❌ Erreur récupération annonces par catégorie:', error);
+      logger.error('❌ Erreur récupération annonces par catégorie:', error);
       
       // Log détaillé de l'erreur
       if (error.response) {
-        console.error('Response status:', error.response.status);
-        console.error('Response data:', error.response.data);
+        logger.error('Response status:', error.response.status);
+        logger.error('Response data:', error.response.data);
       }
       
       const errorMessage = error.response?.data?.message ||
@@ -549,24 +551,24 @@ class AdsService {
   // Récupère les filtres disponibles pour une sous-catégorie
   async getFiltersBySubcategory(subcategorySlug) {
     try {
-      console.log('🔧 Récupération des filtres pour la sous-catégorie:', subcategorySlug);
-      this.token = localStorage.getItem('token');
+      logger.log('🔧 Récupération des filtres pour la sous-catégorie:', subcategorySlug);
+      this.token = storageService.getToken();
       this.setAuthHeader();
 
       const response = await axios.get(`${API_BASE_URL}/filters/by-subcategory/${subcategorySlug}`);
 
-      console.log('✅ Filtres récupérés:', {
+      logger.log('✅ Filtres récupérés:', {
         count: response.data?.length || 0,
         filters: response.data
       });
       
       return response.data;
     } catch (error) {
-      console.error('❌ Erreur récupération filtres:', error);
+      logger.error('❌ Erreur récupération filtres:', error);
       
       if (error.response) {
-        console.error('Response status:', error.response.status);
-        console.error('Response data:', error.response.data);
+        logger.error('Response status:', error.response.status);
+        logger.error('Response data:', error.response.data);
       }
       
       const errorMessage = error.response?.data?.message ||
@@ -580,8 +582,8 @@ class AdsService {
   // Récupère les annonces d'une sous-catégorie
   async getAdsBySubcategory(subcategorySlug, params = {}) {
     try {
-      console.log('📊 Récupération des annonces par sous-catégorie (slug):', { subcategorySlug, params });
-      this.token = localStorage.getItem('token');
+      logger.log('📊 Récupération des annonces par sous-catégorie (slug):', { subcategorySlug, params });
+      this.token = storageService.getToken();
       this.setAuthHeader();
       
       // Construction des paramètres de requête
@@ -591,13 +593,13 @@ class AdsService {
         ...params
       };
       
-      console.log('🔗 URL appelée:', `${API_BASE_URL}/ads/subcategory/${subcategorySlug}`, queryParams);
+      logger.log('🔗 URL appelée:', `${API_BASE_URL}/ads/subcategory/${subcategorySlug}`, queryParams);
       
       const response = await axios.get(`${API_BASE_URL}/ads/subcategory/${subcategorySlug}`, {
         params: queryParams
       });
       
-      console.log('✅ Annonces de sous-catégorie récupérées:', {
+      logger.log('✅ Annonces de sous-catégorie récupérées:', {
         adsCount: response.data.ads?.length || 0,
         subcategory: response.data.subcategory?.name,
         category: response.data.category?.name,
@@ -607,12 +609,12 @@ class AdsService {
       
       return response.data;
     } catch (error) {
-      console.error('❌ Erreur récupération annonces par sous-catégorie:', error);
+      logger.error('❌ Erreur récupération annonces par sous-catégorie:', error);
       
       // Log détaillé de l'erreur
       if (error.response) {
-        console.error('Response status:', error.response.status);
-        console.error('Response data:', error.response.data);
+        logger.error('Response status:', error.response.status);
+        logger.error('Response data:', error.response.data);
       }
       
       const errorMessage = error.response?.data?.message ||
@@ -629,14 +631,14 @@ class AdsService {
    */
   async getPromotionPacks() {
     try {
-      this.token = localStorage.getItem('token');
+      this.token = storageService.getToken();
       this.setAuthHeader();
-      console.log('🔎 Récupération des plans de boost');
+      logger.log('🔎 Récupération des plans de boost');
       const response = await axios.get(`${API_BASE_URL}/promotion-packs`);
-      console.log('✅ Plans de boost récupérés:', response.data);
+      logger.log('✅ Plans de boost récupérés:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Erreur récupération plans de boost:', error);
+      logger.error('❌ Erreur récupération plans de boost:', error);
       const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Erreur lors de la récupération des plans de boost';
       throw new Error(errorMessage);
     }
@@ -649,14 +651,14 @@ class AdsService {
    */
   async checkPaymentStatus(paymentId) {
     try {
-      this.token = localStorage.getItem('token');
+      this.token = storageService.getToken();
       this.setAuthHeader();
-      console.log('🔎 Vérification statut paiement:', paymentId);
+      logger.log('🔎 Vérification statut paiement:', paymentId);
       const response = await axios.get(`${API_BASE_URL}/boost/check-payment/${paymentId}`);
-      console.log('✅ Statut paiement récupéré:', response.data);
+      logger.log('✅ Statut paiement récupéré:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Erreur vérification statut paiement:', error);
+      logger.error('❌ Erreur vérification statut paiement:', error);
       const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Erreur lors de la vérification du paiement';
       throw new Error(errorMessage);
     }

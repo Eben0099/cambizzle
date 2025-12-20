@@ -1,14 +1,18 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import userService from '../../services/userService';
 import { User, Shield, Upload, X, Camera, Trash2, Building2, Lock, Eye, EyeOff } from 'lucide-react';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
+import Avatar from '../ui/Avatar';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import { getPhotoUrl } from '../../utils/helpers';
 import { useToast } from '../toast/useToast';
+import storageService from '../../services/storageService';
 
 const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
+  const { t } = useTranslation();
   const { showToast } = useToast();
   const [editFormData, setEditFormData] = useState({
     firstName: user?.firstName || '',
@@ -203,12 +207,12 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
       formData.append('document_number', editFormData.identityDocumentNumber);
       formData.append('document', identityDocument);
 
-      // Always get userId from user prop, fallback to localStorage if missing
+      // Always get userId from user prop, fallback to storageService if missing
       let userId = undefined;
       let userObj = user;
       if (!userObj) {
         try {
-          userObj = JSON.parse(localStorage.getItem('user'));
+          userObj = storageService.getUser();
         } catch (e) {
           userObj = undefined;
         }
@@ -352,20 +356,18 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
         <div className="p-4 sm:p-6">
           <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
             <Camera className="w-5 h-5 mr-2 text-[#D6BA69]" />
-            Profile Photo
+            {t('profileSettings.profilePhoto')}
           </h3>
           
           <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
             <div className="relative">
-              <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full overflow-hidden bg-[#D6BA69] flex items-center justify-center">
-                {editFormData.photoUrl ? (
-                  <img src={getPhotoUrl(editFormData.photoUrl)} alt="Profile photo" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-lg sm:text-xl font-bold text-white">
-                    {editFormData.firstName.charAt(0)}{editFormData.lastName.charAt(0)}
-                  </span>
-                )}
-              </div>
+              <Avatar
+                src={editFormData.photoUrl}
+                firstName={editFormData.firstName}
+                lastName={editFormData.lastName}
+                size="xl"
+                className="h-20 w-20 sm:h-24 sm:w-24"
+              />
               {uploadingPhoto && (
                 <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
                   <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -381,10 +383,10 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
                   type="button"
                   disabled={uploadingPhoto}
                   onClick={() => document.getElementById('photo-upload').click()}
-                  aria-label="Upload profile photo"
+                  aria-label={t('profileSettings.upload')}
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  Upload
+                  {t('profileSettings.upload')}
                 </Button>
                 <input
                   id="photo-upload"
@@ -401,15 +403,15 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
                     onClick={handleRemovePhoto}
                     disabled={uploadingPhoto}
                     className="text-red-600 hover:bg-red-50"
-                    aria-label="Remove profile photo"
+                    aria-label={t('profileSettings.remove')}
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
-                    Remove
+                    {t('profileSettings.remove')}
                   </Button>
                 )}
               </div>
               <p className="text-xs sm:text-sm text-gray-500 mt-2">
-                JPG, PNG, or GIF. Maximum size: 5MB
+                {t('profileSettings.photoFormats')}
               </p>
               {photoUploadSuccess && (
                 <p className="text-xs sm:text-sm text-green-600 mt-2">{photoUploadSuccess}</p>
@@ -427,36 +429,36 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
         <div className="p-4 sm:p-6">
           <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
             <User className="w-5 h-5 mr-2 text-[#D6BA69]" />
-            Personal Information
+            {t('profileSettings.personalInfo')}
           </h3>
-          
+
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
-                label="First Name"
+                label={t('profileSettings.firstName')}
                 name="firstName"
                 value={editFormData.firstName}
                 onChange={handleFormInputChange}
                 placeholder="John"
               />
               <Input
-                label="Last Name"
+                label={t('profileSettings.lastName')}
                 name="lastName"
                 value={editFormData.lastName}
                 onChange={handleFormInputChange}
                 placeholder="Doe"
               />
             </div>
-            
+
             <Input
-              label="Email"
+              label={t('profileSettings.email')}
               type="email"
               name="email"
               value={editFormData.email}
               onChange={handleFormInputChange}
               placeholder="john.doe@email.com"
             />
-            
+
             <PhoneInput
               country={"cm"}
               value={editFormData.phone}
@@ -464,7 +466,7 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
               inputStyle={{ width: "100%", height: "40px", borderRadius: "8px", borderColor: "#d1d5db" }}
               containerClass="focus-within:ring-2 focus-within:ring-[#D6BA69]"
               enableSearch
-              placeholder="Phone number"
+              placeholder={t('profileSettings.phoneNumber')}
             />
           </div>
         </div>
@@ -475,14 +477,14 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
         <div className="p-4 sm:p-6">
           <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
             <Shield className="w-5 h-5 mr-2 text-[#D6BA69]" />
-            Identity Verification
+            {t('profileSettings.identityVerification')}
           </h3>
-          
+
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="block text-xs sm:text-sm font-medium text-gray-700">
-                  Document Type
+                  {t('profileSettings.documentType')}
                 </label>
                 <select
                   name="identityDocumentType"
@@ -490,15 +492,15 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
                   onChange={handleFormInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D6BA69] focus:border-transparent"
                 >
-                  <option value="">Select a type</option>
-                  <option value="cni">National ID Card</option>
-                  <option value="passport">Passport</option>
-                  <option value="license">Driver's License</option>
+                  <option value="">{t('profileSettings.selectType')}</option>
+                  <option value="cni">{t('profileSettings.nationalId')}</option>
+                  <option value="passport">{t('profileSettings.passport')}</option>
+                  <option value="license">{t('profileSettings.driversLicense')}</option>
                 </select>
               </div>
-              
+
               <Input
-                label="Document Number"
+                label={t('profileSettings.documentNumber')}
                 name="identityDocumentNumber"
                 value={editFormData.identityDocumentNumber}
                 onChange={handleFormInputChange}
@@ -508,20 +510,20 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
 
             <div className="space-y-3">
               <label className="block text-xs sm:text-sm font-medium text-gray-700">
-                Identity Document (PDF only)
+                {t('profileSettings.identityDocumentPdf')}
               </label>
-              
+
               {!identityDocument && !user?.identityDocumentUrl ? (
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-6 text-center hover:border-[#D6BA69] transition-colors">
                   <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mx-auto mb-3" />
                   <label htmlFor="identity-document-upload" className="cursor-pointer">
                     <span className="text-xs sm:text-sm font-medium text-[#D6BA69] hover:text-[#C5A952]">
-                      Click to upload your ID
+                      {t('profileSettings.clickToUpload')}
                     </span>
-                    <span className="text-xs sm:text-sm text-gray-600"> or drag and drop</span>
+                    <span className="text-xs sm:text-sm text-gray-600"> {t('profileSettings.orDragDrop')}</span>
                   </label>
                   <p className="text-xs text-gray-500 mt-1">
-                    PDF only (max. 5MB)
+                    {t('profileSettings.pdfOnly')}
                   </p>
                   <input
                     id="identity-document-upload"
@@ -543,19 +545,19 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
                           {identityDocument ? identityDocument.name : `${editFormData.identityDocumentType?.toUpperCase() || 'ID'} - ${editFormData.identityDocumentNumber}`}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {identityDocument ? `${(identityDocument.size / 1024 / 1024).toFixed(2)} MB` : 'Existing document'}
+                          {identityDocument ? `${(identityDocument.size / 1024 / 1024).toFixed(2)} MB` : t('profileSettings.existingDocument')}
                         </p>
                       </div>
                     </div>
                     <label htmlFor="identity-document-upload-change" className="cursor-pointer">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
+                      <Button
+                        variant="outline"
+                        size="sm"
                         type="button"
                         className="py-2 sm:py-3 text-xs sm:text-sm"
-                        aria-label="Change identity document"
+                        aria-label={t('profileSettings.change')}
                       >
-                        Change
+                        {t('profileSettings.change')}
                       </Button>
                       <input
                         id="identity-document-upload-change"
@@ -574,9 +576,9 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
                   onClick={handleIdentityVerificationSubmit}
                   disabled={identityUploadLoading}
                   className="bg-[#D6BA69] hover:bg-[#C5A952] text-black py-2 sm:py-3 text-xs sm:text-sm"
-                  aria-label="Submit identity verification"
+                  aria-label={t('profileSettings.submitVerification')}
                 >
-                  {identityUploadLoading ? 'Submitting...' : 'Submit for Verification'}
+                  {identityUploadLoading ? t('profileSettings.submitting') : t('profileSettings.submitVerification')}
                 </Button>
                 {identityUploadSuccess && (
                   <span className="text-green-600 text-xs ml-2">{identityUploadSuccess}</span>
@@ -595,14 +597,14 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
         <div className="p-4 sm:p-6">
           <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
             <Lock className="w-5 h-5 mr-2 text-[#D6BA69]" />
-            Security
+            {t('profileSettings.security')}
           </h3>
-          
+
           <div className="space-y-4">
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-1">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Current Password</label>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700">{t('profileSettings.currentPassword')}</label>
                   <div className="relative">
                     <input
                       type={showCurrentPassword ? 'text' : 'password'}
@@ -614,7 +616,7 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
                     <button
                       type="button"
                       onClick={() => setShowCurrentPassword((v) => !v)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
                       aria-label={showCurrentPassword ? 'Hide password' : 'Show password'}
                     >
                       {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -623,7 +625,7 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">New Password</label>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700">{t('profileSettings.newPassword')}</label>
                   <div className="relative">
                     <input
                       type={showNewPassword ? 'text' : 'password'}
@@ -635,8 +637,8 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
                     <button
                       type="button"
                       onClick={() => setShowNewPassword((v) => !v)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                      aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
+                      aria-label={showNewPassword ? t('profileSettings.hidePassword') : t('profileSettings.showPassword')}
                     >
                       {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -644,7 +646,7 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">Confirm New Password</label>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700">{t('profileSettings.confirmPassword')}</label>
                   <div className="relative">
                     <input
                       type={showConfirmPassword ? 'text' : 'password'}
@@ -656,7 +658,7 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword((v) => !v)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
                       aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                     >
                       {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -669,9 +671,9 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
                   onClick={handleChangePassword}
                   disabled={passwordChangeLoading}
                   className="bg-[#D6BA69] hover:bg-[#C5A952] text-black py-2 sm:py-3 text-xs sm:text-sm"
-                  aria-label="Change password"
+                  aria-label={t('profileSettings.changePassword')}
                 >
-                  {passwordChangeLoading ? 'Changing...' : 'Change Password'}
+                  {passwordChangeLoading ? t('profileSettings.changing') : t('profileSettings.changePassword')}
                 </Button>
               </div>
               {passwordChangeSuccess && (
@@ -683,18 +685,18 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
             </div>
             
             <div className="border-t border-gray-200 pt-4">
-              <h4 className="text-xs sm:text-sm font-medium text-red-600 mb-2">Danger Zone</h4>
+              <h4 className="text-xs sm:text-sm font-medium text-red-600 mb-2">{t('profileSettings.dangerZone')}</h4>
               <p className="text-xs sm:text-sm text-gray-600 mb-4">
-                Once your account is deleted, all your data will be permanently removed.
+                {t('profileSettings.deleteWarning')}
               </p>
               <div className="flex justify-end">
                 <Button
                   variant="outline"
                   className="text-red-600 hover:bg-red-50 py-2 sm:py-3 text-xs sm:text-sm"
                   onClick={() => setShowDeleteConfirm(true)}
-                  aria-label="Delete account"
+                  aria-label={t('profileSettings.deleteAccount')}
                 >
-                  Delete My Account
+                  {t('profileSettings.deleteAccount')}
                 </Button>
               </div>
             </div>
@@ -704,19 +706,19 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
 
       {/* Actions */}
       <div className="flex justify-end space-x-3">
-        <Button 
+        <Button
           variant="outline"
           className="py-2 sm:py-3 text-xs sm:text-sm"
-          aria-label="Cancel"
+          aria-label={t('common.cancel')}
         >
-          Cancel
+          {t('common.cancel')}
         </Button>
-        <Button 
-          onClick={handleSave} 
+        <Button
+          onClick={handleSave}
           className="bg-[#D6BA69] hover:bg-[#C5A952] text-black py-2 sm:py-3 text-xs sm:text-sm"
-          aria-label="Save changes"
+          aria-label={t('profileSettings.saveChanges')}
         >
-          Save Changes
+          {t('profileSettings.saveChanges')}
         </Button>
       </div>
 
@@ -725,29 +727,28 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-sm w-full p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base sm:text-lg font-semibold text-red-600">Delete Account</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-red-600">{t('profileSettings.deleteAccountTitle')}</h3>
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="text-gray-400 hover:text-gray-600"
-                aria-label="Close"
+                className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                aria-label={t('common.close')}
               >
                 <X className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
             </div>
-            
+
             <p className="text-xs sm:text-sm text-gray-600 mb-6">
-              Are you sure you want to delete your account? This action is irreversible 
-              and all your data will be permanently removed.
+              {t('profileSettings.deleteConfirmMessage')}
             </p>
-            
+
             <div className="flex justify-end space-x-3">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setShowDeleteConfirm(false)}
                 className="py-2 sm:py-3 text-xs sm:text-sm"
-                aria-label="Cancel"
+                aria-label={t('common.cancel')}
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button
                 className="bg-red-600 hover:bg-red-700 text-white py-2 sm:py-3 text-xs sm:text-sm"
@@ -755,9 +756,9 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
                   onDeleteAccount();
                   setShowDeleteConfirm(false);
                 }}
-                aria-label="Delete permanently"
+                aria-label={t('profileSettings.deletePermanently')}
               >
-                Delete Permanently
+                {t('profileSettings.deletePermanently')}
               </Button>
             </div>
           </div>

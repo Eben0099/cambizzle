@@ -100,3 +100,17 @@ export const useSearchAds = (query, filters = {}) => {
     enabled: !!query, // Seulement si query n'est pas vide
   });
 };
+
+/**
+ * Hook pour récupérer les filtres disponibles pour une sous-catégorie
+ */
+export const useSubcategoryFilters = (subcategorySlug) => {
+  return useQuery({
+    queryKey: ['filters', 'subcategory', subcategorySlug],
+    queryFn: () => adsService.getFiltersBySubcategory(subcategorySlug),
+    staleTime: 30 * 60 * 1000, // Cache 30 minutes (ces données changent rarement)
+    gcTime: 60 * 60 * 1000,
+    retry: 1,
+    enabled: !!subcategorySlug,
+  });
+};
