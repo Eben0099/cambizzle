@@ -48,7 +48,7 @@ import {
 import Loader from "@/components/ui/Loader";
 import { cn } from "@/lib/utils";
 import axios from "axios";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "../../components/toast/useToast";
 import storageService from "@/services/storageService";
 
 const Subcategories = () => {
@@ -84,7 +84,7 @@ const Subcategories = () => {
   const [submitting, setSubmitting] = useState(false);
 
   // Toasts
-  const { toast } = useToast();
+  const { showToast } = useToast();
 
   // Fetch categories + stats on mount
   useEffect(() => {
@@ -113,10 +113,7 @@ const Subcategories = () => {
       const message =
         err.response?.data?.message || err.message || "Error loading categories";
       setError(message);
-      toast({
-        description: t('admin.subcategories.errorLoading'),
-        variant: "destructive",
-      });
+      showToast({ type: 'error', message: t('admin.subcategories.errorLoading') });
 
     } finally {
       setLoading(false);
@@ -167,13 +164,13 @@ const Subcategories = () => {
         });
         setIconFile(null);
         await fetchCategories();
-        toast({ description: t('admin.subcategories.subcategoryCreated') });
+        showToast({ type: 'success', message: t('admin.subcategories.subcategoryCreated') });
       } else {
         throw new Error(data.message || t('admin.subcategories.errorCreating'));
       }
     } catch (err) {
       const message = err.message || t('admin.subcategories.errorCreating');
-      toast({ description: message, variant: "destructive" });
+      showToast({ type: 'error', message: message });
     } finally {
       setSubmitting(false);
     }
@@ -185,8 +182,8 @@ const Subcategories = () => {
     setFormData({
       category_id: categoryId.toString(),
       name: subcategory.name,
-      display_order: subcategory.displayOrder || 1,
-      is_active: subcategory.isActive,
+      display_order: parseInt(subcategory.displayOrder) || 1,
+      is_active: subcategory.isActive === '1' || subcategory.isActive === true,
     });
     setShowEditModal(true);
   };
@@ -222,13 +219,13 @@ const Subcategories = () => {
         });
         setIconFile(null);
         await fetchCategories();
-        toast({ description: t('admin.subcategories.subcategoryUpdated') });
+        showToast({ type: 'success', message: t('admin.subcategories.subcategoryUpdated') });
       } else {
         throw new Error(data.message || t('admin.subcategories.errorUpdating'));
       }
     } catch (err) {
       const message = err.message || t('admin.subcategories.errorUpdating');
-      toast({ description: message, variant: "destructive" });
+      showToast({ type: 'error', message: message });
     } finally {
       setSubmitting(false);
     }
@@ -237,10 +234,7 @@ const Subcategories = () => {
   // OPEN delete dialog (prevent delete if has ads)
   const openDeleteDialog = (subcategory) => {
     if (subcategory.totalAds > 0) {
-      toast({
-        description: t('admin.subcategories.cannotDeleteWithAds'),
-        variant: "destructive",
-      });
+      showToast({ type: 'error', message: t('admin.subcategories.cannotDeleteWithAds') });
       return;
     }
     setSelectedSubcategory(subcategory);
@@ -260,19 +254,19 @@ const Subcategories = () => {
         setShowDeleteDialog(false);
         setSelectedSubcategory(null);
         await fetchCategories();
-        toast({ description: t('admin.subcategories.subcategoryDeleted') });
+        showToast({ type: 'success', message: t('admin.subcategories.subcategoryDeleted') });
       } else {
         throw new Error(response.data?.message || t('admin.subcategories.errorDeleting'));
       }
     } catch (err) {
       if (err.response?.status === 422) {
-        toast({ description: t('admin.subcategories.cannotDeleteNonEmpty'), variant: "destructive" });
+        showToast({ type: 'error', message: t('admin.subcategories.cannotDeleteNonEmpty') });
         setShowDeleteDialog(false);
         setSelectedSubcategory(null);
       } else {
         const message =
           err.response?.data?.message || err.message || t('admin.subcategories.errorDeleting');
-        toast({ description: message, variant: "destructive" });
+        showToast({ type: 'error', message: message });
       }
     } finally {
       setSubmitting(false);
@@ -831,7 +825,7 @@ const Subcategories = () => {
                 <span className="text-xs text-gray-600">{t('admin.subcategories.enableSubcategory')}</span>
                 <Switch
                   checked={formData.is_active}
-                  onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, is_active: checked }))}
+                  onChange={(checked) => setFormData((prev) => ({ ...prev, is_active: checked }))}
                   className="data-[state=checked]:bg-[#D6BA69]"
                 />
               </div>

@@ -125,26 +125,22 @@ const AdCard = ({ ad }) => {
             </div>
           )}
 
-          {/* Verified Badge */}
-          {ad.userVerified === 1 && (
-            <div className="absolute bottom-2 right-2 flex items-center gap-1">
+          {/* Badges */}
+          <div className="absolute bottom-2 right-2 flex items-center gap-1">
+            {/* Verified Badge */}
+            {ad.userVerified === 1 && (
               <div className="bg-green-500 text-white p-1.5 rounded-full">
                 <ShieldCheck className="w-4 h-4" />
               </div>
-              {ad.isBoosted == 1 && (
-                <div className="bg-yellow-500 text-white p-1.5 rounded-full">
-                  <Zap className="w-4 h-4" />
-                </div>
-              )}
-            </div>
-          )}
+            )}
 
-          {/* Boosted Badge (if no verified badge) */}
-          {ad.isBoosted === 1 && ad.userVerified !== 1 && (
-            <div className="absolute bottom-2 right-2 bg-yellow-500 text-white p-1.5 rounded-full">
-              <Zap className="w-4 h-4" />
-            </div>
-          )}
+            {/* Boosted Badge */}
+            {ad.isBoosted == 1 && (
+              <div className="bg-yellow-500 text-white p-1.5 rounded-full">
+                <Zap className="w-4 h-4" />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Content */}

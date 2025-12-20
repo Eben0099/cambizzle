@@ -23,11 +23,11 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Edit, Trash2, MapPin, Search, Download } from "lucide-react";
 import { exportToExcel } from "../../utils/exportToExcel";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "../../components/toast/useToast";
 
 const Locations = () => {
   const { t } = useTranslation();
-  const { toast } = useToast();
+  const { showToast } = useToast();
 
   const [locations, setLocations] = useState([
     {
@@ -58,7 +58,7 @@ const Locations = () => {
   // ---- CRUD FUNCTIONS ----
   const handleAddRegion = () => {
     if (!newRegion.trim()) {
-      toast({ title: t('admin.locations.error'), description: t('admin.locations.regionEmpty'), variant: "destructive" });
+      showToast({ type: 'error', message: t('admin.locations.regionEmpty') });
       return;
     }
     const newLoc = {
@@ -69,17 +69,17 @@ const Locations = () => {
     };
     setLocations([...locations, newLoc]);
     setNewRegion("");
-    toast({ title: t('admin.locations.regionAdded'), description: `${newLoc.region} ${t('admin.locations.regionCreated')}` });
+    showToast({ type: 'success', message: `${newLoc.region} ${t('admin.locations.regionCreated')}` });
   };
 
   const handleDeleteRegion = (id) => {
     setLocations(locations.filter((loc) => loc.id !== id));
-    toast({ title: t('admin.locations.regionDeleted'), description: t('admin.locations.regionRemoved') });
+    showToast({ type: 'success', message: t('admin.locations.regionRemoved') });
   };
 
   const handleAddCity = () => {
     if (!newCity.trim() || !selectedRegion) {
-      toast({ title: t('admin.locations.error'), description: t('admin.locations.cityEmpty'), variant: "destructive" });
+      showToast({ type: 'error', message: t('admin.locations.cityEmpty') });
       return;
     }
     const updated = locations.map((loc) =>
@@ -89,7 +89,7 @@ const Locations = () => {
     );
     setLocations(updated);
     setNewCity("");
-    toast({ title: t('admin.locations.cityAdded'), description: `${newCity} ${t('admin.locations.cityAddedTo')} ${selectedRegion.region}.` });
+    showToast({ type: 'success', message: `${newCity} ${t('admin.locations.cityAddedTo')} ${selectedRegion.region}.` });
   };
 
   const handleDeleteCity = (regionId, city) => {
@@ -99,7 +99,7 @@ const Locations = () => {
         : loc
     );
     setLocations(updated);
-    toast({ title: t('admin.locations.cityDeleted'), description: `${city} ${t('admin.locations.cityRemoved')}` });
+    showToast({ type: 'success', message: `${city} ${t('admin.locations.cityRemoved')}` });
   };
 
   const filteredLocations = locations.filter(

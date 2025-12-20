@@ -36,7 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "../../components/toast/useToast";
 import Loader from "@/components/ui/Loader";
 import adminService from '@/services/adminService';
 
@@ -52,7 +52,7 @@ import adminService from '@/services/adminService';
 
 const Brands = () => {
   const { t } = useTranslation();
-  const { toast } = useToast();
+  const { showToast } = useToast();
 
   // Data state
   const [brandsData, setBrandsData] = useState([]);
@@ -102,7 +102,7 @@ const Brands = () => {
       }, {});
       setBrandsData(Object.values(grouped));
     } catch (err) {
-      toast({ description: t('admin.brands.loadError'), variant: 'destructive' });
+      showToast({ type: 'error', message: t('admin.brands.loadError') });
     } finally {
       setLoading(false);
     }
@@ -172,10 +172,10 @@ const Brands = () => {
       logger.log("Brand created:", response);
       await loadBrands();
       setCreateOpen(false);
-      toast({ description: t('admin.brands.createSuccess') });
+      showToast({ type: 'success', message: t('admin.brands.createSuccess') });
     } catch (err) {
       logger.error("Error creating brand:", err);
-      toast({ description: t('admin.brands.createError'), variant: "destructive" });
+      showToast({ type: 'error', message: t('admin.brands.createError') });
     } finally {
       setSubmitting(false);
     }
@@ -209,10 +209,10 @@ const Brands = () => {
       logger.log("Brand updated");
       await loadBrands();
       setEditOpen(false);
-      toast({ description: t('admin.brands.updateSuccess') });
+      showToast({ type: 'success', message: t('admin.brands.updateSuccess') });
     } catch (err) {
       logger.error("Error updating brand:", err);
-      toast({ description: t('admin.brands.updateError'), variant: "destructive" });
+      showToast({ type: 'error', message: t('admin.brands.updateError') });
     } finally {
       setSubmitting(false);
     }
@@ -231,10 +231,10 @@ const Brands = () => {
       logger.log("Brand deleted");
       await loadBrands();
       setDeleteCandidate(null);
-      toast({ description: t('admin.brands.deleteSuccess') });
+      showToast({ type: 'success', message: t('admin.brands.deleteSuccess') });
     } catch (err) {
       logger.error("Error deleting brand:", err);
-      toast({ description: t('admin.brands.deleteError'), variant: "destructive" });
+      showToast({ type: 'error', message: t('admin.brands.deleteError') });
     } finally {
       setSubmitting(false);
     }

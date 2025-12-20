@@ -43,11 +43,12 @@ import Input from "@/components/ui/Input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import adminService from "@/services/adminService";
-import { toast } from "sonner";
+import { useToast } from "../../components/toast/useToast";
 import storageService from "@/services/storageService";
 
 const Categories = () => {
   const { t } = useTranslation();
+  const { showToast } = useToast();
   // States
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -131,12 +132,12 @@ const Categories = () => {
         });
         setIconFile(null);
         fetchCategories();
-        toast.success(t('admin.categories.categoryCreated'));
+        showToast({ type: 'success', message: t('admin.categories.categoryCreated') });
       } else {
         throw new Error(data.message || t('admin.categories.errorCreating'));
       }
     } catch (err) {
-      toast.error(err.message || t('admin.categories.errorCreating'));
+      showToast({ type: 'error', message: err.message || t('admin.categories.errorCreating') });
     } finally {
       setSubmitting(false);
     }
@@ -147,8 +148,8 @@ const Categories = () => {
     setSelectedCategory(category);
     setFormData({
       name: category.name,
-      display_order: category.displayOrder || 1,
-      is_active: category.isActive,
+      display_order: parseInt(category.displayOrder) || 1,
+      is_active: category.isActive === '1' || category.isActive === true,
     });
     setShowEditModal(true);
   };
@@ -183,10 +184,10 @@ const Categories = () => {
         });
         setIconFile(null);
         fetchCategories();
-        toast.success(t('admin.categories.categoryUpdated'));
+        showToast({ type: 'success', message: t('admin.categories.categoryUpdated') });
       }
     } catch (err) {
-      toast.error(err.message || t('admin.categories.errorUpdating'));
+      showToast({ type: 'error', message: err.message || t('admin.categories.errorUpdating') });
     } finally {
       setSubmitting(false);
     }
@@ -207,23 +208,23 @@ const Categories = () => {
         setShowDeleteDialog(false);
         setSelectedCategory(null);
         fetchCategories();
-        toast.success(t('admin.categories.categoryDeleted'));
+        showToast({ type: 'success', message: t('admin.categories.categoryDeleted') });
       } else {
         if (response.status === 422) {
-          toast.error(t('admin.categories.cannotDeleteNonEmpty'));
+          showToast({ type: 'error', message: t('admin.categories.cannotDeleteNonEmpty') });
           setShowDeleteDialog(false);
           setSelectedCategory(null);
         } else {
-          toast.error(response.message || t('admin.categories.errorDeleting'));
+          showToast({ type: 'error', message: response.message || t('admin.categories.errorDeleting') });
         }
       }
     } catch (err) {
       if (err.response?.status === 422) {
-        toast.error(t('admin.categories.cannotDeleteNonEmpty'));
+        showToast({ type: 'error', message: t('admin.categories.cannotDeleteNonEmpty') });
         setShowDeleteDialog(false);
         setSelectedCategory(null);
       } else {
-        toast.error(err.message || t('admin.categories.errorDeleting'));
+        showToast({ type: 'error', message: err.message || t('admin.categories.errorDeleting') });
       }
     } finally {
       setSubmitting(false);
@@ -524,7 +525,7 @@ const Categories = () => {
                 </span>
                 <Switch
                   checked={formData.is_active}
-                  onCheckedChange={(checked) =>
+                  onChange={(checked) =>
                     setFormData((prev) => ({ ...prev, is_active: checked }))
                   }
                   className="data-[state=checked]:bg-[#D6BA69]"
@@ -625,7 +626,7 @@ const Categories = () => {
                 </span>
                 <Switch
                   checked={formData.is_active}
-                  onCheckedChange={(checked) =>
+                  onChange={(checked) =>
                     setFormData((prev) => ({ ...prev, is_active: checked }))
                   }
                   className="data-[state=checked]:bg-[#D6BA69]"
