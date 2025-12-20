@@ -1,4 +1,4 @@
-import { SERVER_BASE_URL } from '../../config/api';
+import { SERVER_BASE_URL, API_BASE_URL } from '../../config/api';
 import { getPhotoUrl } from '../../utils/helpers';
 // Ads.jsx
 import { useState, useEffect } from 'react';
