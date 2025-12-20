@@ -70,6 +70,14 @@
     "loadingError": "Loading Error",
     "categories": "Categories"
   },
+  "sidebar": {
+    "categories": "Categories",
+    "viewAll": "View All",
+    "loading": "Loading...",
+    "error": "Loading error",
+    "allCategories": "All Categories",
+    "subcategories": "subcategories"
+  },
   "auth": {
     "welcomeBack": "Welcome back",
     "login": "Log in",

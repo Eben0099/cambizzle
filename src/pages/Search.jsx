@@ -321,11 +321,12 @@ const Search = () => {
     };
   } else if (subcategoryParam) {
     rawAds = [];
-    currentLoading = subcategoryLoading || !creationData.categories.length;
+    currentLoading = true;
     displayInfo = {
-      title: subcategoryLoading ? `Loading ads in "${subcategoryParam}"...` : `Looking for "${subcategoryParam}"...`,
+      title: subcategoryParam,
       count: 0,
-      type: 'subcategory-loading'
+      type: 'subcategory-loading',
+      isLoading: true
     };
   } else if (categoryParam && categoryAds) {
     rawAds = categoryAds.ads || [];
@@ -338,11 +339,12 @@ const Search = () => {
     };
   } else if (categoryParam) {
     rawAds = [];
-    currentLoading = categoryLoading || !creationData.categories.length;
+    currentLoading = true;
     displayInfo = {
-      title: categoryLoading ? `Loading ads in "${categoryParam}"...` : `Looking for "${categoryParam}"...`,
+      title: categoryParam,
       count: 0,
-      type: 'category-loading'
+      type: 'category-loading',
+      isLoading: true
     };
   } else {
     rawAds = query ? searchResults : ads;
@@ -425,9 +427,13 @@ const Search = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             <TranslatedTitle title={displayInfo.title} />
           </h1>
-          <p className="text-gray-600">
-            {keywordFilter ? filteredAds.length : displayInfo.count} {t('filters.adsFound', { count: keywordFilter ? filteredAds.length : displayInfo.count })}
-          </p>
+          {currentLoading ? (
+            <p className="text-gray-500 italic">{t('common.loading')}</p>
+          ) : (
+            <p className="text-gray-600">
+              {keywordFilter ? filteredAds.length : displayInfo.count} {t('filters.adsFound', { count: keywordFilter ? filteredAds.length : displayInfo.count })}
+            </p>
+          )}
         </div>
 
         {/* Keyword Search */}

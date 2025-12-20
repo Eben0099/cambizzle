@@ -70,6 +70,14 @@
     "loadingError": "Erreur de chargement",
     "categories": "Catégories"
   },
+  "sidebar": {
+    "categories": "Catégories",
+    "viewAll": "Voir tout",
+    "loading": "Chargement...",
+    "error": "Erreur de chargement",
+    "allCategories": "Toutes les catégories",
+    "subcategories": "sous-catégories"
+  },
   "auth": {
     "welcomeBack": "Content de vous revoir",
     "login": "Se connecter",
