@@ -8,9 +8,10 @@ import { API_BASE_URL, SERVER_BASE_URL } from '../config/api';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAdBySlug } from '../hooks/useAdsQuery';
 import { useWeglotTranslate } from '../hooks/useWeglotRetranslate';
+import { useToast } from '../components/toast/useToast';
+import storageService from '../services/storageService';
 import { 
   ArrowLeft, 
-  Heart, 
   Share2, 
   Flag, 
   MapPin, 
@@ -58,10 +59,11 @@ const TranslatedFilter = ({ filterName, value }) => {
 
 const AdDetail = () => {
   const { t } = useTranslation();
+  const { showToast } = useToast();
   const { slug } = useParams();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const { ads, favorites = [], toggleFavorite, reportAd } = useAds();
+  const { ads, reportAd } = useAds();
   // Use React Query pour éviter les rechargements
   const { data: adData, isLoading, isError } = useAdBySlug(slug);
   
@@ -69,7 +71,10 @@ const AdDetail = () => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [contactMessage, setContactMessage] = useState('');
   const [reportReason, setReportReason] = useState('');
+  const [reportDescription, setReportDescription] = useState('');
   const [relatedAds, setRelatedAds] = useState([]);
+  const [feedbackSummary, setFeedbackSummary] = useState(null);
+  const [isReporting, setIsReporting] = useState(false);
 
   // Préparer les données de l'annonce avec les calculs de remise
   const ad = adData ? {
@@ -96,11 +101,12 @@ const AdDetail = () => {
   );
   const { translatedText: translatedBrand } = useWeglotTranslate(ad?.brandName || '');
 
-  // Charger les annonces similaires quand l'annonce est chargée
+  // Charger les annonces similaires et le summary des feedbacks quand l'annonce est chargée
   useEffect(() => {
-    const fetchRelatedAds = async () => {
+    const fetchRelatedAdsAndSummary = async () => {
       if (!ad) return;
       try {
+        // Fetch related ads
         const relatedResponse = await fetch(`${API_BASE_URL}/ads?category=${encodeURIComponent(ad.categoryName)}&limit=4&exclude=${ad.id}`);
         if (relatedResponse.ok) {
           const relatedData = await relatedResponse.json();
@@ -111,14 +117,26 @@ const AdDetail = () => {
       } catch (error) {
         // Silently fail for related ads
       }
+
+      try {
+        // Fetch feedback summary
+        const summaryResponse = await fetch(`${API_BASE_URL}/ads/${ad.id}/feedbacks/summary`);
+        if (summaryResponse.ok) {
+          const summaryData = await summaryResponse.json();
+          if (summaryData?.status === 'success') {
+            setFeedbackSummary(summaryData.data);
+          }
+        }
+      } catch (error) {
+        // Silently fail for feedback summary
+        setFeedbackSummary({ averageRating: 0, ratingsCount: 0, distribution: {} });
+      }
     };
 
     if (ad) {
-      fetchRelatedAds();
+      fetchRelatedAdsAndSummary();
     }
   }, [ad]);
-
-  const isInFavorites = ad && favorites.some(fav => fav.id === ad.id);
 
   const handleShare = async () => {
     try {
@@ -130,14 +148,6 @@ const AdDetail = () => {
     } catch (error) {
       navigator.clipboard.writeText(window.location.href);
     }
-  };
-
-  const handleFavorite = () => {
-    if (!isAuthenticated) {
-      setIsContactModalOpen(true);
-      return;
-    }
-    toggleFavorite(ad);
   };
 
   const handleContact = () => {
@@ -160,11 +170,67 @@ const AdDetail = () => {
     alert('Message sent successfully!');
   };
 
-  const handleReport = () => {
+  const handleReport = async () => {
+    if (!reportReason.trim()) {
+      showToast({
+        type: 'error',
+        title: 'Report Error',
+        message: 'Please select a reason for reporting this ad.'
+      });
+      return;
+    }
 
-    setIsReportModalOpen(false);
-    setReportReason('');
-    alert('Report submitted. Thank you for helping us maintain our platform’s quality.');
+    const token = storageService.getToken();
+    if (!token) {
+      showToast({
+        type: 'error',
+        title: 'Authentication Required',
+        message: 'You must be logged in to report ads.'
+      });
+      return;
+    }
+
+    setIsReporting(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/reports`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          report_type: 'ad',
+          report_reason: reportReason,
+          description: reportDescription.trim() || null,
+          reported_ad_id: ad.id
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.status === 'success') {
+        showToast({
+          type: 'success',
+          title: 'Report Submitted',
+          message: 'Thank you for helping us maintain a safe platform. Your report has been submitted successfully.'
+        });
+        setIsReportModalOpen(false);
+        setReportReason('');
+        setReportDescription('');
+      } else {
+        throw new Error(data.message || 'Failed to submit report');
+      }
+    } catch (error) {
+      console.error('Report error:', error);
+      showToast({
+        type: 'error',
+        title: 'Report Failed',
+        message: error.message || 'Unable to submit report. Please try again later.'
+      });
+    } finally {
+      setIsReporting(false);
+    }
   };
 
   if (isLoading) {
@@ -215,16 +281,6 @@ const AdDetail = () => {
               <span className="font-medium">{t('ads.backToResults')}</span>
             </button>
             <div className="flex items-center space-x-3">
-              <button
-                onClick={handleFavorite}
-                className={`p-2 rounded-full transition-colors cursor-pointer ${
-                  isInFavorites
-                    ? 'text-red-600 bg-red-50 hover:bg-red-100'
-                    : 'text-gray-400 bg-gray-50 hover:bg-gray-100'
-                }`}
-              >
-                <Heart className={`w-5 h-5 ${isInFavorites ? 'fill-current' : ''}`} />
-              </button>
               <button
                 onClick={handleShare}
                 className="p-2 rounded-full text-gray-400 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
@@ -448,6 +504,47 @@ const AdDetail = () => {
               />
             )}
 
+            {/* Feedback Block */}
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  {t('adDetail.feedback.title', 'Feedback')}
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  {t('adDetail.feedback.description', 'See what other buyers think about this ad')}
+                </p>
+                {feedbackSummary && feedbackSummary.ratingsCount > 0 && (
+                  <div className="flex items-center justify-center space-x-2 mb-4">
+                    <div className="flex items-center">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`w-4 h-4 ${
+                            star <= Math.round(feedbackSummary.averageRating)
+                              ? 'text-yellow-400 fill-current'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                      <span className="ml-2 text-sm font-medium text-gray-900">
+                        {feedbackSummary.averageRating.toFixed(1)}
+                      </span>
+                    </div>
+                    <span className="text-sm text-gray-600">
+                      ({feedbackSummary.ratingsCount} {t('adDetail.feedback.reviews', 'reviews')})
+                    </span>
+                  </div>
+                )}
+                <Button
+                  onClick={() => navigate(`/ads/${ad.slug}/feedbacks`)}
+                  className="w-full bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black font-medium py-3 px-6 rounded-lg transition-colors"
+                >
+                  <Star className="w-4 h-4 mr-2 inline" />
+                  {t('adDetail.feedback.viewFeedbacks', 'View Feedbacks')}
+                </Button>
+              </div>
+            </div>
+
             {/* Safety Tips */}
             <SafetyTips />
           </div>
@@ -506,39 +603,56 @@ const AdDetail = () => {
       <Modal
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
-        title={t('report.title')}
+        title="Report Ad"
       >
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('report.reason')}
+              Reason for reporting
             </label>
             <select
               value={reportReason}
               onChange={(e) => setReportReason(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d6ba69] focus:border-transparent transition-colors cursor-pointer"
             >
-              <option value="">{t('report.selectReason')}</option>
-              <option value="spam">{t('report.spam')}</option>
-              <option value="fraud">{t('report.fraud')}</option>
-              <option value="inappropriate">{t('report.inappropriate')}</option>
-              <option value="duplicate">{t('report.duplicate')}</option>
-              <option value="other">{t('report.other')}</option>
+              <option value="">Select a reason</option>
+              <option value="spam">Spam</option>
+              <option value="fraud">Fraud or scam</option>
+              <option value="inappropriate">Inappropriate content</option>
+              <option value="duplicate">Duplicate ad</option>
+              <option value="other">Other</option>
             </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Additional details <span className="text-gray-500">(optional)</span>
+            </label>
+            <textarea
+              value={reportDescription}
+              onChange={(e) => setReportDescription(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d6ba69] focus:border-transparent resize-none transition-colors"
+              rows={3}
+              placeholder="Please provide more details about why you're reporting this ad..."
+            />
           </div>
           <div className="flex space-x-3">
             <button
-              onClick={() => setIsReportModalOpen(false)}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+              onClick={() => {
+                setIsReportModalOpen(false);
+                setReportReason('');
+                setReportDescription('');
+              }}
+              disabled={isReporting}
+              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {t('common.cancel')}
+              Cancel
             </button>
             <button
               onClick={handleReport}
-              disabled={!reportReason}
+              disabled={!reportReason || isReporting}
               className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
-              {t('report.submit')}
+              {isReporting ? 'Submitting...' : 'Submit Report'}
             </button>
           </div>
         </div>

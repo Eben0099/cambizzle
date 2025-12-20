@@ -262,9 +262,15 @@ const Subcategories = () => {
         throw new Error(response.data?.message || "Failed to delete subcategory");
       }
     } catch (err) {
-      const message =
-        err.response?.data?.message || err.message || "Error deleting subcategory";
-      toast({ description: message, variant: "destructive" });
+      if (err.response?.status === 422) {
+        toast({ description: "You cannot delete a non-empty subcategory.", variant: "destructive" });
+        setShowDeleteDialog(false);
+        setSelectedSubcategory(null);
+      } else {
+        const message =
+          err.response?.data?.message || err.message || "Error deleting subcategory";
+        toast({ description: message, variant: "destructive" });
+      }
     } finally {
       setSubmitting(false);
     }

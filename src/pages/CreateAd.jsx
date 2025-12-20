@@ -815,9 +815,11 @@ const CreateAd = () => {
                       value={formData.title}
                       onChange={handleChange}
                       error={errors.title}
-                      placeholder={t('createAd.adTitlePlaceholder')}
                       className="w-full"
                     />
+                    <p className="text-sm text-gray-500 mt-1">
+                      {formData.title.length} {t('createAd.characters')} (min. 10)
+                    </p>
                   </div>
                   <div className="lg:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -828,7 +830,6 @@ const CreateAd = () => {
                       value={formData.description}
                       onChange={handleChange}
                       rows={6}
-                      placeholder={t('createAd.descriptionPlaceholder')}
                       className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] resize-vertical transition-all bg-white"
                     />
                     {errors.description && (
@@ -844,7 +845,6 @@ const CreateAd = () => {
                       name="tags"
                       value={formData.tags}
                       onChange={handleChange}
-                      placeholder={t('createAd.tagsPlaceholder')}
                       className="w-full"
                     />
                   </div>
@@ -859,7 +859,7 @@ const CreateAd = () => {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Input
-                    label={<span>{t('createAd.price')} <span className="text-red-500">*</span></span>}
+                    label={<span>{t('createAd.price')} (in FCFA) <span className="text-red-500">*</span></span>}
                     type="text"
                     name="price"
                     value={formData.price}
@@ -873,7 +873,6 @@ const CreateAd = () => {
                         }));
                       }
                     }}
-                    placeholder={t('createAd.pricePlaceholder')}
                     error={errors.price}
                   />
                   <Input

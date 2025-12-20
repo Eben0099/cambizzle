@@ -20,6 +20,7 @@ import CreateAd from './pages/CreateAd';
 import UpdateAd from './pages/UpdateAd';
 import Profile from './pages/Profile';
 import AdDetail from './pages/AdDetail';
+import AdFeedbacks from './pages/AdFeedbacks';
 import TestPromotionPacks from './pages/TestPromotionPacks';
 import About from './pages/About';
 import Terms from './pages/Terms';
@@ -37,6 +38,7 @@ import ModerationLogs from './pages/admin/ModerationLogs';
 import ReferralCodes from './pages/admin/ReferralCodes';
 import PromotionPackAdmin from './components/admin/PromotionPackAdmin';
 import Payments from './pages/admin/Payments';
+import Feedbacks from './pages/admin/Feedbacks';
 import ScrollToTop from './components/ScrollToTop';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import './App.css';
@@ -81,6 +83,7 @@ function App() {
                 <Route path="/profile/*" element={<PublicLayout><Profile /></PublicLayout>} />
                 <Route path="/test/promotion-packs" element={<PublicLayout><TestPromotionPacks /></PublicLayout>} />
                 <Route path="/ads/:slug" element={<PublicLayout><AdDetail /></PublicLayout>} />
+                <Route path="/ads/:slug/feedbacks" element={<PublicLayout><AdFeedbacks /></PublicLayout>} />
                 <Route path="/edit-ad/:slug" element={<PublicLayout><UpdateAd /></PublicLayout>} />
                 
                 {/* Info Pages */}
@@ -102,6 +105,7 @@ function App() {
                 <Route path="/admin/referralcodes" element={<AdminLayout><ReferralCodes /></AdminLayout>} />
                 <Route path="/admin/promotion-packs" element={<AdminLayout><PromotionPackAdmin /></AdminLayout>} />
                 <Route path="/admin/payments" element={<AdminLayout><Payments /></AdminLayout>} />
+                <Route path="/admin/feedbacks" element={<AdminLayout><Feedbacks /></AdminLayout>} />
                 {/* Autres routes admin seront ajoutées ici */}
               </Routes>
             </AdsProvider>

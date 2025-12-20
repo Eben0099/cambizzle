@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import adminService from '../../services/adminService';
 import logger from '../../utils/logger';
+import storageService from '../../services/storageService';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,7 +26,8 @@ import {
   Loader as LucideLoader,
   Zap,
   Shield,
-  Download
+  Download,
+  Trash2
 } from 'lucide-react';
 import { exportToExcel } from '../../utils/exportToExcel';
 import Loader from "../../components/ui/Loader";
@@ -35,6 +37,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -78,6 +90,7 @@ const Ads = () => {
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // Form fields for moderation
   const [approveNotes, setApproveNotes] = useState('');
@@ -179,6 +192,40 @@ const Ads = () => {
     }
   };
 
+  // Delete handler
+  const handleDelete = async () => {
+    if (!selectedAd) return;
+    try {
+      setLoading(true);
+      const token = storageService.getToken();
+      const response = await fetch(`${API_BASE_URL}/ads/${selectedAd.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        setShowDeleteModal(false);
+        setSelectedAd(null);
+        showToast({ type: 'success', message: 'Ad deleted successfully.' });
+        if (viewMode === 'pending') {
+          await fetchPendingAds();
+        } else {
+          await fetchAllAds();
+        }
+      } else {
+        throw new Error('Failed to delete ad');
+      }
+    } catch (err) {
+      showToast({ type: 'error', message: err?.message || 'Error deleting ad' });
+      logger.error('Error deleting ad:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Modal openers
   const openApproveModal = (ad) => {
     setSelectedAd(ad);
@@ -188,6 +235,11 @@ const Ads = () => {
   const openRejectModal = (ad) => {
     setSelectedAd(ad);
     setShowRejectModal(true);
+  };
+
+  const openDeleteModal = (ad) => {
+    setSelectedAd(ad);
+    setShowDeleteModal(true);
   };
 
   const openDetailsModal = (ad) => {
@@ -388,13 +440,12 @@ const Ads = () => {
                 </Label>
                 <Input
                   type="text"
-                  placeholder="Search..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-8 h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
                   aria-label="Search ads"
                 />
-                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                
               </div>
             </>
           )}
@@ -493,8 +544,7 @@ const Ads = () => {
                       onClick={() => navigate(`/ads/${ad.slug}`)}
                       aria-label={`View details for ${ad.title}`}
                     >
-                      <Eye className="h-3 w-3 mr-1" />
-                      Details
+                      <Eye className="h-3 w-3" />
                     </Button>
 
                     {ad.moderationStatus === 'pending' && (
@@ -505,8 +555,7 @@ const Ads = () => {
                           onClick={() => openApproveModal(ad)}
                           aria-label={`Approve ${ad.title}`}
                         >
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Approve
+                          <CheckCircle className="h-3 w-3" />
                         </Button>
 
                         <Button
@@ -515,11 +564,19 @@ const Ads = () => {
                           onClick={() => openRejectModal(ad)}
                           aria-label={`Reject ${ad.title}`}
                         >
-                          <XCircle className="h-3 w-3 mr-1" />
-                          Reject
+                          <XCircle className="h-3 w-3" />
                         </Button>
                       </>
                     )}
+
+                    <Button
+                      size="sm"
+                      className="h-8 text-xs bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center"
+                      onClick={() => openDeleteModal(ad)}
+                      aria-label={`Delete ${ad.title}`}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
                   </div>
 
                   <div className="text-xs text-gray-500 hidden sm:block">
@@ -820,8 +877,7 @@ const Ads = () => {
                     openApproveModal(selectedAd);
                   }}
                 >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Approve
+                  <CheckCircle className="h-4 w-4" />
                 </Button>
 
                 <Button
@@ -831,14 +887,50 @@ const Ads = () => {
                     openRejectModal(selectedAd);
                   }}
                 >
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Reject
+                  <XCircle className="h-4 w-4" />
                 </Button>
               </>
             )}
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Modal */}
+      <AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <AlertDialogContent className="bg-white rounded-xl border border-gray-200">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-base font-semibold text-gray-900">
+              Confirm Deletion
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-gray-600">
+              This action cannot be undone. Are you sure you want to delete{" "}
+              <span className="font-semibold">
+                {selectedAd?.title}
+              </span>
+              ?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="pt-3">
+            <AlertDialogCancel className="bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg disabled:opacity-50"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <LucideLoader className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

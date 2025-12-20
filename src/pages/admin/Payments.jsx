@@ -483,15 +483,14 @@ export default function Payments() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-gray-50">
-                    <th className="text-left py-2 px-3">Ref.</th>
-                    <th className="text-left py-2 px-3">Amount</th>
-                    <th className="text-left py-2 px-3">Phone</th>
-                    <th className="text-left py-2 px-3">Method</th>
-                    <th className="text-left py-2 px-3">Status</th>
+                    <th className="text-left py-2 px-3">Référence</th>
+                    <th className="text-left py-2 px-3">Montant</th>
+                    <th className="text-left py-2 px-3">Téléphone</th>
+                    <th className="text-left py-2 px-3">Méthode de paiement</th>
+                    <th className="text-left py-2 px-3">Statut</th>
                     <th className="text-left py-2 px-3">Description</th>
                     <th className="text-left py-2 px-3">Date</th>
-                    <th className="text-left py-2 px-3">Ad Title</th>
-                    <th className="text-left py-2 px-3">User Email</th>
+                    <th className="text-left py-2 px-3">Titre de l'annonce</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -500,7 +499,7 @@ export default function Payments() {
                       <td className="py-2 px-3">{tx.reference}</td>
                       <td className="py-2 px-3">{tx.amount} FCFA</td>
                       <td className="py-2 px-3">{tx.phone ?? "-"}</td>
-                      <td className="py-2 px-3">{tx.payment_method}</td>
+                      <td className="py-2 px-3">{tx.paymentMethod ?? tx.payment_method ?? "-"}</td>
                       <td className="py-2 px-3">
                         <span
                           className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
@@ -517,9 +516,8 @@ export default function Payments() {
                         </span>
                       </td>
                       <td className="py-2 px-3">{tx.description ?? "-"}</td>
-                      <td className="py-2 px-3">{tx.created_at}</td>
-                      <td className="py-2 px-3">{tx.ad_title ?? "-"}</td>
-                      <td className="py-2 px-3">{tx.user_email ?? "-"}</td>
+                      <td className="py-2 px-3">{tx.date ?? tx.createdAt ?? tx.created_at ?? "-"}</td>
+                      <td className="py-2 px-3">{tx.adTitle ?? tx.ad_title ?? "-"}</td>
                     </tr>
                   ))}
                 </tbody>

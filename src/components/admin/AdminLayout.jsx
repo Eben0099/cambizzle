@@ -14,6 +14,7 @@ const navigation = [
   { name: "Payments", href: "/admin/payments", icon: CreditCard },
   { name: "Users", href: "/admin/users", icon: Users },
   { name: "Ads", href: "/admin/ads", icon: FileText },
+  { name: "Feedbacks", href: "/admin/feedbacks", icon: AlertTriangle },
   // Section 2: Content Management
   { name: "Categories", href: "/admin/categories", icon: FolderTree },
   { name: "Subcategories", href: "/admin/subcategories", icon: FolderTree },

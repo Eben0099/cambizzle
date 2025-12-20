@@ -206,9 +206,23 @@ const Categories = () => {
         setSelectedCategory(null);
         fetchCategories();
         toast.success("Category deleted successfully.");
+      } else {
+        if (response.status === 422) {
+          toast.error("You cannot delete a non-empty category.");
+          setShowDeleteDialog(false);
+          setSelectedCategory(null);
+        } else {
+          toast.error(response.message || "Error deleting category.");
+        }
       }
     } catch (err) {
-      toast.error(err.message || "Error deleting category.");
+      if (err.response?.status === 422) {
+        toast.error("You cannot delete a non-empty category.");
+        setShowDeleteDialog(false);
+        setSelectedCategory(null);
+      } else {
+        toast.error(err.message || "Error deleting category.");
+      }
     } finally {
       setSubmitting(false);
     }
