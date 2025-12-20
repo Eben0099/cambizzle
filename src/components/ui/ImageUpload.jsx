@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Upload, X, Image as ImageIcon, Move } from 'lucide-react';
 import { validateImageFile } from '../../utils/helpers';
 import Button from './Button';
@@ -9,7 +10,7 @@ const ImageUpload = ({
   maxImages = 10,
   className = ''
 }) => {
-
+  const { t } = useTranslation();
   const [dragOver, setDragOver] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState(null);
   const fileInputRef = useRef(null);
@@ -29,7 +30,7 @@ const ImageUpload = ({
     });
 
     if (errors.length > 0) {
-      alert(`Errors:\n${errors.join('\n')}`);
+      alert(`${t('imageUpload.errors')}:\n${errors.join('\n')}`);
     }
 
     if (validFiles.length > 0) {
@@ -116,21 +117,21 @@ const ImageUpload = ({
         >
           <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Add your photos
+            {t('imageUpload.addYourPhotos')}
           </h3>
           <p className="text-gray-600 mb-4">
-            Drag and drop your images here or click to select
+            {t('imageUpload.dragAndDrop')}
           </p>
           <p className="text-sm text-gray-500 mb-4">
-            {images.length}/{maxImages} images • JPG, PNG, WebP • Max 5MB per image
+            {t('imageUpload.imagesCount', { count: images.length, max: maxImages })}
           </p>
-          
+
           <Button
             variant="outline"
             onClick={() => fileInputRef.current?.click()}
             className="mx-auto"
           >
-            Select files
+            {t('imageUpload.selectFiles')}
           </Button>
           
           <input
@@ -149,11 +150,11 @@ const ImageUpload = ({
         <div>
           <div className="mb-4">
             <h4 className="text-lg font-medium text-gray-900 mb-2">
-              Ad photos ({images.length})
+              {t('imageUpload.adPhotos', { count: images.length })}
             </h4>
             {images.length > 1 && (
               <p className="text-sm text-gray-500">
-                Hold and Drag to Reorder • The first image will be the main photo
+                {t('imageUpload.dragToReorder')}
               </p>
             )}
           </div>
@@ -189,17 +190,17 @@ const ImageUpload = ({
                   {/* Main Photo Badge */}
                   {index === 0 && (
                     <div className="absolute top-2 left-2 bg-[#D6BA69] text-black px-2 py-1 rounded text-xs font-medium">
-                      Main photo
+                      {t('imageUpload.mainPhoto')}
                     </div>
                   )}
-                  
+
                   {/* Controls */}
                   <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity space-y-1">
                     <button
                       type="button"
                       onClick={() => removeImage(index)}
                       className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"
-                      title="Delete"
+                      title={t('imageUpload.delete')}
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -230,7 +231,7 @@ const ImageUpload = ({
                 className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-[#D6BA69] hover:text-[#D6BA69] transition-colors cursor-pointer"
               >
                 <ImageIcon className="w-8 h-8 mb-2" />
-                <span className="text-sm">Add</span>
+                <span className="text-sm">{t('imageUpload.add')}</span>
               </button>
             )}
           </div>
@@ -241,13 +242,13 @@ const ImageUpload = ({
       {images.length === 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <h4 className="text-sm font-medium text-blue-900 mb-2">
-            Tips for better photos
+            {t('imageUpload.tipsTitle')}
           </h4>
           <ul className="text-sm text-blue-800 space-y-1">
-            <li>• Take clear and well-lit photos</li>
-            <li>• Show the item from different angles</li>
-            <li>• The first image will be used as thumbnail</li>
-            <li>• Avoid blurry or too dark photos</li>
+            <li>• {t('imageUpload.tip1')}</li>
+            <li>• {t('imageUpload.tip2')}</li>
+            <li>• {t('imageUpload.tip3')}</li>
+            <li>• {t('imageUpload.tip4')}</li>
           </ul>
         </div>
       )}

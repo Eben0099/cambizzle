@@ -11,7 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "../../components/ui/table";
-import { Eye, Check, X, AlertTriangle, Search } from "lucide-react";
+import { Eye, Check, X, AlertTriangle, Search, Download } from "lucide-react";
+import { exportToExcel } from "../../utils/exportToExcel";
 import Input from "../../components/ui/input";
 import { useToast } from "../../components/ui/use-toast";
 
@@ -116,6 +117,26 @@ const Reports = () => {
             Monitor and manage reported ads and users
           </p>
         </div>
+        <Button
+          onClick={() => exportToExcel(filteredReports, 'reports', {
+            columns: [
+              { header: 'ID', key: 'id' },
+              { header: 'Type', key: 'type' },
+              { header: 'Title', key: 'title' },
+              { header: 'Reporter', key: 'reporter' },
+              { header: 'Reason', key: 'reason' },
+              { header: 'Status', key: 'status' },
+              { header: 'Priority', key: 'priority' },
+              { header: 'Date', key: 'date' },
+            ],
+            sheetName: 'Reports'
+          })}
+          className="bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center gap-1 cursor-pointer"
+          disabled={filteredReports.length === 0}
+        >
+          <Download className="h-4 w-4" />
+          Export Excel
+        </Button>
       </div>
 
       {/* Stats Summary */}

@@ -71,6 +71,8 @@ const useHomeAds = (initialPage = 1, perPage = 8) => {
   const goToPage = (page) => {
     if (page >= 1 && page <= (data?.pagination?.totalPages || 1)) {
       setCurrentPage(page);
+      // Scroll vers le haut de la page
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 

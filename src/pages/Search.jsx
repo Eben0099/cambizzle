@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Filter, Grid, List, SlidersHorizontal, MapPin, DollarSign } from 'lucide-react';
+import { useWeglotTranslate } from '../hooks/useWeglotRetranslate';
 import { useAds } from '../contexts/AdsContext';
 import { adsService } from '../services/adsService';
 import { useAdCreationData } from '../hooks/useAdsQuery';
@@ -20,6 +21,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+
+// Composant pour traduire le titre dynamique
+const TranslatedTitle = ({ title }) => {
+  const { translatedText } = useWeglotTranslate(title || '');
+  return <>{translatedText || title}</>;
+};
 
 const Search = () => {
   const { t } = useTranslation();
@@ -416,10 +423,10 @@ const Search = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {displayInfo.title}
+            <TranslatedTitle title={displayInfo.title} />
           </h1>
           <p className="text-gray-600">
-            {keywordFilter ? filteredAds.length : displayInfo.count} ad{(keywordFilter ? filteredAds.length : displayInfo.count) !== 1 ? 's' : ''} found
+            {keywordFilter ? filteredAds.length : displayInfo.count} {t('filters.adsFound', { count: keywordFilter ? filteredAds.length : displayInfo.count })}
           </p>
         </div>
 
@@ -444,7 +451,7 @@ const Search = () => {
           </div>
           {keywordFilter && (
             <p className="text-sm text-gray-500 mt-2">
-              Showing {filteredAds.length} of {rawAds.length} ads matching "{keywordFilter}"
+              {t('filters.showingResults', { count: filteredAds.length, total: rawAds.length, keyword: keywordFilter })}
             </p>
           )}
         </div>

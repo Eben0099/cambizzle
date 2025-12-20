@@ -6,11 +6,14 @@ import { changeLanguage, getCurrentLanguage } from '../i18n';
 /**
  * Language Switcher Component
  * Permet de changer la langue du site (UI via i18n, contenu via Weglot)
+ * @param {string} variant - 'light', 'dark', or 'floating'
  */
 const LanguageSwitcher = ({ className = '', variant = 'light' }) => {
   const { i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [currentLang, setCurrentLang] = useState(getCurrentLanguage());
+
+  const isFloating = variant === 'floating';
 
   const languages = [
     { code: 'en', name: 'English', flag: '🇬🇧' },
@@ -31,9 +34,20 @@ const LanguageSwitcher = ({ className = '', variant = 'light' }) => {
   }, [i18n]);
 
   const handleLanguageChange = (langCode) => {
+    // Ne rien faire si c'est déjà la langue actuelle
+    if (langCode === currentLang) {
+      setIsOpen(false);
+      return;
+    }
+
     changeLanguage(langCode);
     setCurrentLang(langCode);
     setIsOpen(false);
+
+    // Rafraîchir la page pour que Weglot traduise tout le contenu dynamique
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   };
 
   const getCurrentLanguageData = () => {
@@ -53,14 +67,25 @@ const LanguageSwitcher = ({ className = '', variant = 'light' }) => {
       dropdown: 'bg-white border-gray-200 shadow-lg',
       option: 'text-gray-700 hover:bg-gray-100',
       optionActive: 'bg-[#D6BA69]/10'
+    },
+    floating: {
+      trigger: 'bg-black hover:bg-gray-800 border-[#D6BA69] text-white shadow-lg',
+      dropdown: 'bg-black border-[#D6BA69] shadow-xl',
+      option: 'text-gray-300 hover:bg-gray-800 hover:text-white',
+      optionActive: 'bg-[#D6BA69]/20'
     }
   };
 
   const currentStyles = styles[variant] || styles.light;
   const currentLanguageData = getCurrentLanguageData();
 
+  // Container classes pour le mode flottant
+  const containerClasses = isFloating
+    ? `fixed bottom-6 right-6 z-50 ${className}`
+    : `relative ${className}`;
+
   return (
-    <div className={`relative ${className}`} data-wg-notranslate="true">
+    <div className={containerClasses} data-wg-notranslate="true">
       {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -83,8 +108,8 @@ const LanguageSwitcher = ({ className = '', variant = 'light' }) => {
             onClick={() => setIsOpen(false)}
           />
 
-          {/* Menu */}
-          <div className={`absolute left-0 bottom-full mb-2 w-44 rounded-lg border py-1 z-50 ${currentStyles.dropdown}`}>
+          {/* Menu - position différente pour le mode flottant */}
+          <div className={`absolute ${isFloating ? 'right-0 bottom-full mb-2' : 'left-0 bottom-full mb-2'} w-44 rounded-lg border py-1 z-50 ${currentStyles.dropdown}`}>
             {languages.map((lang) => (
               <button
                 key={lang.code}

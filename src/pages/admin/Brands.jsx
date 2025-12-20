@@ -18,7 +18,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Plus, Edit, Trash2, Search as IconSearch, Loader2 } from "lucide-react";
+import { Plus, Edit, Trash2, Search as IconSearch, Loader2, Download } from "lucide-react";
+import { exportToExcel } from "../../utils/exportToExcel";
 import {
   Dialog,
   DialogContent,
@@ -109,6 +110,16 @@ const Brands = () => {
   const subcategoryOptions = useMemo(() => {
     const subs = brandsData.map((g) => g.subcategory);
     return subs.sort((a, b) => a.name.localeCompare(b.name));
+  }, [brandsData]);
+
+  // Flatten brands for export
+  const allBrandsFlat = useMemo(() => {
+    return brandsData.flatMap((group) =>
+      group.brands.map((b) => ({
+        ...b,
+        subcategoryName: group.subcategory?.name || '',
+      }))
+    );
   }, [brandsData]);
 
   // Filter and search pipeline
@@ -252,6 +263,24 @@ const Brands = () => {
               />
               <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             </div>
+
+            {/* Export button */}
+            <Button
+              onClick={() => exportToExcel(allBrandsFlat, 'brands', {
+                columns: [
+                  { header: 'ID', key: 'id' },
+                  { header: 'Name', key: 'name' },
+                  { header: 'Subcategory', key: 'subcategoryName' },
+                  { header: 'Ads Count', key: 'adsCount' },
+                ],
+                sheetName: 'Brands'
+              })}
+              className="h-9 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200 flex items-center gap-1 cursor-pointer"
+              disabled={allBrandsFlat.length === 0}
+            >
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
 
             {/* Create button */}
             <Button

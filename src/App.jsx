@@ -38,6 +38,7 @@ import ReferralCodes from './pages/admin/ReferralCodes';
 import PromotionPackAdmin from './components/admin/PromotionPackAdmin';
 import Payments from './pages/admin/Payments';
 import ScrollToTop from './components/ScrollToTop';
+import LanguageSwitcher from './components/LanguageSwitcher';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -50,6 +51,8 @@ const PublicLayout = ({ children }) => (
       {children}
     </main>
     <Footer />
+    {/* Floating Language Switcher */}
+    <LanguageSwitcher variant="floating" />
   </div>
 );
 

@@ -24,8 +24,10 @@ import {
   DollarSign,
   Loader as LucideLoader,
   Zap,
-  Shield
+  Shield,
+  Download
 } from 'lucide-react';
+import { exportToExcel } from '../../utils/exportToExcel';
 import Loader from "../../components/ui/Loader";
 import {
   Dialog,
@@ -293,9 +295,34 @@ const Ads = () => {
           <p className="text-gray-600 text-xs sm:text-sm mt-1">{filteredAds.length} ads</p>
         </div>
 
-        <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg shadow-sm">
-          <Tag className="h-4 w-4 text-[#D6BA69]" />
-          <span className="text-xs text-gray-600">{filteredAds.length} total</span>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => exportToExcel(filteredAds, 'ads', {
+              columns: [
+                { header: 'ID', key: 'id' },
+                { header: 'Title', key: 'title' },
+                { header: 'Price', key: 'price' },
+                { header: 'Category', key: 'categoryName' },
+                { header: 'Subcategory', key: 'subcategoryName' },
+                { header: 'Location', key: 'locationName' },
+                { header: 'Status', key: 'status' },
+                { header: 'Moderation', key: 'moderationStatus' },
+                { header: 'Boosted', key: 'isBoosted' },
+                { header: 'Views', key: 'viewCount' },
+                { header: 'Created At', key: 'createdAt' },
+              ],
+              sheetName: 'Ads'
+            })}
+            className="h-9 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg shadow-sm flex items-center gap-1 cursor-pointer"
+            disabled={filteredAds.length === 0}
+          >
+            <Download className="h-4 w-4" />
+            Export Excel
+          </Button>
+          <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg shadow-sm">
+            <Tag className="h-4 w-4 text-[#D6BA69]" />
+            <span className="text-xs text-gray-600">{filteredAds.length} total</span>
+          </div>
         </div>
       </div>
 

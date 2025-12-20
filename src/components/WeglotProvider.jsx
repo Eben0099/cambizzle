@@ -7,28 +7,14 @@ import logger from '../utils/logger';
 /**
  * Weglot Provider Component
  *
- * IMPORTANT: Configure Weglot Dashboard > Settings > App Settings > Add Dynamic > "body"
- * This allows Weglot's MutationObserver to detect and translate dynamic content.
+ * Gère l'initialisation de Weglot et la synchronisation avec i18n.
+ * Le contenu dynamique est géré via le hook useWeglotRetranslate
+ * qui utilise l'API Weglot.translate() pour traduire manuellement.
  */
 const WeglotProvider = ({ children }) => {
   const scriptLoadedRef = useRef(false);
   const isInitializingRef = useRef(false);
   const location = useLocation();
-
-  // Re-scan when route changes (SPA navigation)
-  useEffect(() => {
-    if (window.Weglot && window.Weglot.initialized) {
-      const currentLang = window.Weglot.getCurrentLang();
-      logger.log(`Weglot: Route changed to ${location.pathname}, re-scanning for ${currentLang}`);
-
-      // Small delay to let React render the new page content
-      const timer = setTimeout(() => {
-        window.Weglot.switchTo(currentLang);
-      }, 500);
-
-      return () => clearTimeout(timer);
-    }
-  }, [location.pathname]);
 
   // Initialize Weglot on mount
   useEffect(() => {
@@ -63,8 +49,10 @@ const WeglotProvider = ({ children }) => {
       window.Weglot.initialize({
         api_key: WEGLOT_CONFIG.apiKey,
         cache: true,
-        wait_transition: true,
-        hide_switcher: true // Hide Weglot's native switcher, we use our own
+        wait_transition: false,
+        hide_switcher: true, // Hide Weglot's native switcher, we use our own
+        auto_switch: false, // Disable auto language detection redirect
+        subdirectory: null // Disable URL subdirectory for languages
       });
 
       scriptLoadedRef.current = true;
@@ -75,20 +63,11 @@ const WeglotProvider = ({ children }) => {
         const currentWeglotLang = window.Weglot.getCurrentLang();
         logger.log(`Weglot ready - current: ${currentWeglotLang}, target: ${targetLang}`);
 
-        // Switch to target language if different
+        // Switch to target language if different (without causing redirect)
         if (targetLang !== currentWeglotLang) {
           logger.log(`Switching Weglot to ${targetLang}`);
           window.Weglot.switchTo(targetLang);
         }
-
-        // Force re-scan after content has likely loaded
-        // This catches any content that loaded after initial Weglot scan
-        setTimeout(() => {
-          const lang = window.Weglot.getCurrentLang();
-          logger.log(`Weglot: Forcing re-scan for language ${lang}`);
-          // Switching to the same language forces Weglot to re-translate
-          window.Weglot.switchTo(lang);
-        }, 1500);
       });
 
       // Handle language changes from Weglot's native switcher (if visible)

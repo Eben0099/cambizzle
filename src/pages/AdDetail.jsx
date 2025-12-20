@@ -7,7 +7,7 @@ import { ProductSchema, BreadcrumbSchema } from '../components/StructuredData';
 import { API_BASE_URL, SERVER_BASE_URL } from '../config/api';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAdBySlug } from '../hooks/useAdsQuery';
-import useWeglotRetranslate from '../hooks/useWeglotRetranslate';
+import { useWeglotTranslate } from '../hooks/useWeglotRetranslate';
 import { 
   ArrowLeft, 
   Heart, 
@@ -41,14 +41,27 @@ import SafetyTips from '../components/adDetail/SafetyTips';
 import Modal from '../components/adDetail/Modal';
 import AdCard from '../components/ads/AdCard';
 
+// Composant pour traduire un filtre individuel
+const TranslatedFilter = ({ filterName, value }) => {
+  const { translatedText: translatedName } = useWeglotTranslate(filterName || '');
+  const { translatedText: translatedValue } = useWeglotTranslate(value || '');
+
+  return (
+    <div className="flex flex-row items-start py-3 border-b border-gray-100">
+      <span className="text-gray-600 font-medium mr-2 min-w-[120px]">
+        {translatedName || filterName}:
+      </span>
+      <span className="text-gray-900">{translatedValue || value}</span>
+    </div>
+  );
+};
+
 const AdDetail = () => {
   const { t } = useTranslation();
   const { slug } = useParams();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const { ads, favorites = [], toggleFavorite, reportAd } = useAds();
-  const retranslateWeglot = useWeglotRetranslate();
-  
   // Use React Query pour éviter les rechargements
   const { data: adData, isLoading, isError } = useAdBySlug(slug);
   
@@ -73,6 +86,16 @@ const AdDetail = () => {
   const seller = ad?.userDetails || null;
   const sellerBusiness = ad?.seller_profile || null;
 
+  // Traduction manuelle du contenu dynamique avec Weglot
+  const { translatedText: translatedTitle } = useWeglotTranslate(ad?.title || '');
+  const { translatedText: translatedDescription } = useWeglotTranslate(ad?.description || '');
+  const { translatedText: translatedCategory } = useWeglotTranslate(ad?.categoryName || '');
+  const { translatedText: translatedSubcategory } = useWeglotTranslate(ad?.subcategoryName || '');
+  const { translatedText: translatedLocation } = useWeglotTranslate(
+    ad?.locationName && ad?.locationType ? `${ad.locationName}, ${ad.locationType}` : ''
+  );
+  const { translatedText: translatedBrand } = useWeglotTranslate(ad?.brandName || '');
+
   // Charger les annonces similaires quand l'annonce est chargée
   useEffect(() => {
     const fetchRelatedAds = async () => {
@@ -89,12 +112,11 @@ const AdDetail = () => {
         // Silently fail for related ads
       }
     };
-    
+
     if (ad) {
       fetchRelatedAds();
-      retranslateWeglot();
     }
-  }, [ad, retranslateWeglot]);
+  }, [ad]);
 
   const isInFavorites = ad && favorites.some(fav => fav.id === ad.id);
 
@@ -244,7 +266,7 @@ const AdDetail = () => {
                   onClick={() => navigate(`/search?category=${ad.category?.slug || ad.categorySlug}`)}
                   className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
                 >
-                  {ad.categoryName}
+                  {translatedCategory || ad.categoryName}
                 </button>
               </>
             )}
@@ -255,13 +277,13 @@ const AdDetail = () => {
                   onClick={() => navigate(`/search?category=${ad.category?.slug || ad.categorySlug}&subcategory=${ad.subcategory?.slug || ad.subcategorySlug}`)}
                   className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
                 >
-                  {ad.subcategoryName}
+                  {translatedSubcategory || ad.subcategoryName}
                 </button>
               </>
             )}
             <ChevronRight className="w-4 h-4 text-gray-400" />
             <span className="text-gray-900 font-medium truncate max-w-xs">
-              {ad?.title}
+              {translatedTitle || ad?.title}
             </span>
           </nav>
         </div>
@@ -282,11 +304,11 @@ const AdDetail = () => {
               <div className="p-6 sm:p-8">
                 {/* Title and Location */}
                 <div className="mb-6">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">{ad.title}</h1>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">{translatedTitle || ad.title}</h1>
                   <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                     <div className="flex items-center">
                       <MapPin className="w-4 h-4 mr-1.5" />
-                      <span>{ad.locationName}, {ad.locationType}</span>
+                      <span>{translatedLocation || `${ad.locationName}, ${ad.locationType}`}</span>
                     </div>
                     <div className="flex items-center">
                       <Calendar className="w-4 h-4 mr-1.5" />
@@ -331,17 +353,17 @@ const AdDetail = () => {
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
                     <Package className="w-6 h-6 text-gray-400 mx-auto mb-2" />
                     <div className="text-xs text-gray-500 mb-1">{t('ads.category')}</div>
-                    <div className="font-medium text-sm">{ad.categoryName}</div>
+                    <div className="font-medium text-sm">{translatedCategory || ad.categoryName}</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
                     <CheckCircle className="w-6 h-6 text-gray-400 mx-auto mb-2" />
                     <div className="text-xs text-gray-500 mb-1">{t('ads.subcategory')}</div>
-                    <div className="font-medium text-sm">{ad.subcategoryName}</div>
+                    <div className="font-medium text-sm">{translatedSubcategory || ad.subcategoryName}</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
                     <Truck className="w-6 h-6 text-gray-400 mx-auto mb-2" />
                     <div className="text-xs text-gray-500 mb-1">{t('ads.brand')}</div>
-                    <div className="font-medium text-sm">{ad.brandName}</div>
+                    <div className="font-medium text-sm">{translatedBrand || ad.brandName}</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
                     <AlertTriangle className="w-6 h-6 text-gray-400 mx-auto mb-2" />
@@ -356,10 +378,11 @@ const AdDetail = () => {
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('ads.specifications')}</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {ad.filters.map((filter, index) => (
-                        <div key={index} className="flex flex-row items-start py-3 border-b border-gray-100">
-                          <span className="text-gray-600 font-medium mr-2 min-w-[120px]">{filter.filterName}:</span>
-                          <span className="text-gray-900">{filter.value}</span>
-                        </div>
+                        <TranslatedFilter
+                          key={index}
+                          filterName={filter.filterName}
+                          value={filter.value}
+                        />
                       ))}
                     </div>
                   </div>
@@ -370,7 +393,7 @@ const AdDetail = () => {
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('ads.description')}</h3>
                   <div className="prose prose-gray max-w-none">
                     <p className="whitespace-pre-line text-gray-700 leading-relaxed">
-                      {ad.description}
+                      {translatedDescription || ad.description}
                     </p>
                   </div>
                 </div>

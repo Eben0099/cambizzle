@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Facebook, Instagram } from 'lucide-react';
-import LanguageSwitcher from '../LanguageSwitcher';
 
 const Footer = () => {
   const { t } = useTranslation();
@@ -87,11 +86,10 @@ const Footer = () => {
 
         {/* Copyright Section */}
         <div className="mt-12 pt-8 border-t border-gray-800">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center">
             <p className="text-sm text-gray-400">
               © {new Date().getFullYear()} Cambizzle. {t('footer.copyright')}
             </p>
-            <LanguageSwitcher variant="dark" />
           </div>
         </div>
       </div>

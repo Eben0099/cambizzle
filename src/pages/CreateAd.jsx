@@ -17,6 +17,190 @@ import { adsService } from '../services/adsService';
 import StepBoostPlan from '../components/StepBoostPlan';
 import PaymentModal from '../components/PaymentModal';
 import logger from '../utils/logger';
+import { useWeglotTranslate, useWeglotTranslateArray } from '../hooks/useWeglotRetranslate';
+
+// Fonction pour traduire les erreurs API
+const translateApiError = (errorMessage, t) => {
+  if (!errorMessage) return errorMessage;
+
+  // Vérifier si c'est un message d'erreur connu (format "field: message")
+  const colonIndex = errorMessage.indexOf(':');
+  if (colonIndex > 0) {
+    const field = errorMessage.substring(0, colonIndex).trim();
+    const message = errorMessage.substring(colonIndex + 1).trim();
+
+    // Traduire le nom du champ
+    const translatedField = t(`errors.apiFields.${field}`, { defaultValue: field });
+
+    // Essayer de traduire le message complet d'abord
+    const fullMessageKey = `errors.apiMessages.${message}`;
+    const translatedFullMessage = t(fullMessageKey, { defaultValue: '' });
+
+    if (translatedFullMessage) {
+      return `${translatedField}: ${translatedFullMessage}`;
+    }
+
+    // Sinon, essayer de traduire des parties du message
+    let translatedMessage = message;
+    if (message.toLowerCase().includes('required')) {
+      translatedMessage = t('errors.apiMessages.required');
+    } else if (message.toLowerCase().includes('min') || message.toLowerCase().includes('short')) {
+      translatedMessage = t('errors.apiMessages.min');
+    } else if (message.toLowerCase().includes('max') || message.toLowerCase().includes('long')) {
+      translatedMessage = t('errors.apiMessages.max');
+    } else if (message.toLowerCase().includes('invalid')) {
+      translatedMessage = t('errors.apiMessages.invalid');
+    }
+
+    return `${translatedField} ${translatedMessage}`;
+  }
+
+  // Essayer de traduire le message complet
+  const directTranslation = t(`errors.apiMessages.${errorMessage}`, { defaultValue: '' });
+  if (directTranslation) {
+    return directTranslation;
+  }
+
+  return errorMessage;
+};
+
+// Composant pour traduire un texte inline (pour les labels de filtres)
+const TranslatedText = ({ text, className }) => {
+  const { translatedText } = useWeglotTranslate(text || '');
+  return <span className={className}>{translatedText || text}</span>;
+};
+
+// Composant pour traduire une option de filtre
+const TranslatedOption = ({ text }) => {
+  const { translatedText } = useWeglotTranslate(text || '');
+  return <>{translatedText || text}</>;
+};
+
+// Composant Select avec options traduites
+const TranslatedFilterSelectField = ({ filter, value, onChange, error }) => {
+  const { translatedItems } = useWeglotTranslateArray(
+    (filter.options || []).map(opt => ({ value: opt, displayLabel: opt })),
+    'displayLabel'
+  );
+
+  const optionsToDisplay = translatedItems.length > 0 ? translatedItems : (filter.options || []).map(opt => ({ value: opt, displayLabel: opt }));
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        <TranslatedText text={filter.name} /> <span className="text-red-500">*</span>
+      </label>
+      <select
+        name={`filters.${filter.id}`}
+        value={value || ''}
+        onChange={(e) => onChange(filter.id, e.target.value)}
+        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
+      >
+        <option value=""></option>
+        {[...optionsToDisplay]
+          .sort((a, b) => {
+            const aNum = Number(a.value), bNum = Number(b.value);
+            if (!isNaN(aNum) && !isNaN(bNum)) {
+              return aNum - bNum;
+            }
+            return a.displayLabel.localeCompare(b.displayLabel);
+          })
+          .map(option => (
+            <option key={option.value} value={option.value}>
+              {option.displayLabel}
+            </option>
+          ))}
+      </select>
+      {error && (
+        <p className="text-sm text-red-600 mt-1">{error}</p>
+      )}
+    </div>
+  );
+};
+
+// Composant Multi-Select (checkbox) avec options traduites
+const TranslatedFilterMultiSelect = ({ filter, value, onChange, error, Select: SelectComponent }) => {
+  const { translatedItems } = useWeglotTranslateArray(
+    (filter.options || []).map(opt => ({ value: opt, displayLabel: opt })),
+    'displayLabel'
+  );
+
+  const optionsToDisplay = translatedItems.length > 0 ? translatedItems : (filter.options || []).map(opt => ({ value: opt, displayLabel: opt }));
+
+  const selectOptions = [...optionsToDisplay]
+    .sort((a, b) => {
+      const aNum = Number(a.value), bNum = Number(b.value);
+      if (!isNaN(aNum) && !isNaN(bNum)) {
+        return aNum - bNum;
+      }
+      return a.displayLabel.localeCompare(b.displayLabel);
+    })
+    .map(option => ({ value: option.value, label: option.displayLabel }));
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        <TranslatedText text={filter.name} /> <span className="text-red-500">*</span>
+      </label>
+      <SelectComponent
+        isMulti
+        closeMenuOnSelect={false}
+        hideSelectedOptions={false}
+        isClearable={true}
+        name={`filters.${filter.id}`}
+        options={selectOptions}
+        value={(value || []).map(val => {
+          const found = selectOptions.find(opt => opt.value === val);
+          return found || { value: val, label: val };
+        })}
+        onChange={selected => onChange(filter.id, selected ? selected.map(opt => opt.value) : [])}
+        classNamePrefix="react-select"
+        menuPlacement="auto"
+        menuShouldScrollIntoView={false}
+        styles={{
+          control: (base) => ({
+            ...base,
+            borderColor: '#D6BA69',
+            minHeight: 44,
+            borderRadius: '8px',
+            boxShadow: 'none',
+            '&:focus': { borderColor: '#D6BA69' }
+          }),
+          multiValue: (base) => ({ ...base, backgroundColor: '#F3F4F6' }),
+          option: (base, state) => ({
+            ...base,
+            backgroundColor: state.isSelected ? '#D6BA69' : '#fff',
+            color: state.isSelected ? 'white' : '#222',
+            '&:hover': { backgroundColor: state.isSelected ? '#D6BA69' : '#f9fafb' },
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8
+          })
+        }}
+        formatOptionLabel={(option, { context, isSelected }) =>
+          context === 'menu' ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input
+                type="checkbox"
+                checked={isSelected}
+                tabIndex={-1}
+                readOnly
+                style={{ accentColor: '#D6BA69', marginRight: 8, pointerEvents: 'none' }}
+                onClick={e => e.stopPropagation()}
+              />
+              <span>{option.label}</span>
+            </div>
+          ) : (
+            <span>{option.label}</span>
+          )
+        }
+      />
+      {error && (
+        <p className="text-sm text-red-600 mt-1">{error}</p>
+      )}
+    </div>
+  );
+};
 
 const CreateAd = () => {
   const { t } = useTranslation();
@@ -61,6 +245,13 @@ const CreateAd = () => {
     error: creationError,
     loadSubcategoryFields
   } = useAdCreation();
+
+  // Traduire les données dynamiques avec Weglot
+  const { translatedItems: translatedCategories } = useWeglotTranslateArray(creationData.categories || [], 'name');
+  const { translatedItems: translatedSubcategories } = useWeglotTranslateArray(subcategories, 'name');
+  const { translatedItems: translatedLocations } = useWeglotTranslateArray(creationData.locations || [], 'city');
+  const { translatedItems: translatedBrands } = useWeglotTranslateArray(subcategoryFields.brands || [], 'name');
+  const { translatedItems: translatedFilters } = useWeglotTranslateArray(subcategoryFields.filters || [], 'name');
 
   // Vérifier l'authentification
   useEffect(() => {
@@ -192,52 +383,52 @@ const CreateAd = () => {
 
   const validateStep = (step) => {
     const newErrors = {};
-    
+
     if (step === 1) {
       if (!formData.title.trim()) {
-        newErrors.title = 'Title is required';
+        newErrors.title = t('createAd.validation.titleRequired');
       } else if (formData.title.length < 10) {
-        newErrors.title = 'Title must be at least 10 characters';
+        newErrors.title = t('createAd.validation.titleMinLength');
       }
       if (!formData.description.trim()) {
-        newErrors.description = 'Description is required';
+        newErrors.description = t('createAd.validation.descriptionRequired');
       } else if (formData.description.length < 20) {
-        newErrors.description = 'Description must be at least 20 characters';
+        newErrors.description = t('createAd.validation.descriptionMinLength');
       }
       if (!formData.category) {
-        newErrors.category = 'Please select a category';
+        newErrors.category = t('createAd.validation.categoryRequired');
       }
       if (!formData.type) {
-        newErrors.type = 'Please select an ad type';
+        newErrors.type = t('createAd.validation.adTypeRequired');
       }
       if (!formData.subcategory) {
-        newErrors.subcategory = 'Subcategory is required';
+        newErrors.subcategory = t('createAd.validation.subcategoryRequired');
       }
     }
     if (step === 2) {
       if (!formData.price) {
-        newErrors.price = 'Price is required';
+        newErrors.price = t('createAd.validation.priceRequired');
       } else {
         const priceRaw = formData.price.replace(/\s/g, '');
         if (parseFloat(priceRaw) <= 0) {
-          newErrors.price = 'Price must be greater than 0';
+          newErrors.price = t('createAd.validation.priceGreaterThanZero');
         }
       }
       if (formData.originalPrice) {
         const originalPriceRaw = formData.originalPrice.replace(/\s/g, '');
         const priceRaw = formData.price.replace(/\s/g, '');
         if (parseFloat(originalPriceRaw) <= parseFloat(priceRaw)) {
-          newErrors.originalPrice = 'Original price must be greater than selling price';
+          newErrors.originalPrice = t('createAd.validation.originalPriceMustBeHigher');
         }
       }
       if (!formData.locationId) {
-        newErrors.locationId = 'Location is required';
+        newErrors.locationId = t('createAd.validation.locationRequired');
       }
     }
     if (step === 3) {
       if (subcategoryFields.brands && subcategoryFields.brands.length > 0) {
         if (!formData.brandId) {
-          newErrors.brandId = 'Brand is required';
+          newErrors.brandId = t('createAd.validation.brandRequired');
         }
       }
       if (subcategoryFields.filters) {
@@ -250,7 +441,7 @@ const CreateAd = () => {
             hasValue = !!(value && typeof value === 'string' && value.trim() !== '');
           }
           if (filter.isRequired && !hasValue) {
-            newErrors[`filters.${filter.id}`] = `${filter.name} is required`;
+            newErrors[`filters.${filter.id}`] = t('createAd.validation.filterRequired', { filterName: filter.name });
           }
         });
       }
@@ -259,19 +450,19 @@ const CreateAd = () => {
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
       const maxSize = 5 * 1024 * 1024;
       if (images.length < 3) {
-        newErrors.images = 'At least 3 photos are required';
+        newErrors.images = t('createAd.validation.minPhotosRequired');
       } else if (images.length > 10) {
-        newErrors.images = 'Maximum 10 photos allowed';
+        newErrors.images = t('createAd.validation.maxPhotosExceeded');
       } else {
         for (let i = 0; i < images.length; i++) {
           const img = images[i];
           if (img.file) {
             if (!allowedTypes.includes(img.file.type)) {
-              newErrors.images = `Photo format not allowed (photo ${i + 1}). Accepted formats: JPG, PNG, WEBP.`;
+              newErrors.images = t('createAd.validation.photoFormatNotAllowed', { index: i + 1 });
               break;
             }
             if (img.file.size > maxSize) {
-              newErrors.images = `Photo too large (photo ${i + 1}). Max size: 5MB.`;
+              newErrors.images = t('createAd.validation.photoTooLarge', { index: i + 1 });
               break;
             }
           }
@@ -284,17 +475,17 @@ const CreateAd = () => {
         // If a paid plan is selected, validate phone and payment method
         if (formData.selectedPlan && formData.selectedPlan.price > 0) {
           if (!formData.phone.trim()) {
-            newErrors.phone = 'Phone number is required for paid boosts';
+            newErrors.phone = t('createAd.validation.phoneRequiredForBoost');
           } else if (formData.phone.length < 10) {
-            newErrors.phone = 'Please enter a valid phone number';
+            newErrors.phone = t('createAd.validation.invalidPhoneNumber');
           }
           if (!formData.payment_method) {
-            newErrors.payment_method = 'Payment method is required for paid boosts';
+            newErrors.payment_method = t('createAd.validation.paymentMethodRequired');
           }
         }
       }
     }
-    
+
     return newErrors;
   };
 
@@ -455,11 +646,13 @@ const CreateAd = () => {
         });
       } else {
         // Handle unexpected status
-        setErrors({ submit: result.message || 'Unexpected response from server' });
+        const errorMsg = result.message || t('errors.somethingWentWrong');
+        setErrors({ submit: translateApiError(errorMsg, t) });
       }
     } catch (err) {
       logger.error('Erreur création annonce:', err);
-      setErrors({ submit: err.message || 'Erreur lors de la création de l\'annonce' });
+      const errorMsg = err.message || t('errors.somethingWentWrong');
+      setErrors({ submit: translateApiError(errorMsg, t) });
     } finally {
       setIsLoading(false);
     }
@@ -579,7 +772,7 @@ const CreateAd = () => {
                         className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                       >
                         <option value=""></option>
-                        {creationData.categories?.map(category => (
+                        {(translatedCategories.length > 0 ? translatedCategories : creationData.categories || []).map(category => (
                           <option key={category.id} value={category.id}>
                             {category.name}
                           </option>
@@ -603,7 +796,7 @@ const CreateAd = () => {
                       className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] disabled:bg-gray-100 disabled:cursor-not-allowed transition-all bg-white"
                     >
                       <option value=""></option>
-                      {formData.category && subcategories.length > 0 && [...subcategories]
+                      {formData.category && subcategories.length > 0 && [...(translatedSubcategories.length > 0 ? translatedSubcategories : subcategories)]
                         .sort((a, b) => a.name.localeCompare(b.name))
                         .map(subcategory => (
                           <option key={subcategory.id} value={subcategory.slug}>
@@ -752,7 +945,7 @@ const CreateAd = () => {
                       className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                     >
                       <option value=""></option>
-                      {creationData.locations?.map(location => (
+                      {(translatedLocations.length > 0 ? translatedLocations : creationData.locations || []).map(location => (
                         <option key={location.id} value={location.id}>
                           {location.city}
                         </option>
@@ -790,7 +983,7 @@ const CreateAd = () => {
                         className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                       >
                         <option value=""></option>
-                        {[...subcategoryFields.brands]
+                        {[...(translatedBrands.length > 0 ? translatedBrands : subcategoryFields.brands || [])]
                           .sort((a, b) => a.name.localeCompare(b.name))
                           .map(brand => (
                             <option key={brand.id} value={brand.id}>
@@ -816,42 +1009,38 @@ const CreateAd = () => {
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {subcategoryFields.filters.map(filter => (
-                          <div key={filter.id}>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              {filter.name} <span className="text-red-500">*</span>
-                            </label>
-                            {filter.type === 'select' && filter.options.length > 0 ? (
-                              <select
-                                name={`filters.${filter.id}`}
-                                value={formData.filters[filter.id] || ''}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  setFormData(prev => ({
-                                    ...prev,
-                                    filters: {
-                                      ...prev.filters,
-                                      [filter.id]: value
-                                    }
-                                  }));
-                                }}
-                                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
-                              >
-                                <option value=""></option>
-                                {[...filter.options]
-                                  .sort((a, b) => {
-                                    const aNum = Number(a), bNum = Number(b);
-                                    if (!isNaN(aNum) && !isNaN(bNum)) {
-                                      return aNum - bNum;
-                                    }
-                                    return a.localeCompare(b);
-                                  })
-                                  .map(option => (
-                                    <option key={option} value={option}>
-                                      {option}
-                                    </option>
-                                  ))}
-                              </select>
-                            ) : filter.type === 'number' ? (
+                          filter.type === 'select' && filter.options && filter.options.length > 0 ? (
+                            <TranslatedFilterSelectField
+                              key={filter.id}
+                              filter={filter}
+                              value={formData.filters[filter.id]}
+                              onChange={(filterId, value) => {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  filters: { ...prev.filters, [filterId]: value }
+                                }));
+                              }}
+                              error={errors[`filters.${filter.id}`]}
+                            />
+                          ) : filter.type === 'checkbox' && filter.options && filter.options.length > 0 ? (
+                            <TranslatedFilterMultiSelect
+                              key={filter.id}
+                              filter={filter}
+                              value={formData.filters[filter.id]}
+                              onChange={(filterId, value) => {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  filters: { ...prev.filters, [filterId]: value }
+                                }));
+                              }}
+                              error={errors[`filters.${filter.id}`]}
+                              Select={Select}
+                            />
+                          ) : filter.type === 'number' ? (
+                            <div key={filter.id}>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <TranslatedText text={filter.name} /> <span className="text-red-500">*</span>
+                              </label>
                               <input
                                 type="number"
                                 name={`filters.${filter.id}`}
@@ -860,15 +1049,20 @@ const CreateAd = () => {
                                   const value = e.target.value;
                                   setFormData(prev => ({
                                     ...prev,
-                                    filters: {
-                                      ...prev.filters,
-                                      [filter.id]: value
-                                    }
+                                    filters: { ...prev.filters, [filter.id]: value }
                                   }));
                                 }}
                                 className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                               />
-                            ) : filter.type === 'date' ? (
+                              {errors[`filters.${filter.id}`] && (
+                                <p className="text-sm text-red-600 mt-1">{errors[`filters.${filter.id}`]}</p>
+                              )}
+                            </div>
+                          ) : filter.type === 'date' ? (
+                            <div key={filter.id}>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <TranslatedText text={filter.name} /> <span className="text-red-500">*</span>
+                              </label>
                               <input
                                 type="date"
                                 name={`filters.${filter.id}`}
@@ -877,82 +1071,20 @@ const CreateAd = () => {
                                   const value = e.target.value;
                                   setFormData(prev => ({
                                     ...prev,
-                                    filters: {
-                                      ...prev.filters,
-                                      [filter.id]: value
-                                    }
+                                    filters: { ...prev.filters, [filter.id]: value }
                                   }));
                                 }}
                                 className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                               />
-                            ) : filter.type === 'checkbox' && filter.options.length > 0 ? (
-                              <Select
-                                isMulti
-                                closeMenuOnSelect={false}
-                                hideSelectedOptions={false}
-                                isClearable={true}
-                                name={`filters.${filter.id}`}
-                                options={[...filter.options]
-                                  .sort((a, b) => {
-                                    const aNum = Number(a), bNum = Number(b);
-                                    if (!isNaN(aNum) && !isNaN(bNum)) {
-                                      return aNum - bNum;
-                                    }
-                                    return a.localeCompare(b);
-                                  })
-                                  .map(option => ({ value: option, label: option }))}
-                                value={(formData.filters[filter.id] || []).map(val => ({ value: val, label: val }))}
-                                onChange={selected => {
-                                  setFormData(prev => ({
-                                    ...prev,
-                                    filters: {
-                                      ...prev.filters,
-                                      [filter.id]: selected ? selected.map(opt => opt.value) : []
-                                    }
-                                  }));
-                                }}
-                                classNamePrefix="react-select"
-                                menuPlacement="auto"
-                                menuShouldScrollIntoView={false}
-                                styles={{
-                                  control: (base) => ({ 
-                                    ...base, 
-                                    borderColor: '#D6BA69', 
-                                    minHeight: 44,
-                                    borderRadius: '8px',
-                                    boxShadow: 'none',
-                                    '&:focus': { borderColor: '#D6BA69' }
-                                  }),
-                                  multiValue: (base) => ({ ...base, backgroundColor: '#F3F4F6' }),
-                                  option: (base, state) => ({ 
-                                    ...base, 
-                                    backgroundColor: state.isSelected ? '#D6BA69' : '#fff', 
-                                    color: state.isSelected ? 'white' : '#222',
-                                    '&:hover': { backgroundColor: state.isSelected ? '#D6BA69' : '#f9fafb' },
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 8
-                                  })
-                                }}
-                                formatOptionLabel={(option, { context, isSelected }) =>
-                                  context === 'menu' ? (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                      <input
-                                        type="checkbox"
-                                        checked={isSelected}
-                                        tabIndex={-1}
-                                        readOnly
-                                        style={{ accentColor: '#D6BA69', marginRight: 8, pointerEvents: 'none' }}
-                                        onClick={e => e.stopPropagation()}
-                                      />
-                                      <span>{option.label}</span>
-                                    </div>
-                                  ) : (
-                                    <span>{option.label}</span>
-                                  )
-                                }
-                              />
-                            ) : filter.type === 'text' ? (
+                              {errors[`filters.${filter.id}`] && (
+                                <p className="text-sm text-red-600 mt-1">{errors[`filters.${filter.id}`]}</p>
+                              )}
+                            </div>
+                          ) : filter.type === 'text' ? (
+                            <div key={filter.id}>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <TranslatedText text={filter.name} /> <span className="text-red-500">*</span>
+                              </label>
                               <input
                                 type="text"
                                 name={`filters.${filter.id}`}
@@ -961,19 +1093,16 @@ const CreateAd = () => {
                                   const value = e.target.value;
                                   setFormData(prev => ({
                                     ...prev,
-                                    filters: {
-                                      ...prev.filters,
-                                      [filter.id]: value
-                                    }
+                                    filters: { ...prev.filters, [filter.id]: value }
                                   }));
                                 }}
                                 className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
                               />
-                            ) : null}
-                            {errors[`filters.${filter.id}`] && (
-                              <p className="text-sm text-red-600 mt-1">{errors[`filters.${filter.id}`]}</p>
-                            )}
-                          </div>
+                              {errors[`filters.${filter.id}`] && (
+                                <p className="text-sm text-red-600 mt-1">{errors[`filters.${filter.id}`]}</p>
+                              )}
+                            </div>
+                          ) : null
                         ))}
                       </div>
                     )}

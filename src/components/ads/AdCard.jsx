@@ -7,6 +7,7 @@ import Card from '../ui/Card';
 import useFavorites from '../../hooks/useFavorites';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFavoriteStatus } from '../../hooks/useFavoriteStatus';
+import { useWeglotTranslate } from '../../hooks/useWeglotRetranslate';
 import logger from '../../utils/logger';
 
 const AdCard = ({ ad }) => {
@@ -16,6 +17,10 @@ const AdCard = ({ ad }) => {
   const { isAuthenticated } = useAuth();
   const { toggleFavorite } = useFavorites();
   const { isFavorite, loading, refreshStatus } = useFavoriteStatus(ad.id);
+
+  // Traduction du contenu dynamique
+  const { translatedText: translatedTitle } = useWeglotTranslate(ad?.title || '');
+  const { translatedText: translatedLocation } = useWeglotTranslate(ad?.locationName || '');
 
   const handleFavoriteClick = async (e) => {
     e.preventDefault();
@@ -146,7 +151,7 @@ const AdCard = ({ ad }) => {
         <div className="flex-1 p-3 flex flex-col">
           {/* Title */}
           <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm leading-snug">
-            {ad.title}
+            {translatedTitle || ad.title}
           </h3>
 
           {/* Price */}
@@ -177,7 +182,7 @@ const AdCard = ({ ad }) => {
             <div className="flex items-center space-x-1">
               <MapPin className="w-3 h-3" />
               <span className="truncate">
-                {ad.locationName}
+                {translatedLocation || ad.locationName}
               </span>
             </div>
             <span className="text-xs">{formatRelativeDate(ad.createdAt)}</span>

@@ -22,6 +22,13 @@ import { useAds } from '../../contexts/AdsContext';
 import Loader from '../ui/Loader';
 import useCategories from '../../hooks/useCategories';
 import { SERVER_BASE_URL } from '../../config/api';
+import { useWeglotTranslate } from '../../hooks/useWeglotRetranslate';
+
+// Composant pour traduire le nom d'une catégorie
+const TranslatedName = ({ name, className = '' }) => {
+  const { translatedText } = useWeglotTranslate(name || '');
+  return <span className={className}>{translatedText || name}</span>;
+};
 
 const CategorySidebar = ({ className = '' }) => {
   const [hoveredCategory, setHoveredCategory] = useState(null);
@@ -332,9 +339,10 @@ const CategorySidebar = ({ className = '' }) => {
                       <div className="bg-gray-50 rounded-full p-2.5 flex-shrink-0">
                         {typeof IconComponent === 'function' ? <IconComponent /> : <IconComponent className="w-6 h-6 text-[#D6BA69]" />}
                       </div>
-                      <span className="text-xs font-medium text-gray-800 line-clamp-2 text-center leading-tight">
-                        {category.name}
-                      </span>
+                      <TranslatedName
+                        name={category.name}
+                        className="text-xs font-medium text-gray-800 line-clamp-2 text-center leading-tight"
+                      />
                     </div>
                   </button>
 
@@ -357,7 +365,7 @@ const CategorySidebar = ({ className = '' }) => {
                           >
                             <div className="flex items-center space-x-3">
                               {typeof SubIcon === 'function' ? <SubIcon /> : <SubIcon className="w-5 h-5 text-gray-600" />}
-                              <span className="text-sm text-gray-700 truncate">{sub.name}</span>
+                              <TranslatedName name={sub.name} className="text-sm text-gray-700 truncate" />
                             </div>
                             {/* <span className="text-xs text-gray-500 bg-white px-2.5 py-0.5 rounded-full">
                               {count}
@@ -431,9 +439,10 @@ const CategorySidebar = ({ className = '' }) => {
                   >
                     <div className="flex items-center space-x-3 flex-1">
                       {typeof Icon === 'function' ? <Icon /> : <Icon className="w-5 h-5 text-gray-600 group-hover:text-[#D6BA69]" />}
-                      <span className="text-sm font-medium text-gray-800 group-hover:text-[#D6BA69] truncate">
-                        {category.name}
-                      </span>
+                      <TranslatedName
+                        name={category.name}
+                        className="text-sm font-medium text-gray-800 group-hover:text-[#D6BA69] truncate"
+                      />
                     </div>
                     <div className="flex items-center space-x-2">
                       {count > 0 && (
@@ -476,7 +485,7 @@ const CategorySidebar = ({ className = '' }) => {
                     <div className="p-5 border-b border-gray-200">
                       <h3 className="flex items-center text-sm font-semibold text-gray-900">
                         {typeof Icon === 'function' ? <Icon /> : <Icon className="w-5 h-5 text-[#D6BA69] mr-2" />}
-                        {cat.name}
+                        <TranslatedName name={cat.name} />
                       </h3>
                     </div>
                     <div className="flex-1 overflow-y-auto py-2">
@@ -491,9 +500,10 @@ const CategorySidebar = ({ className = '' }) => {
                           >
                             <div className="flex items-center space-x-3">
                               {typeof SubIcon === 'function' ? <SubIcon /> : <SubIcon className="w-4 h-4 text-gray-500 group-hover:text-[#D6BA69]" />}
-                              <span className="text-sm text-gray-700 group-hover:text-[#D6BA69] truncate">
-                                {sub.name}
-                              </span>
+                              <TranslatedName
+                                name={sub.name}
+                                className="text-sm text-gray-700 group-hover:text-[#D6BA69] truncate"
+                              />
                             </div>
                             {count > 0 && (
                               <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-600">

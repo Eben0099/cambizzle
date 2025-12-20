@@ -1,4 +1,5 @@
 import { SERVER_BASE_URL } from '../config/api';
+import i18n from '../i18n';
 
 // Construction de l'URL complète pour les photos
 export const getPhotoUrl = (photoPath) => {
@@ -74,11 +75,22 @@ export const formatRelativeDate = (date) => {
   const now = new Date();
   const targetDate = new Date(date);
   const diffInSeconds = Math.floor((now - targetDate) / 1000);
-  
-  if (diffInSeconds < 60) return 'Just now';
-  if (diffInSeconds < 3600) return `About ${Math.floor(diffInSeconds / 60)} min ago`;
-  if (diffInSeconds < 86400) return `About ${Math.floor(diffInSeconds / 3600)} h ago`;
-  if (diffInSeconds < 604800) return `About ${Math.floor(diffInSeconds / 86400)} d ago`;
+
+  const t = i18n.t.bind(i18n);
+
+  if (diffInSeconds < 60) return t('dates.justNow', 'Just now');
+  if (diffInSeconds < 3600) {
+    const mins = Math.floor(diffInSeconds / 60);
+    return t('dates.minutesAgo', { count: mins, defaultValue: `${mins} min ago` });
+  }
+  if (diffInSeconds < 86400) {
+    const hours = Math.floor(diffInSeconds / 3600);
+    return t('dates.hoursAgo', { count: hours, defaultValue: `${hours} h ago` });
+  }
+  if (diffInSeconds < 604800) {
+    const days = Math.floor(diffInSeconds / 86400);
+    return t('dates.daysAgo', { count: days, defaultValue: `${days} d ago` });
+  }
 
   return formatDate(date);
 };

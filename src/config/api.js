@@ -57,8 +57,10 @@ const handleResponseError = (error) => {
   // Si le token est expiré ou invalide (401), nettoyer le storage
   if (error.response?.status === 401) {
     storageService.clearAuth();
-    // Rediriger vers la page d'accueil si nécessaire
-    if (window.location.pathname !== '/') {
+    // Rediriger vers la page d'accueil uniquement pour les routes protégées
+    const protectedRoutes = ['/profile', '/create-ad', '/edit-ad', '/admin'];
+    const isProtectedRoute = protectedRoutes.some(route => window.location.pathname.startsWith(route));
+    if (isProtectedRoute) {
       window.location.href = '/';
     }
   }

@@ -57,6 +57,8 @@ const CategoryAds = () => {
     const newParams = new URLSearchParams(searchParams);
     newParams.set('page', pageNumber);
     setSearchParams(newParams);
+    // Scroll vers le haut de la page
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (

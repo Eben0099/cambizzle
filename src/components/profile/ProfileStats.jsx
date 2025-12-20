@@ -1,36 +1,41 @@
 import { Package, Eye, Heart, Calendar } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import useFavorites from '../../hooks/useFavorites';
 
 const ProfileStats = ({ user, userAds }) => {
+  const { t, i18n } = useTranslation();
   const { totalFavorites, favorites, loading } = useFavorites();
-  
+
+  // Déterminer la locale pour les dates
+  const dateLocale = i18n.language === 'fr' ? 'fr-FR' : 'en-US';
+
   const stats = [
-    { 
-      label: 'Active Ads', 
-      value: userAds.filter(ad => ad.status === 'active').length, 
+    {
+      label: t('profileStats.activeAds'),
+      value: userAds.filter(ad => ad.status === 'active').length,
       icon: Package,
       color: 'text-primary',
       bgColor: 'bg-primary/10'
     },
-    { 
-      label: 'Total Views', 
-      value: userAds.reduce((sum, ad) => sum + (parseInt(ad.viewCount) || 0), 0), 
+    {
+      label: t('profileStats.totalViews'),
+      value: userAds.reduce((sum, ad) => sum + (parseInt(ad.viewCount) || 0), 0),
       icon: Eye,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100'
     },
-    { 
-      label: 'Favorites', 
+    {
+      label: t('profileStats.favorites'),
       value: typeof totalFavorites === 'number' ? totalFavorites : parseInt(totalFavorites) || 0,
       icon: Heart,
       color: 'text-red-500',
       bgColor: 'bg-red-100'
     },
-    { 
-      label: 'Member Since', 
-      value: user ? new Date(user.createdAt).toLocaleDateString('en-US', { 
-        month: 'short', 
-        year: 'numeric' 
+    {
+      label: t('profileStats.memberSince'),
+      value: user ? new Date(user.createdAt).toLocaleDateString(dateLocale, {
+        month: 'short',
+        year: 'numeric'
       }) : '-',
       icon: Calendar,
       color: 'text-purple-600',
