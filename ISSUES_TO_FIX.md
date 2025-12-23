@@ -238,9 +238,10 @@
 ### 28. Mobile Dashboard menu - icon couvre texte
 | Aspect | Détails |
 |--------|---------|
-| **Status** | ❌ |
-| **Problème** | L'icône du menu couvre le texte, le header CAMBIZZLE devrait être sur chaque écran |
-| **Fichiers** | `src/components/admin/AdminLayout.jsx` |
+| **Status** | ✅ CORRIGÉ |
+| **Problème** | L'icône du menu couvrait le texte, pas de header sur mobile |
+| **Solution appliquée** | Ajouté header mobile sticky avec logo Cambizzle et lien "Retour au site" |
+| **Fichiers modifiés** | `src/components/admin/AdminLayout.jsx` |
 
 ### 29. Terms start at 13,14 instead of 1,2,3
 | Aspect | Détails |
@@ -258,9 +259,10 @@
 ### 31. Admin menu mobile améliorations
 | Aspect | Détails |
 |--------|---------|
-| **Status** | ❌ |
-| **Problème** | - Clic sur menu item doit afficher immédiatement les détails<br>- Icône de fermeture à droite<br>- Retirer "Cambizzle" en haut |
-| **Fichiers** | `src/components/admin/AdminLayout.jsx` |
+| **Status** | ✅ CORRIGÉ |
+| **Problème** | Menu ne se fermait pas après clic sur un item |
+| **Solution appliquée** | Ajouté `onClick={() => setIsSidebarOpen(false)}` sur tous les NavLink pour fermer le sidebar après navigation |
+| **Fichiers modifiés** | `src/components/admin/AdminLayout.jsx` |
 
 ### 32. Mobile Login screen overlapping
 | Aspect | Détails |
@@ -271,16 +273,17 @@
 ### 33. My favorites blank
 | Aspect | Détails |
 |--------|---------|
-| **Status** | ❌ |
-| **Problème** | La page favoris est vide, rien ne s'affiche |
-| **Fichiers** | `src/components/profile/ProfileFavorites.jsx` |
+| **Status** | ✅ CORRIGÉ |
+| **Problème** | La page favoris était vide (mismatch snake_case/camelCase) |
+| **Solution appliquée** | Ajouté transformation des données dans `useFavorites.js` pour mapper les champs snake_case vers camelCase |
+| **Fichiers modifiés** | `src/hooks/useFavorites.js` |
 
 ### 34. Pages loading from bottom/footer
 | Aspect | Détails |
 |--------|---------|
-| **Status** | ❌ |
-| **Problème** | Chaque page charge depuis le bas/footer au lieu du haut |
-| **Fichiers** | Layout/routing components |
+| **Status** | ✅ DÉJÀ CORRIGÉ |
+| **Note** | Le composant `ScrollToTop` existe et est utilisé dans `App.jsx` pour réinitialiser le scroll lors des changements de route |
+| **Fichiers** | `src/components/ScrollToTop.jsx`, `src/App.jsx` |
 
 ### 35. iOS drag to reorder not working
 | Aspect | Détails |
@@ -344,4 +347,6 @@
 | 2024-12-23 | #7 | Edit ad price validation | UpdateAd.jsx |
 | 2024-12-23 | #20 | WhatsApp icon positioning | SellerProfile.jsx |
 | 2024-12-23 | #4 | Total views display fix | useProfileQuery.js |
+| 2024-12-23 | #33 | Favorites page fix | useFavorites.js |
+| 2024-12-23 | #28/#31 | Admin mobile menu improvements | AdminLayout.jsx |
 

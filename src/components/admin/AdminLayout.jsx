@@ -140,6 +140,7 @@ const AdminLayout = ({ children }) => {
                 )
               }
               aria-label={`Navigate to ${item.name}`}
+              onClick={() => setIsSidebarOpen(false)}
             >
               {({ isActive }) => (
                 <>
@@ -169,6 +170,7 @@ const AdminLayout = ({ children }) => {
                 )
               }
               aria-label={`Navigate to ${item.name}`}
+              onClick={() => setIsSidebarOpen(false)}
             >
               {({ isActive }) => (
                 <>
@@ -198,6 +200,7 @@ const AdminLayout = ({ children }) => {
                 )
               }
               aria-label={`Navigate to ${item.name}`}
+              onClick={() => setIsSidebarOpen(false)}
             >
               {({ isActive }) => (
                 <>
@@ -227,6 +230,7 @@ const AdminLayout = ({ children }) => {
               )
             }
             aria-label="Navigate to Settings"
+            onClick={() => setIsSidebarOpen(false)}
           >
             {({ isActive }) => (
               <>
@@ -261,6 +265,22 @@ const AdminLayout = ({ children }) => {
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto bg-white">
+        {/* Mobile Header */}
+        <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-200 bg-white sticky top-0 z-20">
+          <NavLink to="/" className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-[#D6BA69] flex items-center justify-center shadow-sm">
+              <span className="text-lg font-bold text-gray-900">C</span>
+            </div>
+            <span className="text-lg font-bold text-gray-900">Cambizzle</span>
+          </NavLink>
+          <NavLink
+            to="/"
+            className="flex items-center gap-1 text-sm text-gray-600 hover:text-[#D6BA69] transition-colors"
+          >
+            <Home className="h-4 w-4" />
+            <span>{t('admin.sidebar.backToSite')}</span>
+          </NavLink>
+        </div>
         <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-8">{children}</div>
       </main>
     </div>

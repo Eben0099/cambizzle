@@ -13,8 +13,31 @@ export const useFavorites = () => {
     queryFn: async () => {
       const response = await favoriteService.getFavorites();
       if (response.status === 'success' && response.data) {
+        // Transform snake_case to camelCase for AdCard compatibility
+        const transformedItems = (response.data.items || []).map(item => ({
+          ...item,
+          id: item.id || item.ad_id,
+          adId: item.ad_id,
+          viewCount: item.viewCount || item.view_count || 0,
+          createdAt: item.createdAt || item.created_at,
+          updatedAt: item.updatedAt || item.updated_at,
+          locationName: item.locationName || item.location_name,
+          subcategoryName: item.subcategoryName || item.subcategory_name,
+          categoryName: item.categoryName || item.category_name,
+          originalPrice: item.originalPrice || item.original_price,
+          sellerUsername: item.sellerUsername || item.seller_username,
+          userIdentityVerified: item.userIdentityVerified || item.user_identity_verified || 0,
+          isBoosted: item.isBoosted || item.is_boosted || 0,
+          isNegotiable: item.isNegotiable || item.is_negotiable || 0,
+          // Transform photos
+          photos: (item.photos || []).map(photo => ({
+            ...photo,
+            originalUrl: photo.originalUrl || photo.original_url,
+            thumbnailUrl: photo.thumbnailUrl || photo.thumbnail_url,
+          }))
+        }));
         return {
-          items: response.data.items || [],
+          items: transformedItems,
           total: response.data.total || 0
         };
       }

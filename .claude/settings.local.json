@@ -19,7 +19,9 @@
       "Bash(git fetch:*)",
       "Bash(ls:*)",
       "Bash(git clone:*)",
-      "Bash(dir \"C:\\tmp\\claude\\tasks\\cambizzle-api\")"
+      "Bash(dir \"C:\\tmp\\claude\\tasks\\cambizzle-api\")",
+      "Bash(git push:*)",
+      "Bash(ssh:*)"
     ]
   }
 }

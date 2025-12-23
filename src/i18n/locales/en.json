@@ -1426,7 +1426,8 @@
       "contentManagement": "Content Management",
       "promotionReports": "Promotion & Reports",
       "settings": "Settings",
-      "logOut": "Log Out"
+      "logOut": "Log Out",
+      "backToSite": "Back to site"
     },
     "feedbacks": {
       "title": "Ad Feedback Management",
