@@ -42,7 +42,7 @@ const ProfileHeader = ({ user, sellerProfile, onEdit, onBecomeSeller }) => {
                       {user.firstName || t('auth.firstName')} {user.lastName || t('auth.lastName')}
                     </h1>
                     <div className="flex gap-2">
-                      {user.isVerified && user.isVerified !== "0" && user.isVerified !== false && (
+                      {(user.isIdentityVerified === "1" || user.isIdentityVerified === 1 || user.isIdentityVerified === true) && (
                         <span className="bg-green-100 text-green-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium border border-green-200">
                           <Shield className="w-3 h-3 mr-1 inline" />
                           {t('ads.verified')}

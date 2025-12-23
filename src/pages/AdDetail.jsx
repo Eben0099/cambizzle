@@ -10,13 +10,13 @@ import { useAdBySlug } from '../hooks/useAdsQuery';
 import { useWeglotTranslate } from '../hooks/useWeglotRetranslate';
 import { useToast } from '../components/toast/useToast';
 import storageService from '../services/storageService';
-import { 
-  ArrowLeft, 
-  Share2, 
-  Flag, 
-  MapPin, 
-  Calendar, 
-  Eye, 
+import {
+  ArrowLeft,
+  Share2,
+  Flag,
+  MapPin,
+  Calendar,
+  Eye,
   Star,
   Shield,
   Phone,
@@ -28,7 +28,9 @@ import {
   CheckCircle,
   AlertTriangle,
   Tag,
-  ChevronRight
+  ChevronRight,
+  Edit,
+  List
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAds } from '../contexts/AdsContext';
@@ -90,6 +92,12 @@ const AdDetail = () => {
 
   const seller = ad?.userDetails || null;
   const sellerBusiness = ad?.seller_profile || null;
+
+  // Check if current user is the owner of the ad
+  const isOwner = isAuthenticated && user && ad && (
+    String(user.id) === String(ad.userId) ||
+    String(user.id) === String(seller?.idUser)
+  );
 
   // Traduction manuelle du contenu dynamique avec Weglot
   const { translatedText: translatedTitle } = useWeglotTranslate(ad?.title || '');
@@ -476,6 +484,31 @@ const AdDetail = () => {
 
           {/* Right Column - Seller and Actions */}
           <div className="lg:col-span-4 space-y-6">
+            {/* Owner Actions - Show when user is viewing their own ad */}
+            {isOwner && (
+              <div className="bg-white rounded-xl shadow-sm border border-blue-100 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('profile.myAds')}</h3>
+                <p className="text-sm text-gray-600 mb-4">{t('ads.seller')}: {t('common.you') || 'You'}</p>
+                <div className="space-y-3">
+                  <Button
+                    onClick={() => navigate(`/edit-ad/${ad.slug}`)}
+                    className="w-full bg-[#D6BA69] hover:bg-[#c5a55d] text-black font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <Edit className="w-5 h-5" />
+                    <span>{t('common.edit')}</span>
+                  </Button>
+                  <Button
+                    onClick={() => navigate('/profile/ads')}
+                    variant="outline"
+                    className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <List className="w-5 h-5" />
+                    <span>{t('header.myAds')}</span>
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* Seller Profile - Always show with fallback */}
             <SellerProfile 
               seller={{
@@ -487,7 +520,7 @@ const AdDetail = () => {
                 memberSince: formatDate(seller?.createdAt || ad?.createdAt),
                 rating: seller?.rating || 0,
                 reviewCount: seller?.reviewCount || 0,
-                isVerified: seller?.isVerified === '1' || seller?.isVerified === true || false,
+                isVerified: seller?.isIdentityVerified === '1' || seller?.isIdentityVerified === 1 || seller?.isIdentityVerified === true || false,
                 phoneNumber: seller?.phone,
                 responseRate: seller?.responseRate || 95,
                 responseTime: seller?.responseTime || t('adDetail.aFewHours')

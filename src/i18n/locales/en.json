@@ -26,7 +26,8 @@
     "yes": "Yes",
     "no": "No",
     "tryAgain": "Try again",
-    "noAdsInCategory": "There are no ads in this category yet."
+    "noAdsInCategory": "There are no ads in this category yet.",
+    "you": "You"
   },
   "header": {
     "postAd": "Post an ad",
@@ -120,6 +121,7 @@
     "registerSuccess": "Registration successful!",
     "logoutSuccess": "Logged out successfully",
     "passwordResetSuccess": "Password reset successful! Redirecting to login...",
+    "redirectingToLogin": "You will be redirected to the login page shortly.",
     "invalidPhone": "Invalid phone number for selected country",
     "invalidEmail": "Please enter a valid email address (e.g., example@domain.com)",
     "passwordMinLength": "Password must be at least 8 characters.",

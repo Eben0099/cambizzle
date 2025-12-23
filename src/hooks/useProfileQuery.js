@@ -26,6 +26,19 @@ export const useUserAds = (userId) => {
       }
 
       const data = await response.json();
+      // Transform snake_case to camelCase for consistency
+      if (data.ads && Array.isArray(data.ads)) {
+        data.ads = data.ads.map(ad => ({
+          ...ad,
+          viewCount: ad.viewCount || ad.view_count || 0,
+          createdAt: ad.createdAt || ad.created_at,
+          updatedAt: ad.updatedAt || ad.updated_at,
+          locationName: ad.locationName || ad.location_name,
+          subcategoryName: ad.subcategoryName || ad.subcategory_name,
+          categoryName: ad.categoryName || ad.category_name,
+          originalPrice: ad.originalPrice || ad.original_price,
+        }));
+      }
       return data;
     },
     staleTime: 2 * 60 * 1000, // Cache 2 minutes

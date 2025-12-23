@@ -15,6 +15,7 @@ import AdminLayout from './components/admin/AdminLayout';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
 import Search from './pages/Search';
 import CreateAd from './pages/CreateAd';
 import UpdateAd from './pages/UpdateAd';
@@ -75,6 +76,7 @@ function App() {
                 <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
                 <Route path="/login" element={<PublicLayout><Login /></PublicLayout>} />
                 <Route path="/register" element={<PublicLayout><Register /></PublicLayout>} />
+                <Route path="/forgot-password" element={<PublicLayout><ForgotPassword /></PublicLayout>} />
                 <Route path="/search" element={<PublicLayout><Search /></PublicLayout>} />
                 <Route path="/category/:categoryId" element={<PublicLayout><CategoryAds /></PublicLayout>} />
                 <Route path="/subcategory" element={<PublicLayout><SubcategoryAds /></PublicLayout>} />

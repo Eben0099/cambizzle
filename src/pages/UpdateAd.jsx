@@ -95,11 +95,15 @@ const UpdateAd = () => {
         const categoryId = categoryData?.id?.toString() || '';
 
 
+        // Only show original price if it's different from (and greater than) the selling price
+        const hasValidDiscount = data.originalPrice && data.price &&
+          parseFloat(data.originalPrice) > parseFloat(data.price);
+
         const mappedFormData = {
           title: data.title || '',
           description: data.description || '',
           price: data.price ? data.price.toString() : '',
-          originalPrice: data.originalPrice ? data.originalPrice.toString() : '',
+          originalPrice: hasValidDiscount ? data.originalPrice.toString() : '',
           category: categoryId,
           subcategory: data.subcategorySlug || '',
           locationId: data.locationId ? data.locationId.toString() : '',
@@ -481,8 +485,15 @@ const UpdateAd = () => {
       const originalPriceRaw = formData.originalPrice ? formData.originalPrice.replace(/\s/g, '') : '';
       
       formDataToSend.append('price', priceRaw);
-      formDataToSend.append('original_price', originalPriceRaw || priceRaw);
-      formDataToSend.append('discount_percentage', formData.discountPercent || 0);
+      // Only send original_price if it's actually different from and greater than the selling price
+      if (originalPriceRaw && parseFloat(originalPriceRaw) > parseFloat(priceRaw)) {
+        formDataToSend.append('original_price', originalPriceRaw);
+        formDataToSend.append('discount_percentage', formData.discountPercent || 0);
+      } else {
+        // If no valid discount, send price as original_price and 0 discount
+        formDataToSend.append('original_price', priceRaw);
+        formDataToSend.append('discount_percentage', 0);
+      }
       formDataToSend.append('type', formData.type);
       formDataToSend.append('condition', formData.condition);
       formDataToSend.append('tags', formData.tags);

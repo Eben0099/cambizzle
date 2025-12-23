@@ -39,6 +39,7 @@ const Search = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState('recent');
   const [keywordFilter, setKeywordFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page')) || 1);
   const lastRequestRef = useRef(null);
   const categoryRequestRef = useRef(null);
   const subcategoryRequestRef = useRef(null);
@@ -86,18 +87,18 @@ const Search = () => {
   }, [rawCreationData]);
 
   // Function to fetch ads for a specific category
-  const fetchCategoryAds = async (categoryId, filters = {}) => {
-    const requestKey = `category-${categoryId}-${JSON.stringify(filters)}`;
-    
+  const fetchCategoryAds = async (categoryId, filters = {}, page = 1) => {
+    const requestKey = `category-${categoryId}-${JSON.stringify(filters)}-page${page}`;
+
     if (categoryRequestRef.current === requestKey) {
       return;
     }
-    
+
     categoryRequestRef.current = requestKey;
-    
+
     try {
       setCategoryLoading(true);
-      const response = await adsService.getAdsByCategory(categoryId, { page: 1, ...filters });
+      const response = await adsService.getAdsByCategory(categoryId, { page, ...filters });
       setCategoryAds(response);
     } catch (error) {
       setCategoryAds(null);
@@ -107,18 +108,18 @@ const Search = () => {
   };
 
   // Function to fetch ads for a specific subcategory
-  const fetchSubcategoryAds = async (subcategorySlug, filters = {}) => {
-    const requestKey = `subcategory-${subcategorySlug}-${JSON.stringify(filters)}`;
-    
+  const fetchSubcategoryAds = async (subcategorySlug, filters = {}, page = 1) => {
+    const requestKey = `subcategory-${subcategorySlug}-${JSON.stringify(filters)}-page${page}`;
+
     if (subcategoryRequestRef.current === requestKey) {
       return;
     }
-    
+
     subcategoryRequestRef.current = requestKey;
-    
+
     try {
       setSubcategoryLoading(true);
-      const response = await adsService.getAdsBySubcategory(subcategorySlug, { page: 1, ...filters });
+      const response = await adsService.getAdsBySubcategory(subcategorySlug, { page, ...filters });
       setSubcategoryAds(response);
     } catch (error) {
       setSubcategoryAds(null);
@@ -127,17 +128,39 @@ const Search = () => {
     }
   };
 
+  // Handle page change
+  const handlePageChange = (newPage) => {
+    const totalPages = categoryAds?.pagination?.totalPages || subcategoryAds?.pagination?.totalPages || pagination.totalPages || 1;
+    if (newPage < 1 || newPage > totalPages) return;
+
+    setCurrentPage(newPage);
+
+    // Update URL params
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('page', newPage.toString());
+    setSearchParams(newParams);
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   useEffect(() => {
     const categoryParam = searchParams.get('category');
     const subcategoryParam = searchParams.get('subcategory');
     const sortParam = searchParams.get('sort') || 'recent';
-    
-    const requestKey = `${categoryParam}|${subcategoryParam}|${query}|${sortParam}|${creationData.categories?.length || 0}`;
-    
+    const pageParam = parseInt(searchParams.get('page')) || 1;
+
+    // Sync currentPage with URL
+    if (pageParam !== currentPage) {
+      setCurrentPage(pageParam);
+    }
+
+    const requestKey = `${categoryParam}|${subcategoryParam}|${query}|${sortParam}|${pageParam}|${creationData.categories?.length || 0}`;
+
     if (lastRequestRef.current === requestKey) {
       return;
     }
-    
+
     lastRequestRef.current = requestKey;
     setSortBy(sortParam);
 
@@ -156,15 +179,15 @@ const Search = () => {
       const cleanSubcategoryFilters = Object.fromEntries(
         Object.entries(subcategoryFilters).filter(([_, value]) => value !== null)
       );
-      fetchSubcategoryAds(subcategoryParam, cleanSubcategoryFilters);
+      fetchSubcategoryAds(subcategoryParam, cleanSubcategoryFilters, pageParam);
       return;
     } else {
       setSubcategoryAds(null);
     }
 
     if (categoryParam) {
-      const foundCategory = creationData.categories.find(cat => 
-        cat.slug === categoryParam || 
+      const foundCategory = creationData.categories.find(cat =>
+        cat.slug === categoryParam ||
         cat.name.toLowerCase() === categoryParam.toLowerCase() ||
         cat.id.toString() === categoryParam
       );
@@ -180,7 +203,7 @@ const Search = () => {
         const cleanCategoryFilters = Object.fromEntries(
           Object.entries(categoryFilters).filter(([_, value]) => value !== null)
         );
-        fetchCategoryAds(foundCategory.id, cleanCategoryFilters);
+        fetchCategoryAds(foundCategory.id, cleanCategoryFilters, pageParam);
         return;
       } else {
         setCategoryAds(null);
@@ -598,29 +621,25 @@ const Search = () => {
             </div>
 
             {/* Pagination */}
-            {pagination.totalPages > 1 && (
+            {(pagination.totalPages > 1 || categoryAds?.pagination?.totalPages > 1 || subcategoryAds?.pagination?.totalPages > 1) && (
               <div className="flex justify-center mt-12">
                 <div className="flex items-center space-x-2 bg-white rounded-lg shadow-sm px-4 py-2 border border-gray-200">
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => {
-                      // Handle prev page
-                    }}
-                    disabled={pagination.currentPage === 1}
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage <= 1}
                   >
                     {t('pagination.previous')}
                   </Button>
                   <span className="text-sm text-gray-600">
-                    {t('pagination.page')} {pagination.currentPage} {t('pagination.of')} {pagination.totalPages}
+                    {t('pagination.page')} {currentPage} {t('pagination.of')} {categoryAds?.pagination?.totalPages || subcategoryAds?.pagination?.totalPages || pagination.totalPages || 1}
                   </span>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => {
-                      // Handle next page
-                    }}
-                    disabled={pagination.currentPage === pagination.totalPages}
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage >= (categoryAds?.pagination?.totalPages || subcategoryAds?.pagination?.totalPages || pagination.totalPages || 1)}
                   >
                     {t('pagination.next')}
                   </Button>

@@ -26,7 +26,8 @@
     "yes": "Oui",
     "no": "Non",
     "tryAgain": "Réessayer",
-    "noAdsInCategory": "Il n'y a pas encore d'annonces dans cette catégorie."
+    "noAdsInCategory": "Il n'y a pas encore d'annonces dans cette catégorie.",
+    "you": "Vous"
   },
   "header": {
     "postAd": "Publier une annonce",
@@ -120,6 +121,7 @@
     "registerSuccess": "Inscription réussie !",
     "logoutSuccess": "Déconnexion réussie",
     "passwordResetSuccess": "Mot de passe réinitialisé avec succès ! Redirection...",
+    "redirectingToLogin": "Vous allez être redirigé vers la page de connexion.",
     "invalidPhone": "Numéro de téléphone invalide pour le pays sélectionné",
     "invalidEmail": "Veuillez entrer une adresse email valide (ex: exemple@domaine.com)",
     "passwordMinLength": "Le mot de passe doit contenir au moins 8 caractères.",

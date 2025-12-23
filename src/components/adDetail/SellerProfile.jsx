@@ -122,7 +122,16 @@ const SellerProfile = ({ seller, onContact, onCall, adTitle }) => {
                   <Phone className="w-5 h-5 text-gray-700" />
                   <span className="font-medium text-gray-600">{t('adDetail.phone')}</span>
                 </div>
-                <span className="font-medium text-gray-900">{seller.phoneNumber}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-gray-900">{seller.phoneNumber}</span>
+                  <button
+                    onClick={() => handleWhatsapp(adTitle)}
+                    className="p-1.5 bg-green-500 hover:bg-green-600 text-white rounded-full transition-colors cursor-pointer"
+                    aria-label={t('adDetail.contactWhatsApp')}
+                  >
+                    <WhatsappIcon size={16} />
+                  </button>
+                </div>
               </div>
             )}
             {/* Autres infos pertinentes */}
@@ -131,20 +140,6 @@ const SellerProfile = ({ seller, onContact, onCall, adTitle }) => {
                 <span className="font-medium text-gray-900">{seller.email}</span>
               </div>
             )}
-            <div className="flex gap-3 mt-4">
-              {seller.phoneNumber && (
-                <div className="flex w-full justify-end">
-                  <button
-                    onClick={() => handleWhatsapp(adTitle)}
-                    className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer"
-                    aria-label={t('adDetail.contactWhatsApp')}
-                  >
-                    <span>WhatsApp</span>
-                    <WhatsappIcon size={20} />
-                  </button>
-                </div>
-              )}
-            </div>
           </div>
         </Modal>
       )}
