@@ -129,7 +129,7 @@ const AdCard = ({ ad }) => {
           <div className="absolute bottom-2 right-2 flex items-center gap-1">
             {/* Verified Badge - uses identity verification, not email verification */}
             {(ad.userIdentityVerified === 1 || ad.userIdentityVerified === "1") && (
-              <div className="bg-green-500 text-white p-1.5 rounded-full">
+              <div className="bg-green-500 text-white p-1.5 rounded-full" title="Verified Seller">
                 <ShieldCheck className="w-4 h-4" />
               </div>
             )}

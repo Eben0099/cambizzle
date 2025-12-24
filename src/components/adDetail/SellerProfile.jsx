@@ -29,7 +29,15 @@ const SellerProfile = ({ seller, onContact, onCall, adTitle }) => {
   return (
     <>
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">{t('adDetail.seller')}</h3>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-gray-900">{t('adDetail.seller')}</h3>
+          {seller.isVerified && (
+            <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-green-50 rounded-full border border-green-200">
+              <Shield className="w-3.5 h-3.5 text-green-600" />
+              <span className="text-xs text-green-700 font-medium">{t('adDetail.verifiedSeller')}</span>
+            </div>
+          )}
+        </div>
         <div className="flex items-center space-x-4 mb-6">
           <Avatar
             src={seller.avatar}
@@ -40,12 +48,6 @@ const SellerProfile = ({ seller, onContact, onCall, adTitle }) => {
           />
           <div className="flex-1">
             <h4 className="font-semibold text-gray-900 text-lg">{seller.name || t('adDetail.seller')}</h4>
-            {seller.isVerified && (
-              <div className="flex items-center space-x-2 mt-2 p-2 bg-green-50 rounded border border-green-200 w-fit">
-                <Shield className="w-4 h-4 text-green-600" />
-                <span className="text-xs text-green-700 font-medium">{t('adDetail.verifiedSeller')}</span>
-              </div>
-            )}
             <div className="flex items-center space-x-2 text-sm text-gray-600 mt-2">
               <Clock className="w-4 h-4" />
               <span>{t('adDetail.memberSince')} {seller.memberSince || 'N/A'}</span>

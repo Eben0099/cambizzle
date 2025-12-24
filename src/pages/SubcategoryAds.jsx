@@ -5,6 +5,8 @@ import { Grid, List, SlidersHorizontal } from 'lucide-react';
 import AdCard from '../components/ads/AdCard';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
+import SEO from '../components/SEO';
+import { BreadcrumbSchema } from '../components/StructuredData';
 import FilterSidebar from '../components/filters/FilterSidebar';
 import ActiveFilterBadges from '../components/filters/ActiveFilterBadges';
 import { buildFilterQueryParams, parseFiltersFromURL, resetFilters, countActiveFilters } from '../utils/filterHelpers';
@@ -208,8 +210,36 @@ const SubcategoryAds = () => {
     categoryInfo: subcategoryAds?.category
   };
 
+  // SEO data
+  const subcategoryName = displayInfo.subcategoryInfo?.name || subcategoryParam;
+  const categoryName = displayInfo.categoryInfo?.name || '';
+  const seoTitle = categoryName
+    ? `${subcategoryName} - ${categoryName}`
+    : subcategoryName;
+  const seoDescription = t('seo.subcategoryDescription', {
+    subcategory: subcategoryName,
+    category: categoryName,
+    count: displayInfo.count
+  }) || `Browse ${displayInfo.count} ads in ${subcategoryName}. Find the best deals on Cambizzle, Cameroon's marketplace.`;
+
+  // Breadcrumb items for structured data
+  const breadcrumbItems = [
+    { name: t('common.home'), url: '/' },
+    ...(categoryName ? [{ name: categoryName, url: `/category/${categoryParam}` }] : []),
+    { name: subcategoryName, url: `/subcategory?subcategory=${subcategoryParam}${categoryParam ? `&category=${categoryParam}` : ''}` }
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* SEO */}
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        url={`/subcategory?subcategory=${subcategoryParam}`}
+        keywords={`${subcategoryName}, ${categoryName}, buy, sell, Cameroon, classifieds, Cambizzle`}
+      />
+      <BreadcrumbSchema items={breadcrumbItems} />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-6">

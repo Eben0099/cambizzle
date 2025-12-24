@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { Grid, List, SlidersHorizontal } from 'lucide-react';
 import AdCard from '../components/ads/AdCard';
 import Button from '../components/ui/Button';
+import SEO from '../components/SEO';
+import { BreadcrumbSchema } from '../components/StructuredData';
 import { useAdsByCategory } from '../hooks/useAdsQuery';
 import { useWeglotTranslate } from '../hooks/useWeglotRetranslate';
 
@@ -70,8 +72,31 @@ const CategoryAds = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // SEO data
+  const categoryName = categoryInfo?.name || t('home.categories');
+  const seoTitle = `${categoryName} - ${t('common.buyAndSell')}`;
+  const seoDescription = t('seo.categoryDescription', {
+    category: categoryName,
+    count: pagination.total
+  }) || `Browse ${pagination.total} ads in ${categoryName}. Find the best deals on Cambizzle, Cameroon's marketplace.`;
+
+  // Breadcrumb items for structured data
+  const breadcrumbItems = [
+    { name: t('common.home'), url: '/' },
+    { name: categoryName, url: `/category/${categoryId}` }
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* SEO */}
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        url={`/category/${categoryId}`}
+        keywords={`${categoryName}, buy, sell, Cameroon, classifieds, Cambizzle`}
+      />
+      <BreadcrumbSchema items={breadcrumbItems} />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">

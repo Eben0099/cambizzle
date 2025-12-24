@@ -27,7 +27,12 @@
     "no": "Non",
     "tryAgain": "Réessayer",
     "noAdsInCategory": "Il n'y a pas encore d'annonces dans cette catégorie.",
-    "you": "Vous"
+    "you": "Vous",
+    "buyAndSell": "Acheter & Vendre"
+  },
+  "seo": {
+    "categoryDescription": "Parcourez {{count}} annonces dans {{category}}. Trouvez les meilleures offres sur Cambizzle, la marketplace de confiance au Cameroun.",
+    "subcategoryDescription": "Découvrez {{count}} annonces dans {{subcategory}}. Achetez et vendez {{category}} facilement sur Cambizzle."
   },
   "header": {
     "postAd": "Publier une annonce",
@@ -365,7 +370,8 @@
     "showingResults": "Affichage de {{count}} sur {{total}} annonces correspondant à \"{{keyword}}\"",
     "noAdditionalFilters": "Aucun filtre supplémentaire disponible",
     "enter": "Entrer",
-    "noMatchingAds": "Aucune annonce ne correspond à vos filtres. Essayez d'ajuster vos critères."
+    "noMatchingAds": "Aucune annonce ne correspond à vos filtres. Essayez d'ajuster vos critères.",
+    "selectPlaceholder": "Sélectionner {{field}}"
   },
   "contact": {
     "message": "Message",

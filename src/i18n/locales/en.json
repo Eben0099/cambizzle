@@ -27,7 +27,12 @@
     "no": "No",
     "tryAgain": "Try again",
     "noAdsInCategory": "There are no ads in this category yet.",
-    "you": "You"
+    "you": "You",
+    "buyAndSell": "Buy & Sell"
+  },
+  "seo": {
+    "categoryDescription": "Browse {{count}} ads in {{category}}. Find the best deals on Cambizzle, Cameroon's trusted marketplace.",
+    "subcategoryDescription": "Discover {{count}} ads in {{subcategory}}. Buy and sell {{category}} easily on Cambizzle."
   },
   "header": {
     "postAd": "Post an ad",
@@ -365,7 +370,8 @@
     "showingResults": "Showing {{count}} of {{total}} ads matching \"{{keyword}}\"",
     "noAdditionalFilters": "No additional filters available",
     "enter": "Enter",
-    "noMatchingAds": "No ads match your selected filters. Try adjusting your criteria."
+    "noMatchingAds": "No ads match your selected filters. Try adjusting your criteria.",
+    "selectPlaceholder": "Select {{field}}"
   },
   "contact": {
     "message": "Message",
