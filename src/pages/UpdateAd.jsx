@@ -12,6 +12,7 @@ import Card from '../components/ui/Card';
 import ImageUpload from '../components/ui/ImageUpload';
 import useAdCreation from '../hooks/useAdCreation';
 import { adsService } from '../services/adsService';
+import { SERVER_BASE_URL } from '../config/api';
 import logger from '../utils/logger';
 
 
@@ -28,7 +29,6 @@ const UpdateAd = () => {
     brandId: '',
     discountPercent: 0,
     type: 'sell',
-    condition: '',
     tags: '',
     isPremium: false,
     isNegotiable: false,
@@ -110,7 +110,6 @@ const UpdateAd = () => {
           brandId: data.brandId ? data.brandId.toString() : '',
           discountPercent: data.discountPercentage || 0,
           type: data.type || 'sell',
-          condition: data.filters?.find(f => f.filterName === 'Condition')?.value || '',
           tags: '',
           isPremium: false,
           isNegotiable: data.isNegotiable || false,
@@ -139,7 +138,7 @@ const UpdateAd = () => {
         }
 
         // Correction: utiliser SERVER_BASE_URL pour les images
-        const SERVER_BASE_URL = 'http://localhost:8080/api'; // à remplacer par import si déjà présent
+        // const SERVER_BASE_URL = 'http://localhost:8080/api'; // REMOVED: Now imported from config/api
         const mappedImages = (data.photos || [])
           .sort((a, b) => parseInt(a.displayOrder) - parseInt(b.displayOrder))
           .map((photo, index) => {
@@ -190,10 +189,10 @@ const UpdateAd = () => {
       ...validateStep(3),
       ...validateStep(4)
     };
-    
+
     const hasNoErrors = Object.keys(allErrors).length === 0;
     const hasMinimumImages = images.length >= 3;
-    
+
     setCanSubmit(hasNoErrors && hasMinimumImages && currentStep === 4);
   }, [formData, images, currentStep]);
 
@@ -286,20 +285,20 @@ const UpdateAd = () => {
 
   const validateStep = (step) => {
     const newErrors = {};
-    
+
     if (step === 1) {
       if (!formData.title.trim()) {
         newErrors.title = 'Le titre est requis';
       } else if (formData.title.length < 10) {
         newErrors.title = 'Le titre doit contenir au moins 10 caractères';
       }
-      
+
       if (!formData.description.trim()) {
         newErrors.description = 'La description est requise';
       } else if (formData.description.length < 20) {
         newErrors.description = 'La description doit contenir au moins 20 caractères';
       }
-      
+
       if (!formData.category) {
         newErrors.category = 'Sélectionnez une catégorie';
       }
@@ -312,7 +311,7 @@ const UpdateAd = () => {
         newErrors.subcategory = 'La sous-catégorie est requise';
       }
     }
-    
+
     if (step === 2) {
       if (!formData.price) {
         newErrors.price = 'Le prix est requis';
@@ -322,7 +321,7 @@ const UpdateAd = () => {
           newErrors.price = 'Le prix doit être supérieur à 0';
         }
       }
-      
+
       if (formData.originalPrice) {
         const originalPriceRaw = formData.originalPrice.replace(/\s/g, '');
         const priceRaw = formData.price.replace(/\s/g, '');
@@ -335,7 +334,7 @@ const UpdateAd = () => {
         newErrors.locationId = 'La localisation est requise';
       }
     }
-    
+
     if (step === 3) {
       // Validation du champ brandId si la sous-catégorie a des marques
       if (subcategoryFields.brands && subcategoryFields.brands.length > 0) {
@@ -364,7 +363,7 @@ const UpdateAd = () => {
     if (step === 4) {
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
       const maxSize = 5 * 1024 * 1024;
-      
+
       if (images.length < 3) {
         newErrors.images = 'Au moins 3 photos sont requises';
       } else if (images.length > 10) {
@@ -385,7 +384,7 @@ const UpdateAd = () => {
         }
       }
     }
-    
+
     return newErrors;
   };
 
@@ -395,7 +394,7 @@ const UpdateAd = () => {
       setErrors(stepErrors);
       return;
     }
-    
+
     setErrors({});
     setCurrentStep(prev => prev + 1);
   };
@@ -435,28 +434,28 @@ const UpdateAd = () => {
 
     if (isLoading || !canSubmit) return;
 
-    logger.log('🚀 Début soumission formulaire');
-    
+    logger.log('Début soumission formulaire');
+
     const allErrors = {
       ...validateStep(1),
       ...validateStep(2),
       ...validateStep(3),
       ...validateStep(4)
     };
-    
+
     if (Object.keys(allErrors).length > 0) {
-      logger.log('❌ Validation échouée - Arrêt soumission');
+      logger.log('Validation échouée - Arrêt soumission');
       setErrors(allErrors);
       return;
     }
 
-    logger.log('✅ Validation réussie - Lancement mise à jour annonce');
+    logger.log('Validation réussie - Lancement mise à jour annonce');
 
     setIsLoading(true);
 
     try {
-      logger.log('🚀 === DÉBUT CONSTRUCTION FORM DATA ===');
-      logger.log('🚀 Données formData actuelles:', {
+      logger.log('=== DÉBUT CONSTRUCTION FORM DATA ===');
+      logger.log('Données formData actuelles:', {
         title: formData.title,
         description: formData.description?.substring(0, 50) + '...',
         price: formData.price,
@@ -480,10 +479,10 @@ const UpdateAd = () => {
       // Champs statiques
       formDataToSend.append('title', formData.title);
       formDataToSend.append('description', formData.description);
-      
+
       const priceRaw = formData.price.replace(/\s/g, '');
       const originalPriceRaw = formData.originalPrice ? formData.originalPrice.replace(/\s/g, '') : '';
-      
+
       formDataToSend.append('price', priceRaw);
       // Only send original_price if it's actually different from and greater than the selling price
       if (originalPriceRaw && parseFloat(originalPriceRaw) > parseFloat(priceRaw)) {
@@ -495,38 +494,37 @@ const UpdateAd = () => {
         formDataToSend.append('discount_percentage', 0);
       }
       formDataToSend.append('type', formData.type);
-      formDataToSend.append('condition', formData.condition);
       formDataToSend.append('tags', formData.tags);
       formDataToSend.append('is_premium', formData.isPremium ? 1 : 0);
       formDataToSend.append('is_negotiable', formData.isNegotiable ? 1 : 0);
 
-      logger.log('📝 Champs statiques ajoutés au FormData');
-      
+      logger.log('Champs statiques ajoutés au FormData');
+
       // Convertir subcategory slug en ID
       if (formData.subcategory && formData.category) {
         const selectedSubcategory = subcategories.find(sub => sub.slug === formData.subcategory);
         if (selectedSubcategory?.id) {
           formDataToSend.append('subcategory_id', selectedSubcategory.id);
-          logger.log('🏷️ Sous-catégorie ajoutée:', selectedSubcategory.id);
+          logger.log('Sous-catégorie ajoutée:', selectedSubcategory.id);
         } else {
-          logger.log('⚠️ Sous-catégorie non trouvée pour slug:', formData.subcategory);
+          logger.log('Sous-catégorie non trouvée pour slug:', formData.subcategory);
         }
       }
 
       // Convertir location_id en entier
       if (formData.locationId) {
         formDataToSend.append('location_id', parseInt(formData.locationId));
-        logger.log('📍 Localisation ajoutée:', formData.locationId);
+        logger.log('Localisation ajoutée:', formData.locationId);
       }
 
       // Champs dynamiques
       if (formData.brandId) {
         formDataToSend.append('brand_id', parseInt(formData.brandId));
-        logger.log('🏢 Marque ajoutée:', formData.brandId);
+        logger.log('Marque ajoutée:', formData.brandId);
       }
 
       // Ajouter les filtres dynamiques (comme dans createAd)
-      logger.log('🔧 Traitement des filtres dynamiques:', formData.filters);
+      logger.log('Traitement des filtres dynamiques:', formData.filters);
       let filterCount = 0;
       Object.entries(formData.filters).forEach(([filterId, value]) => {
         if (value !== undefined && value !== '') {
@@ -535,18 +533,18 @@ const UpdateAd = () => {
               formDataToSend.append(`filters[${filterId}][]`, val);
               filterCount++;
             });
-            logger.log(`🔧 Filtre array ajouté: filters[${filterId}][] =`, value);
+            logger.log(`Filtre array ajouté: filters[${filterId}][] =`, value);
           } else {
             formDataToSend.append(`filters[${filterId}]`, value);
             filterCount++;
-            logger.log(`🔧 Filtre simple ajouté: filters[${filterId}] = "${value}"`);
+            logger.log(`Filtre simple ajouté: filters[${filterId}] = "${value}"`);
           }
         }
       });
-      logger.log(`🔧 Total filtres ajoutés: ${filterCount}`);
+      logger.log(`Total filtres ajoutés: ${filterCount}`);
 
       // Gestion des images pour mise à jour
-      logger.log('📸 Traitement des images:', {
+      logger.log('Traitement des images:', {
         totalImages: images.length,
         imagesWithFile: images.filter(img => img.file).length,
         imagesWithoutFile: images.filter(img => !img.file).length
@@ -558,44 +556,44 @@ const UpdateAd = () => {
         if (image.file) {
           formDataToSend.append('photos[]', image.file, `photo-${index + 1}.jpg`);
           newImageCount++;
-          logger.log(`📸 Nouvelle image ${newImageCount} ajoutée: ${image.file.name} (${image.file.size} bytes)`);
+          logger.log(`Nouvelle image ${newImageCount} ajoutée: ${image.file.name} (${image.file.size} bytes)`);
         }
       });
-      logger.log(`📸 Total nouvelles images ajoutées: ${newImageCount}`);
+      logger.log(`Total nouvelles images ajoutées: ${newImageCount}`);
 
       // 2. Ordre des images existantes (pour mise à jour de l'ordre)
       const existingImages = images.filter(img => !img.file && img.originalId);
       if (existingImages.length > 0) {
-        logger.log(`📸 Envoi de l'ordre des ${existingImages.length} images existantes:`);
+        logger.log(`Envoi de l'ordre des ${existingImages.length} images existantes:`);
         existingImages.forEach((image, index) => {
           const realId = image.originalId;
           formDataToSend.append('existing_photos_order[]', realId);
-          logger.log(`📸 Image existante ${index + 1}: ID=${realId} (position ${index + 1})`);
+          logger.log(`Image existante ${index + 1}: ID=${realId} (position ${index + 1})`);
         });
       } else {
-        logger.log('📸 Aucune image existante à réorganiser');
+        logger.log('Aucune image existante à réorganiser');
       }
 
       // Logs détaillés du FormData envoyé
-      logger.log('📤 === DONNÉES FORM DATA ENVOYÉES ===');
-      logger.log('📤 Type des données:', formDataToSend instanceof FormData ? 'FormData' : typeof formDataToSend);
+      logger.log('=== DONNÉES FORM DATA ENVOYÉES ===');
+      logger.log('Type des données:', formDataToSend instanceof FormData ? 'FormData' : typeof formDataToSend);
 
       if (formDataToSend instanceof FormData) {
-        logger.log('📤 Contenu détaillé du FormData:');
+        logger.log('Contenu détaillé du FormData:');
         for (let [key, value] of formDataToSend.entries()) {
           if (value instanceof File) {
-            logger.log(`  📎 ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
+            logger.log(`  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
           } else {
-            logger.log(`  📝 ${key}: "${value}"`);
+            logger.log(`  ${key}: "${value}"`);
           }
         }
       }
-      logger.log('📤 === FIN CONTENU FORM DATA ===');
-      logger.log('📤 Nombre total d\'entrées:', formDataToSend instanceof FormData ? [...formDataToSend.entries()].length : 'N/A');
+      logger.log('=== FIN CONTENU FORM DATA ===');
+      logger.log('Nombre total d\'entrées:', formDataToSend instanceof FormData ? [...formDataToSend.entries()].length : 'N/A');
 
-      logger.log('📤 Envoi des données de mise à jour vers:', `POST /ads/${slug}`);
+      logger.log('Envoi des données de mise à jour vers:', `POST /ads/${slug}`);
       const result = await adsService.updateAdBySlug(slug, formDataToSend);
-      logger.log('📡 Réponse API reçue:', result);
+      logger.log('Réponse API reçue:', result);
 
       if (result.ad) {
         navigate('/profile');
@@ -607,14 +605,6 @@ const UpdateAd = () => {
       setIsLoading(false);
     }
   };
-
-  const conditionOptions = [
-    { value: 'new', label: 'New' },
-    { value: 'like_new', label: 'Like new' },
-    { value: 'good', label: 'Good condition' },
-    { value: 'fair', label: 'Fair condition' },
-    { value: 'poor', label: 'Needs renovation' }
-  ];
 
   const typeOptions = [
     { value: 'sell', label: 'Sell' },
@@ -662,34 +652,30 @@ const UpdateAd = () => {
               const Icon = step.icon;
               const isActive = currentStep === step.number;
               const isCompleted = currentStep > step.number;
-             
+
               return (
                 <div key={step.number} className="flex items-center flex-1">
-                  <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${
-                    isCompleted
-                      ? 'bg-[#D6BA69] border-[#D6BA69] text-black'
-                      : isActive
-                        ? 'border-[#D6BA69] bg-[#D6BA69]/10 text-[#D6BA69]'
-                        : 'border-gray-300 bg-white text-gray-400'
-                  }`}>
+                  <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${isCompleted
+                    ? 'bg-[#D6BA69] border-[#D6BA69] text-black'
+                    : isActive
+                      ? 'border-[#D6BA69] bg-[#D6BA69]/10 text-[#D6BA69]'
+                      : 'border-gray-300 bg-white text-gray-400'
+                    }`}>
                     <Icon className="w-5 h-5" />
                   </div>
                   <div className="ml-3 hidden sm:block">
-                    <p className={`text-sm font-medium ${
-                      isActive ? 'text-[#D6BA69]' : 'text-gray-500'
-                    }`}>
+                    <p className={`text-sm font-medium ${isActive ? 'text-[#D6BA69]' : 'text-gray-500'
+                      }`}>
                       Step {step.number}
                     </p>
-                    <p className={`text-xs ${
-                      isActive ? 'text-gray-900' : 'text-gray-500'
-                    }`}>
+                    <p className={`text-xs ${isActive ? 'text-gray-900' : 'text-gray-500'
+                      }`}>
                       {step.title}
                     </p>
                   </div>
                   {index < steps.length - 1 && (
-                    <div className={`flex-1 h-0.5 mx-4 ${
-                      isCompleted ? 'bg-[#D6BA69]' : 'bg-gray-200'
-                    }`} />
+                    <div className={`flex-1 h-0.5 mx-4 ${isCompleted ? 'bg-[#D6BA69]' : 'bg-gray-200'
+                      }`} />
                   )}
                 </div>
               );
@@ -710,7 +696,7 @@ const UpdateAd = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Ad Type
+                      Ad Type <span className="text-red-600">*</span>
                     </label>
                     <select
                       name="type"
@@ -782,7 +768,7 @@ const UpdateAd = () => {
                     )}
                   </div>
                   <Input
-                    label="Ad Title *"
+                    label={<>Ad Title <span className="text-red-600">*</span></>}
                     name="title"
                     value={formData.title}
                     onChange={handleChange}
@@ -810,31 +796,6 @@ const UpdateAd = () => {
                       {formData.description.length} characters (min. 20)
                     </p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Condition
-                    </label>
-                    <select
-                      name="condition"
-                      value={formData.condition}
-                      onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] transition-all bg-white"
-                    >
-                      {conditionOptions.map(option => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <Input
-                    label="Keywords (optional)"
-                    name="tags"
-                    value={formData.tags}
-                    onChange={handleChange}
-                    placeholder="smartphone, apple, iphone (separated by commas)"
-                    helperText="Add keywords to improve visibility"
-                  />
                 </div>
               </div>
             </div>
@@ -914,9 +875,9 @@ const UpdateAd = () => {
                   </div>
                 )}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Location <span className="text-red-600">*</span>
-                    </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Location <span className="text-red-600">*</span>
+                  </label>
                   {creationLoading ? (
                     <div className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 flex items-center">
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -961,14 +922,14 @@ const UpdateAd = () => {
                 {subcategoryFields.brands && subcategoryFields.brands.length > 0 && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Brand *
+                      Brand <span className="text-red-600">*</span>
                     </label>
                     {fieldsLoading ? (
                       <div className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 flex items-center">
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                         Loading brands...
                       </div>
-                  ) : (
+                    ) : (
                       <select
                         name="brandId"
                         value={formData.brandId}
@@ -1004,8 +965,7 @@ const UpdateAd = () => {
                         {subcategoryFields.filters.map(filter => (
                           <div key={filter.id}>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              {filter.name}
-                              {filter.isRequired && <span className="text-red-500 ml-1">*</span>}
+                              {filter.name}{filter.isRequired && <span className="text-red-600">*</span>}
                             </label>
                             {filter.type === 'select' && filter.options.length > 0 ? (
                               <select
@@ -1103,18 +1063,18 @@ const UpdateAd = () => {
                                 menuPlacement="auto"
                                 menuShouldScrollIntoView={false}
                                 styles={{
-                                  control: (base) => ({ 
-                                    ...base, 
-                                    borderColor: '#D6BA69', 
+                                  control: (base) => ({
+                                    ...base,
+                                    borderColor: '#D6BA69',
                                     minHeight: 44,
                                     borderRadius: '8px',
                                     boxShadow: 'none',
                                     '&:focus': { borderColor: '#D6BA69' }
                                   }),
                                   multiValue: (base) => ({ ...base, backgroundColor: '#F3F4F6' }),
-                                  option: (base, state) => ({ 
-                                    ...base, 
-                                    backgroundColor: state.isSelected ? '#D6BA69' : '#fff', 
+                                  option: (base, state) => ({
+                                    ...base,
+                                    backgroundColor: state.isSelected ? '#D6BA69' : '#fff',
                                     color: state.isSelected ? 'white' : '#222',
                                     '&:hover': { backgroundColor: state.isSelected ? '#D6BA69' : '#f9fafb' },
                                     display: 'flex',
@@ -1195,17 +1155,15 @@ const UpdateAd = () => {
                 {errors.images && (
                   <p className="text-sm text-red-600">{errors.images}</p>
                 )}
-                <div className={`p-4 rounded-lg ${
-                  images.length >= 3 
-                    ? 'bg-green-50 border border-green-200' 
-                    : 'bg-yellow-50 border border-yellow-200'
-                }`}>
-                  <p className={`text-sm font-medium ${
-                    images.length >= 3 ? 'text-green-800' : 'text-yellow-800'
+                <div className={`p-4 rounded-lg ${images.length >= 3
+                  ? 'bg-green-50 border border-green-200'
+                  : 'bg-yellow-50 border border-yellow-200'
                   }`}>
-                    {images.length >= 3 
-                      ? '✅ Minimum 3 photos requirement met!' 
-                      : `⚠️ ${3 - images.length} more photo(s) needed (minimum 3 required)`
+                  <p className={`text-sm font-medium ${images.length >= 3 ? 'text-green-800' : 'text-yellow-800'
+                    }`}>
+                    {images.length >= 3
+                      ? 'Minimum 3 photos requirement met!'
+                      : `${3 - images.length} more photo(s) needed (minimum 3 required)`
                     }
                   </p>
                 </div>
@@ -1214,7 +1172,7 @@ const UpdateAd = () => {
           )}
 
           {/* Navigation Buttons */}
-          <div className="flex flex-col sm:flex-row justify-between gap-4 mt-8 pt-6 border-t border-gray-200">
+          <div className="flex justify-between items-center gap-4 mt-8 pt-6 border-t border-gray-200">
             <div>
               {currentStep > 1 && (
                 <Button
@@ -1227,7 +1185,7 @@ const UpdateAd = () => {
                 </Button>
               )}
             </div>
-            <div className="flex items-center gap-4">
+            <div>
               {currentStep < 4 ? (
                 <Button
                   type="button"
