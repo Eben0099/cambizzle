@@ -46,17 +46,23 @@ class AdsService {
     }
   }
 
-  async getAdsFromAPI(page = 1, perPage = 8) {
+  async getAdsFromAPI(page = 1, perPage = 8, search = '') {
     try {
       this.token = storageService.getToken();
       this.setAuthHeader();
 
+      const params = { 
+        page, 
+        per_page: perPage,
+        moderation_status: 'approved'
+      };
+
+      if (search.trim()) {
+        params.search = search.trim();
+      }
+
       const response = await axios.get(`${API_BASE_URL}/ads`, {
-        params: { 
-          page, 
-          per_page: perPage,
-          moderation_status: 'approved'
-        }
+        params
       });
 
       return response.data;

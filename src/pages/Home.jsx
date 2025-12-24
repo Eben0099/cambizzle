@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search, ArrowRight, Car, Home as HomeIcon, Briefcase, Shirt, Smartphone, Sofa, Baby, Book, Dumbbell, Wrench } from 'lucide-react';
 import Button from '../components/ui/Button';
+import SearchAutocomplete from '../components/ui/SearchAutocomplete';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
 import AdCard from '../components/ads/AdCard';
@@ -13,36 +14,16 @@ import SEO from '../components/SEO';
 import { OrganizationSchema, WebsiteSchema } from '../components/StructuredData';
 import useCategories from '../hooks/useCategories';
 import useHomeAds from '../hooks/useHomeAds';
+import useDebouncedValue from '../hooks/useDebouncedValue';
 import Pagination from '../components/ui/Pagination';
 
 const Home = () => {
   const { t } = useTranslation();
-  const [keywordFilter, setKeywordFilter] = useState('');
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 500);
   const { categories, isLoading: categoriesLoading, error: categoriesError } = useCategories();
-  const { ads, pagination, isLoading: adsLoading, error: adsError, goToPage } = useHomeAds(1, 8);
+  const { ads, pagination, isLoading: adsLoading, error: adsError, goToPage } = useHomeAds(1, 8, debouncedSearch);
   const navigate = useNavigate();
-
-  // Fonction de filtrage par mots-clés (frontend)
-  const filterByKeywords = (adsArray) => {
-    if (!keywordFilter.trim()) return adsArray;
-    
-    const keywords = keywordFilter.toLowerCase().trim().split(/\s+/);
-    
-    return adsArray.filter(ad => {
-      const searchableText = [
-        ad.title,
-        ad.description,
-        ad.subcategory?.name,
-        ad.category?.name,
-        ad.location,
-        ad.brand?.name
-      ].filter(Boolean).join(' ').toLowerCase();
-      
-      return keywords.every(keyword => searchableText.includes(keyword));
-    });
-  };
-
-  const filteredAds = filterByKeywords(ads || []);
 
   // Icon mapping for categories
   const categoryIcons = {
@@ -80,23 +61,23 @@ const Home = () => {
               <p className="text-lg sm:text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto">
                 {t('home.heroSubtitle')}
               </p>
-              
-              {/* Search Bar */}
+
               <div className="max-w-2xl mx-auto">
                 <div className="relative group">
-                  <Input
-                    type="text"
-                    value={keywordFilter}
-                    onChange={(e) => setKeywordFilter(e.target.value)}
+                  <SearchAutocomplete
+                    value={search}
+                    onChange={setSearch}
+          
                     className="text-base sm:text-lg py-3 sm:py-4 pr-12 bg-white text-black rounded-xl shadow-sm group-hover:shadow-md transition-shadow duration-300"
+                    onSearch={() => { }} // Search is handled by reactive effect
                   />
-                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-[#D6BA69] hover:bg-[#C5A952] rounded-lg p-2 transition-colors duration-200">
+                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-[#D6BA69] hover:bg-[#C5A952] rounded-lg p-2 transition-colors duration-200 pointer-events-none">
                     <Search className="w-5 h-5 text-black" />
                   </div>
-                  {keywordFilter && (
+                  {search && (
                     <button
-                      onClick={() => setKeywordFilter('')}
-                      className="absolute right-14 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-white rounded-full w-6 h-6 flex items-center justify-center cursor-pointer"
+                      onClick={() => setSearch('')}
+                      className="absolute right-14 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-white rounded-full w-6 h-6 flex items-center justify-center cursor-pointer z-10"
                       title="Clear filter"
                     >
                       ✕
@@ -164,17 +145,17 @@ const Home = () => {
                   <Loader text={t('common.loading')} />
                 ) : (
                   <>
-                    {filteredAds.length === 0 && keywordFilter ? (
+                    {ads.length === 0 && search ? (
                       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-8 text-center">
                         <Search className="w-12 h-12 mx-auto mb-4 text-yellow-600" />
                         <h3 className="text-lg font-semibold text-yellow-800 mb-2">
                           {t('home.noAdsFound')}
                         </h3>
                         <p className="text-yellow-600 mb-4">
-                          {t('home.noAdsMatchSearch')} "{keywordFilter}"
+                          {t('home.noAdsMatchSearch')} "{search}"
                         </p>
                         <Button
-                          onClick={() => setKeywordFilter('')}
+                          onClick={() => setSearch('')}
                           className="bg-[#D6BA69] hover:bg-[#C5A952] text-black"
                         >
                           {t('home.clearFilter')}
@@ -183,13 +164,13 @@ const Home = () => {
                     ) : (
                       <>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-                          {filteredAds.map((ad) => (
-                            <AdCard key={ad.id} ad={ad} className="hover:shadow-lg hover:-translate-y-1 transition-all duration-300" />
+                          {ads.map((ad) => (
+                            <AdCard key={ad.id} ad={ad} className="hover:shadow-lg hover:-translate-y-1/1 transition-all duration-300" />
                           ))}
                         </div>
 
-                        {/* Pagination - masquée si filtre actif */}
-                        {!keywordFilter && pagination && pagination.totalPages > 1 && (
+                        {/* Pagination */}
+                        {pagination && pagination.totalPages > 1 && (
                           <div className="mt-12 flex justify-center">
                             <Pagination
                               currentPage={pagination.currentPage}

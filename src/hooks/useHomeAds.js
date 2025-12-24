@@ -1,14 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { adsService } from '../services/adsService';
 
-const useHomeAds = (initialPage = 1, perPage = 8) => {
+const useHomeAds = (initialPage = 1, perPage = 8, search = '') => {
   const [currentPage, setCurrentPage] = useState(initialPage);
 
+  useEffect(() => {
+    setCurrentPage(1); // Reset to page 1 when search changes
+  }, [search]);
+
   const { data, isLoading, isFetching, error, refetch } = useQuery({
-    queryKey: ['ads', 'home', currentPage, perPage],
+    queryKey: ['ads', 'home', currentPage, perPage, search],
     queryFn: async () => {
-      const response = await adsService.getAdsFromAPI(currentPage, perPage);
+      const response = await adsService.getAdsFromAPI(currentPage, perPage, search);
 
       // Handle case where response.ads is undefined or null
       if (!response?.ads) {
