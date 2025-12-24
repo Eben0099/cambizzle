@@ -2,6 +2,12 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import SEO from '../components/SEO';
 import { CheckCircle, Users, Globe, Zap } from 'lucide-react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "../components/ui/accordion";
 
 const About = () => {
   const { t } = useTranslation();
@@ -29,63 +35,46 @@ const About = () => {
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-          {/* Introduction */}
+          {/* Accordion Sections */}
           <section className="mb-16">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('about.whoWeAre')}</h2>
-              <p className="text-lg text-gray-600 leading-relaxed mb-4">
-                {t('about.whoWeAreText')}
-              </p>
-            </div>
-          </section>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sm:p-8">
+              <Accordion type="multiple" className="w-full">
+                {/* Who We Are */}
+                <AccordionItem value="item-1">
+                  <AccordionTrigger className="text-left text-2xl font-bold hover:text-[#D6BA69]">
+                    {t('about.whoWeAre')}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-lg text-gray-600 leading-relaxed pt-4">
+                    <p>{t('about.whoWeAreText')}</p>
+                  </AccordionContent>
+                </AccordionItem>
 
-          {/* Our Mission */}
-          <section className="mb-16">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">{t('about.ourMission')}</h2>
-              <p className="text-lg text-gray-600 leading-relaxed mb-6">
-                {t('about.ourMissionText')}
-              </p>
-            </div>
-          </section>
+                {/* Our Mission */}
+                <AccordionItem value="item-2">
+                  <AccordionTrigger className="text-left text-2xl font-bold hover:text-[#D6BA69]">
+                    {t('about.ourMission')}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-lg text-gray-600 leading-relaxed pt-4">
+                    <p>{t('about.ourMissionText')}</p>
+                  </AccordionContent>
+                </AccordionItem>
 
-          {/* Our Vision */}
-          <section className="mb-16">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">{t('about.ourVision')}</h2>
-              <p className="text-lg text-gray-600 leading-relaxed mb-6">
-                {t('about.ourVisionText1')}
-              </p>
-              <p className="text-lg text-gray-600 leading-relaxed">
-                {t('about.ourVisionText2')}
-              </p>
-            </div>
-          </section>
-
-          {/* CTA Section */}
-          <section className="bg-gradient-to-r from-black to-gray-900 text-white rounded-lg shadow-lg p-8 text-center">
-            <h2 className="text-3xl font-bold mb-4">{t('about.readyToStart')}</h2>
-            <p className="text-lg text-gray-300 mb-8">
-              {t('about.joinThousands')}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                to="/register"
-                className="inline-block bg-[#D6BA69] text-black font-semibold px-8 py-3 rounded-lg hover:bg-[#e8d087] transition-colors"
-              >
-                {t('about.createAccount')}
-              </Link>
-              <Link
-                to="/"
-                className="inline-block bg-gray-700 text-white font-semibold px-8 py-3 rounded-lg hover:bg-gray-600 transition-colors"
-              >
-                {t('about.browseListings')}
-              </Link>
+                {/* Our Vision */}
+                <AccordionItem value="item-3">
+                  <AccordionTrigger className="text-left text-2xl font-bold hover:text-[#D6BA69]">
+                    {t('about.ourVision')}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-lg text-gray-600 leading-relaxed space-y-4 pt-4">
+                    <p>{t('about.ourVisionText1')}</p>
+                    <p>{t('about.ourVisionText2')}</p>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </div>
           </section>
 
           {/* Additional Info */}
-          <section className="mt-16">
+          <section>
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('about.haveQuestions')}</h2>
               <p className="text-gray-600 mb-6">

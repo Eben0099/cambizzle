@@ -53,14 +53,14 @@ const AdminLayout = ({ children }) => {
         setIsVerifying(false);
         return;
       }
-      
+
       // Vérifier que l'utilisateur a roleId === "1" (admin)
       if (user?.roleId !== "1") {
         setIsAuthorized(false);
         setIsVerifying(false);
         return;
       }
-      
+
       setIsAuthorized(true);
     } catch (error) {
       setIsAuthorized(false);
@@ -113,9 +113,11 @@ const AdminLayout = ({ children }) => {
         {/* Header */}
         <div className="p-2 sm:p-4 bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-700">
           <NavLink to="/" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-[#D6BA69] flex items-center justify-center shadow-md">
-              <span className="text-lg font-bold text-gray-900">C</span>
-            </div>
+            <img
+              src="/cambizzle.png"
+              alt="Cambizzle Logo"
+              className="h-12 w-12 object-contain"
+            />
             <div>
               <h1 className="text-sm sm:text-base font-bold text-white">Cambizzle</h1>
               <p className="text-xs text-gray-400">{t('admin.sidebar.adminPanel')}</p>
@@ -268,9 +270,11 @@ const AdminLayout = ({ children }) => {
         {/* Mobile Header */}
         <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-200 bg-white sticky top-0 z-20">
           <NavLink to="/" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-[#D6BA69] flex items-center justify-center shadow-sm">
-              <span className="text-lg font-bold text-gray-900">C</span>
-            </div>
+            <img
+              src="/cambizzle.png"
+              alt="Cambizzle Logo"
+              className="h-10 w-10 object-contain"
+            />
             <span className="text-lg font-bold text-gray-900">Cambizzle</span>
           </NavLink>
           <NavLink

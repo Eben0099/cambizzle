@@ -31,7 +31,7 @@ const SellerProfile = ({ seller, onContact, onCall, adTitle }) => {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-gray-900">{t('adDetail.seller')}</h3>
-          {seller.isVerified && (
+          {(seller.isVerified === true || seller.isVerified === "1" || seller.isVerified === 1) && (
             <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-green-50 rounded-full border border-green-200">
               <Shield className="w-3.5 h-3.5 text-green-600" />
               <span className="text-xs text-green-700 font-medium">{t('adDetail.verifiedSeller')}</span>
@@ -64,11 +64,10 @@ const SellerProfile = ({ seller, onContact, onCall, adTitle }) => {
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`w-4 h-4 ${
-                        i < Math.floor(seller.rating)
+                      className={`w-4 h-4 ${i < Math.floor(seller.rating)
                           ? 'text-yellow-400 fill-current'
                           : 'text-gray-300'
-                      }`}
+                        }`}
                     />
                   ))}
                 </div>

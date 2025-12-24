@@ -888,7 +888,7 @@ const UpdateAd = () => {
                       <option value=""></option>
                       {creationData.locations?.map(location => (
                         <option key={location.id} value={location.id}>
-                          {location.city} - {location.region}
+                          {location.city}
                         </option>
                       ))}
                     </select>

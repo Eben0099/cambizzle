@@ -68,7 +68,7 @@ const AdDetail = () => {
   const { ads, reportAd } = useAds();
   // Use React Query pour éviter les rechargements
   const { data: adData, isLoading, isError } = useAdBySlug(slug);
-  
+
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [contactMessage, setContactMessage] = useState('');
@@ -81,8 +81,8 @@ const AdDetail = () => {
   // Préparer les données de l'annonce avec les calculs de remise
   const ad = adData ? {
     ...adData,
-    discountPercentage: adData.discountPercentage || adData.discount_percentage || 
-      (adData.originalPrice && adData.price && adData.originalPrice > adData.price 
+    discountPercentage: adData.discountPercentage || adData.discount_percentage ||
+      (adData.originalPrice && adData.price && adData.originalPrice > adData.price
         ? Math.round(((adData.originalPrice - adData.price) / adData.originalPrice) * 100)
         : 0),
     hasDiscount: (adData.originalPrice && adData.price && adData.originalPrice > adData.price) ||
@@ -510,17 +510,17 @@ const AdDetail = () => {
             )}
 
             {/* Seller Profile - Always show with fallback */}
-            <SellerProfile 
+            <SellerProfile
               seller={{
                 id: (seller?.idUser || ad?.userId || '1'),
-                name: seller?.firstName && seller?.lastName 
-                  ? `${seller.firstName} ${seller.lastName}` 
+                name: seller?.firstName && seller?.lastName
+                  ? `${seller.firstName} ${seller.lastName}`
                   : (seller?.firstName || ad?.sellerUsername || 'Seller'),
                 avatar: seller?.photoUrl ? (seller.photoUrl.startsWith('http') ? seller.photoUrl : `${SERVER_BASE_URL}/${seller.photoUrl}`.replace(/\/+/g, '/')) : null,
                 memberSince: formatDate(seller?.createdAt || ad?.createdAt),
                 rating: seller?.rating || 0,
                 reviewCount: seller?.reviewCount || 0,
-                isVerified: seller?.isIdentityVerified === '1' || seller?.isIdentityVerified === 1 || seller?.isIdentityVerified === true || false,
+                isVerified: (seller?.isVerified === '1' || seller?.isVerified === 1 || seller?.isVerified === true) || (seller?.isIdentityVerified === '1' || seller?.isIdentityVerified === 1 || seller?.isIdentityVerified === true) || false,
                 phoneNumber: seller?.phone,
                 responseRate: seller?.responseRate || 95,
                 responseTime: seller?.responseTime || t('adDetail.aFewHours')
@@ -532,7 +532,7 @@ const AdDetail = () => {
 
             {/* Business Profile */}
             {sellerBusiness && (
-              <BusinessProfile 
+              <BusinessProfile
                 business={sellerBusiness}
               />
             )}
@@ -552,11 +552,10 @@ const AdDetail = () => {
                       {[1, 2, 3, 4, 5].map((star) => (
                         <Star
                           key={star}
-                          className={`w-4 h-4 ${
-                            star <= Math.round(feedbackSummary.averageRating)
+                          className={`w-4 h-4 ${star <= Math.round(feedbackSummary.averageRating)
                               ? 'text-yellow-400 fill-current'
                               : 'text-gray-300'
-                          }`}
+                            }`}
                         />
                       ))}
                       <span className="ml-2 text-sm font-medium text-gray-900">

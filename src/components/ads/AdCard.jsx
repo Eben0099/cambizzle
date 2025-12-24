@@ -71,9 +71,8 @@ const AdCard = ({ ad }) => {
               <img
                 src={getPhotoUrl(ad.photos[0].originalUrl)}
                 alt={ad.title}
-                className={`w-full h-full object-cover transition-opacity duration-300 ${
-                  isImageLoading ? 'opacity-0' : 'opacity-100'
-                }`}
+                className={`w-full h-full object-cover transition-opacity duration-300 ${isImageLoading ? 'opacity-0' : 'opacity-100'
+                  }`}
                 onLoad={() => setIsImageLoading(false)}
                 onError={() => {
                   setImageError(true);
@@ -102,19 +101,17 @@ const AdCard = ({ ad }) => {
           {/* Favorite Button */}
           <button
             onClick={handleFavoriteClick}
-            className={`absolute top-2 right-2 p-1.5 rounded-full transition-all duration-300 transform hover:scale-110 cursor-pointer ${
-              isFavorite
+            className={`absolute top-2 right-2 p-1.5 rounded-full transition-all duration-300 transform hover:scale-110 cursor-pointer ${isFavorite
                 ? 'bg-red-500 text-white hover:bg-red-600'
                 : 'bg-white/90 text-gray-600 hover:bg-white hover:text-red-500'
-            }`}
+              }`}
             aria-label={isFavorite ? t('ads.removeFromFavorites') : t('ads.addToFavorites')}
           >
-            <Heart 
-              className={`w-3.5 h-3.5 transition-all duration-300 ${
-                isFavorite 
-                  ? 'fill-current animate-heartbeat' 
+            <Heart
+              className={`w-3.5 h-3.5 transition-all duration-300 ${isFavorite
+                  ? 'fill-current animate-heartbeat'
                   : 'hover:animate-pulse'
-              }`} 
+                }`}
             />
           </button>
 
@@ -128,7 +125,7 @@ const AdCard = ({ ad }) => {
           {/* Badges */}
           <div className="absolute bottom-2 right-2 flex items-center gap-1">
             {/* Verified Badge - uses identity verification, not email verification */}
-            {(ad.userIdentityVerified === 1 || ad.userIdentityVerified === "1") && (
+            {(ad.userIdentityVerified === 1 || ad.userIdentityVerified === "1" || ad.userIdentityVerified === true) && (
               <div className="bg-green-500 text-white p-1.5 rounded-full" title="Verified Seller">
                 <ShieldCheck className="w-4 h-4" />
               </div>

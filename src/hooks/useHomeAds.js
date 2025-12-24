@@ -55,7 +55,7 @@ const useHomeAds = (initialPage = 1, perPage = 8, search = '') => {
         categoryName: ad.categoryName || ad.category_name,
         brandName: ad.brandName || ad.brand_name,
         sellerUsername: ad.sellerUsername || ad.seller_username,
-        userVerified: ad.userVerified || ad.user_verified,
+        userIdentityVerified: ad.userIdentityVerified || ad.user_identity_verified,
         photos: ad.photos || [],
         filters: ad.filters || []
       }));

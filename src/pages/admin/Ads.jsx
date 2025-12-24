@@ -160,7 +160,7 @@ const Ads = () => {
     try {
       setLoading(true);
       await adminService.rejectAd(selectedAd.id, rejectReason, rejectNotes);
-      
+
       // Envoyer notification WhatsApp à l'utilisateur
       if (selectedAd.user?.phone) {
         const phoneNumber = selectedAd.user.phone.replace(/\s+/g, '');
@@ -172,11 +172,11 @@ const Ads = () => {
           `Please review and resubmit your ad with the necessary corrections.\n\n` +
           `Best regards,\nCambizzle Team`
         );
-        
+
         // Ouvrir WhatsApp dans un nouvel onglet
         window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
       }
-      
+
       setShowRejectModal(false);
       setRejectReason('');
       setRejectNotes('');
@@ -300,17 +300,17 @@ const Ads = () => {
     ? pendingAds
     : filterStatus === 'all'
       ? ads.filter(ad =>
+        !searchTerm ||
+        (ad.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (ad.description || '').toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      : ads.filter(ad =>
+        ad.moderationStatus === filterStatus && (
           !searchTerm ||
           (ad.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
           (ad.description || '').toLowerCase().includes(searchTerm.toLowerCase())
         )
-      : ads.filter(ad =>
-          ad.moderationStatus === filterStatus && (
-            !searchTerm ||
-            (ad.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (ad.description || '').toLowerCase().includes(searchTerm.toLowerCase())
-          )
-        );
+      );
 
   const totalPages = Math.max(1, Math.ceil(filteredAds.length / itemsPerPage));
   const paginatedAds = filteredAds.slice(
@@ -495,8 +495,8 @@ const Ads = () => {
                           {ad.isBoosted == "1" && (
                             <Zap className="h-4 w-4 text-yellow-500 fill-yellow-500" title="Annonce boostée" />
                           )}
-                          {ad.userVerified === 1 && (
-                            <Shield className="h-4 w-4 text-blue-500 fill-blue-500" title="Utilisateur vérifié" />
+                          {(ad.userIdentityVerified === 1 || ad.userIdentityVerified === "1" || ad.userIdentityVerified === true) && (
+                            <Shield className="h-4 w-4 text-green-500 fill-green-500" title="Utilisateur vérifié" />
                           )}
                         </div>
                       </div>

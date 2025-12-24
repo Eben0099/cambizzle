@@ -212,22 +212,22 @@ const Users = () => {
   // Frontend filtering
   const filteredUsers = users.filter(user => {
     const fullName = `${user.firstName || ''} ${user.lastName || ''}`.toLowerCase();
-    const matchesSearch = searchTerm === "" || 
+    const matchesSearch = searchTerm === "" ||
       fullName.includes(searchTerm.toLowerCase()) ||
       (user.email?.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (user.phone?.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesStatus = statusFilter === "all" || 
+
+    const matchesStatus = statusFilter === "all" ||
       (statusFilter === "active" && user.isSuspended === "0" && !user.deleted) ||
       (statusFilter === "suspended" && user.isSuspended === "1") ||
       (statusFilter === "deleted" && user.deleted);
-    
+
     const matchesRole = roleFilter === "all" || user.roleId === roleFilter;
-    
+
     const matchesVerified = verifiedFilter === "all" ||
-      (verifiedFilter === "verified" && user.isVerified === "1") ||
-      (verifiedFilter === "unverified" && user.isVerified === "0");
-    
+      (verifiedFilter === "verified" && (user.isVerified === "1" || user.isVerified === 1 || user.isIdentityVerified === "1" || user.isIdentityVerified === 1)) ||
+      (verifiedFilter === "unverified" && (user.isVerified === "0" || user.isVerified === 0 || !user.isVerified) && (user.isIdentityVerified === "0" || user.isIdentityVerified === 0 || !user.isIdentityVerified));
+
     return matchesSearch && matchesStatus && matchesRole && matchesVerified;
   });
 
@@ -422,7 +422,7 @@ const Users = () => {
                       <Eye className="h-3 w-3 mr-1" />
                       {t('admin.users.details')}
                     </Button>
-                    {user.isIdentityVerified === "0" && (
+                    {!(user.isVerified === "1" || user.isVerified === 1 || user.isIdentityVerified === "1" || user.isIdentityVerified === 1) && (
                       <Button
                         size="sm"
                         className="bg-white border border-[#D6BA69] text-[#D6BA69] hover:bg-[#D6BA69]/10 h-8 text-xs px-3 rounded-lg"
@@ -438,11 +438,10 @@ const Users = () => {
                   </div>
                   <Button
                     size="sm"
-                    className={`h-8 text-xs px-3 rounded-lg ${
-                      user.isSuspended === "0"
+                    className={`h-8 text-xs px-3 rounded-lg ${user.isSuspended === "0"
                         ? "bg-red-600 hover:bg-red-700 text-white"
                         : "bg-green-600 hover:bg-green-700 text-white"
-                    }`}
+                      }`}
                     onClick={() => {
                       setSelectedUser(user);
                       user.isSuspended === "0"
@@ -468,9 +467,9 @@ const Users = () => {
                     <Calendar className="h-3 w-3" />
                     {formatDate(user.createdAt)}
                   </span>
-                  <span className={`flex items-center gap-1 ${user.isIdentityVerified === "1" ? "text-green-600" : "text-gray-600"}`}>
+                  <span className={`flex items-center gap-1 ${(user.isVerified === "1" || user.isVerified === 1 || user.isIdentityVerified === "1" || user.isIdentityVerified === 1) ? "text-green-600" : "text-gray-600"}`}>
                     <Shield className="h-3 w-3" />
-                    {user.isIdentityVerified === "1" ? t('admin.users.verified') : t('admin.users.unverified')}
+                    {(user.isVerified === "1" || user.isVerified === 1 || user.isIdentityVerified === "1" || user.isIdentityVerified === 1) ? t('admin.users.verified') : t('admin.users.unverified')}
                   </span>
                 </div>
               </div>
@@ -576,8 +575,8 @@ const Users = () => {
                           return (
                             <div>
                               <a href={url} download target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-xs">{t('admin.users.downloadPdf')}</a>
-                              <div className="mt-2 border rounded overflow-hidden" style={{height: '300px'}}>
-                                <iframe src={url} title="Document PDF" width="100%" height="100%" style={{border:0}} />
+                              <div className="mt-2 border rounded overflow-hidden" style={{ height: '300px' }}>
+                                <iframe src={url} title="Document PDF" width="100%" height="100%" style={{ border: 0 }} />
                               </div>
                             </div>
                           );
