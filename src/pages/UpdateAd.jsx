@@ -12,7 +12,7 @@ import Card from '../components/ui/Card';
 import ImageUpload from '../components/ui/ImageUpload';
 import useAdCreation from '../hooks/useAdCreation';
 import { adsService } from '../services/adsService';
-import { SERVER_BASE_URL } from '../config/api';
+import { getPhotoUrl } from '../utils/helpers';
 import logger from '../utils/logger';
 
 
@@ -137,17 +137,12 @@ const UpdateAd = () => {
           loadSubcategoryFields(data.subcategorySlug);
         }
 
-        // Correction: utiliser SERVER_BASE_URL pour les images
-        // const SERVER_BASE_URL = 'http://localhost:8080/api'; // REMOVED: Now imported from config/api
+        // Utiliser getPhotoUrl pour construire les URLs correctement
         const mappedImages = (data.photos || [])
           .sort((a, b) => parseInt(a.displayOrder) - parseInt(b.displayOrder))
           .map((photo, index) => {
-            let imageUrl = photo.originalUrl;
-            if (imageUrl && !imageUrl.startsWith('http')) {
-              // Supprimer tout / initial
-              imageUrl = imageUrl.replace(/^\/+/, '');
-              imageUrl = `${SERVER_BASE_URL}/${imageUrl}`;
-            }
+            const imageUrl = getPhotoUrl(photo.originalUrl);
+            logger.log(`[UpdateAd] Image ${index + 1}: originalUrl=${photo.originalUrl}, computed=${imageUrl}`);
             return {
               url: imageUrl,
               file: null,
