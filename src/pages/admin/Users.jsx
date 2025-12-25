@@ -32,6 +32,12 @@ import { API_CONFIG } from "../../utils/constants";
 import { SERVER_BASE_URL } from "../../config/api";
 import { useToast } from "../../components/toast/useToast";
 
+// PDF Viewer imports
+import { Worker, Viewer } from '@react-pdf-viewer/core';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+
 const Users = () => {
   // States
   const { t } = useTranslation();
@@ -57,6 +63,7 @@ const Users = () => {
   const [verifyNotes, setVerifyNotes] = useState("");
 
   const USERS_PER_PAGE = 8;
+  const defaultLayoutPluginInstance = defaultLayoutPlugin();
 
   // Fetch all users (without server pagination)
   useEffect(() => {
@@ -190,6 +197,9 @@ const Users = () => {
     }
     if (user.deleted) {
       return <Badge className="bg-gray-100 text-gray-800 text-xs">{t('admin.users.deleted')}</Badge>;
+    }
+    if ((user.identityDocumentUrl || user.identity_document_url) && !(user.isVerified === "1" || user.isVerified === 1 || user.isIdentityVerified === "1" || user.isIdentityVerified === 1)) {
+      return <Badge className="bg-blue-100 text-blue-100 hover:bg-blue-100 text-blue-800 text-xs border-blue-200">{t('admin.users.documentSubmitted')}</Badge>;
     }
     return <Badge className="bg-green-100 text-green-800 text-xs">{t('admin.users.active')}</Badge>;
   };
@@ -439,8 +449,8 @@ const Users = () => {
                   <Button
                     size="sm"
                     className={`h-8 text-xs px-3 rounded-lg ${user.isSuspended === "0"
-                        ? "bg-red-600 hover:bg-red-700 text-white"
-                        : "bg-green-600 hover:bg-green-700 text-white"
+                      ? "bg-red-600 hover:bg-red-700 text-white"
+                      : "bg-green-600 hover:bg-green-700 text-white"
                       }`}
                     onClick={() => {
                       setSelectedUser(user);
@@ -467,9 +477,18 @@ const Users = () => {
                     <Calendar className="h-3 w-3" />
                     {formatDate(user.createdAt)}
                   </span>
-                  <span className={`flex items-center gap-1 ${(user.isVerified === "1" || user.isVerified === 1 || user.isIdentityVerified === "1" || user.isIdentityVerified === 1) ? "text-green-600" : "text-gray-600"}`}>
+                  <span className={`flex items-center gap-1 ${(user.isVerified === "1" || user.isVerified === 1 || user.isIdentityVerified === "1" || user.isIdentityVerified === 1)
+                      ? "text-green-600"
+                      : (user.identityDocumentUrl || user.identity_document_url)
+                        ? "text-blue-600"
+                        : "text-gray-600"
+                    }`}>
                     <Shield className="h-3 w-3" />
-                    {(user.isVerified === "1" || user.isVerified === 1 || user.isIdentityVerified === "1" || user.isIdentityVerified === 1) ? t('admin.users.verified') : t('admin.users.unverified')}
+                    {(user.isVerified === "1" || user.isVerified === 1 || user.isIdentityVerified === "1" || user.isIdentityVerified === 1)
+                      ? t('admin.users.verified')
+                      : (user.identityDocumentUrl || user.identity_document_url)
+                        ? t('admin.users.documentSubmitted')
+                        : t('admin.users.unverified')}
                   </span>
                 </div>
               </div>
@@ -560,6 +579,7 @@ const Users = () => {
                   <div className="font-semibold mb-1">{t('admin.users.identity')}</div>
                   <div className="text-xs text-gray-600">{t('admin.users.identityType')} <span className="font-medium">{selectedUserDetails.identity_document_type || selectedUserDetails.identityDocumentType || 'N/A'}</span></div>
                   <div className="text-xs text-gray-600">{t('admin.users.identityNumber')} <span className="font-medium">{selectedUserDetails.identity_document_number || selectedUserDetails.identityDocumentNumber || 'N/A'}</span></div>
+                  <div className="text-xs text-gray-600">{t('admin.users.submissionDate')} <span className="font-medium">{selectedUserDetails.created_at ? formatDate(selectedUserDetails.created_at) : selectedUserDetails.createdAt ? formatDate(selectedUserDetails.createdAt) : 'N/A'}</span></div>
                   <div className="text-xs text-gray-600">{t('admin.users.identityStatus')} <span className="font-medium">{selectedUserDetails.identity?.status_label || selectedUserDetails.identityStatusLabel || 'N/A'}</span></div>
                   <div className="text-xs text-gray-600">{t('admin.users.verifiedAt')} <span className="font-medium">{selectedUserDetails.identity_verified_at ? formatDate(selectedUserDetails.identity_verified_at) : selectedUserDetails.identityVerifiedAt ? formatDate(selectedUserDetails.identityVerifiedAt) : t('admin.users.notVerified')}</span></div>
                   {selectedUserDetails.identity_review_reason && (
@@ -574,16 +594,21 @@ const Users = () => {
                         if (isPdf) {
                           return (
                             <div>
-                              <a href={url} download target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-xs">{t('admin.users.downloadPdf')}</a>
-                              <div className="mt-2 border rounded overflow-hidden" style={{ height: '300px' }}>
-                                <iframe src={url} title="Document PDF" width="100%" height="100%" style={{ border: 0 }} />
+                              <a href={url} download target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-xs mb-2 block">{t('admin.users.downloadPdf')}</a>
+                              <div className="mt-2 border rounded overflow-hidden" style={{ height: '400px' }}>
+                                <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+                                  <Viewer
+                                    fileUrl={url}
+                                    plugins={[defaultLayoutPluginInstance]}
+                                  />
+                                </Worker>
                               </div>
                             </div>
                           );
                         } else {
                           return (
                             <div>
-                              <a href={url} download target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-xs">{t('admin.users.downloadImage')}</a>
+                              <a href={url} download target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-xs mb-2 block">{t('admin.users.downloadImage')}</a>
                               <div className="mt-2">
                                 <img src={url} alt="Document identité" className="max-h-48 rounded border" />
                               </div>
