@@ -106,14 +106,14 @@ class AdminService {
   }
 
   // Méthodes pour les autres endpoints admin (à ajouter plus tard)
-  
+
   // Gestion des annonces
   async getAds(page = 1, limit = 20, search = '') {
     try {
       this.setAuthHeader();
       const params = { page, limit };
       if (search) params.q = search;
-      
+
       const response = await axios.get(`${API_BASE_URL}/ads`, { params });
       return response.data;
     } catch (error) {
@@ -175,7 +175,7 @@ class AdminService {
       throw error;
     }
   }
-  
+
   // Gestion des utilisateurs
   async getUsers(page = 1, perPage = 20) {
     try {
@@ -328,7 +328,7 @@ class AdminService {
   }
 
   // ============= GESTION DES CATÉGORIES =============
-  
+
   // Récupérer la liste des catégories
   async getCategories(page = 1, perPage = 20) {
     try {
@@ -412,7 +412,7 @@ class AdminService {
   }
 
   // ============= GESTION DES FILTRES =============
-  
+
   // Récupérer tous les filtres par catégories avec leurs options
   async getFilters() {
     try {
@@ -514,6 +514,24 @@ class AdminService {
     try {
       this.setAuthHeader();
       const response = await axios.delete(`${API_BASE_URL}/admin/referentials/filters/${filterId}/options/${optionId}`);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        storageService.removeToken();
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
+
+  // Récupérer un fichier sous forme de blob (pour les PDFs authentifiés)
+  async getFileBlob(url) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.get(url, {
+        responseType: 'blob'
+      });
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {

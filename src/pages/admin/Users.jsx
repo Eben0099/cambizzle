@@ -61,6 +61,7 @@ const Users = () => {
   const [suspendNotes, setSuspendNotes] = useState("");
   const [unsuspendNotes, setUnsuspendNotes] = useState("");
   const [verifyNotes, setVerifyNotes] = useState("");
+  const [identityDocumentBlobUrl, setIdentityDocumentBlobUrl] = useState(null);
 
   const USERS_PER_PAGE = 8;
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
@@ -93,7 +94,23 @@ const Users = () => {
       setActionLoading(true);
       const response = await adminService.getUserDetails(userId);
       if (response.status === 'success') {
-        setSelectedUserDetails(response.data);
+        const userDetails = response.data;
+        setSelectedUserDetails(userDetails);
+
+        // Fetch identity document blob if it exists
+        const docPath = userDetails.identity_document_url || userDetails.identityDocumentUrl;
+        if (docPath) {
+          try {
+            const baseUrl = SERVER_BASE_URL.endsWith('/') ? SERVER_BASE_URL.slice(0, -1) : SERVER_BASE_URL;
+            const fullUrl = `${baseUrl}/${docPath.replace(/^\/+/, '')}`;
+            const blob = await adminService.getFileBlob(fullUrl);
+            const blobUrl = URL.createObjectURL(blob);
+            setIdentityDocumentBlobUrl(blobUrl);
+          } catch (blobErr) {
+            logger.error('Error fetching identity document blob:', blobErr);
+          }
+        }
+
         setUserDetailsModalOpen(true);
       } else {
         throw new Error(response.message || t('admin.users.errorLoadingDetails'));
@@ -103,6 +120,26 @@ const Users = () => {
       showToast({ type: 'error', message: err.message || t('admin.users.errorLoadingDetails') });
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleDownload = async (e, url, filename) => {
+    e.preventDefault();
+    if (!url) return;
+    try {
+      showToast({ type: 'info', message: t('common.loading') });
+      const blob = await adminService.getFileBlob(url);
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename || 'document';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      logger.error('Download error:', err);
+      showToast({ type: 'error', message: t('admin.users.errorLoading') });
     }
   };
 
@@ -379,7 +416,7 @@ const Users = () => {
                   <div className="flex-shrink-0">
                     {user.photoUrl ? (
                       <img
-                        src={`${SERVER_BASE_URL}/${user.photoUrl}`.replace(/\/+/g, '/')}
+                        src={`${SERVER_BASE_URL}/${user.photoUrl}`.replace(/([^:]\/)\/+/g, "$1")}
                         alt={`${user.firstName || ''} ${user.lastName || ''}`}
                         className="h-12 w-12 rounded-full object-cover ring-1 ring-gray-200"
                         onError={(e) => {
@@ -478,10 +515,10 @@ const Users = () => {
                     {formatDate(user.createdAt)}
                   </span>
                   <span className={`flex items-center gap-1 ${(user.isVerified === "1" || user.isVerified === 1 || user.isIdentityVerified === "1" || user.isIdentityVerified === 1)
-                      ? "text-green-600"
-                      : (user.identityDocumentUrl || user.identity_document_url)
-                        ? "text-blue-600"
-                        : "text-gray-600"
+                    ? "text-green-600"
+                    : (user.identityDocumentUrl || user.identity_document_url)
+                      ? "text-blue-600"
+                      : "text-gray-600"
                     }`}>
                     <Shield className="h-3 w-3" />
                     {(user.isVerified === "1" || user.isVerified === 1 || user.isIdentityVerified === "1" || user.isIdentityVerified === 1)
@@ -515,7 +552,15 @@ const Users = () => {
       )}
 
       {/* Modal: User Details */}
-      <Dialog open={userDetailsModalOpen} onOpenChange={setUserDetailsModalOpen}>
+      <Dialog open={userDetailsModalOpen} onOpenChange={(open) => {
+        if (!open) {
+          if (identityDocumentBlobUrl) {
+            URL.revokeObjectURL(identityDocumentBlobUrl);
+            setIdentityDocumentBlobUrl(null);
+          }
+        }
+        setUserDetailsModalOpen(open);
+      }}>
         <DialogContent className="max-w-md bg-white rounded-xl shadow-xl border border-gray-200">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-gray-900">{t('admin.users.userDetails')}</DialogTitle>
@@ -525,7 +570,7 @@ const Users = () => {
               <div className="flex items-center gap-3">
                 {(selectedUserDetails.photo_url || selectedUserDetails.photoUrl) ? (
                   <img
-                    src={`${SERVER_BASE_URL}/${selectedUserDetails.photo_url || selectedUserDetails.photoUrl}`.replace(/\/+/g, '/')}
+                    src={`${SERVER_BASE_URL}/${selectedUserDetails.photo_url || selectedUserDetails.photoUrl}`.replace(/([^:]\/)\/+/g, "$1")}
                     alt="Photo"
                     className="h-10 w-10 rounded-full object-cover"
                     onError={(e) => {
@@ -589,16 +634,24 @@ const Users = () => {
                   {(selectedUserDetails.identity_document_url || selectedUserDetails.identityDocumentUrl) && (
                     <div className="mt-2">
                       {(() => {
-                        const url = `${SERVER_BASE_URL}/${selectedUserDetails.identity_document_url || selectedUserDetails.identityDocumentUrl}`.replace(/\/+/g, '/');
+                        const baseUrl = SERVER_BASE_URL.endsWith('/') ? SERVER_BASE_URL.slice(0, -1) : SERVER_BASE_URL;
+                        const docPath = (selectedUserDetails.identity_document_url || selectedUserDetails.identityDocumentUrl || '').replace(/^\/+/, '');
+                        const url = `${baseUrl}/${docPath}`;
                         const isPdf = url.toLowerCase().endsWith('.pdf');
                         if (isPdf) {
                           return (
                             <div>
-                              <a href={url} download target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-xs mb-2 block">{t('admin.users.downloadPdf')}</a>
+                              <a
+                                href="#"
+                                onClick={(e) => handleDownload(e, identityDocumentBlobUrl || url, `document_${selectedUserDetails.id_user || selectedUserDetails.idUser}.pdf`)}
+                                className="text-blue-600 underline text-xs mb-2 block"
+                              >
+                                {t('admin.users.downloadPdf')}
+                              </a>
                               <div className="mt-2 border rounded overflow-hidden" style={{ height: '400px' }}>
                                 <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
                                   <Viewer
-                                    fileUrl={url}
+                                    fileUrl={identityDocumentBlobUrl || url}
                                     plugins={[defaultLayoutPluginInstance]}
                                   />
                                 </Worker>
@@ -608,9 +661,15 @@ const Users = () => {
                         } else {
                           return (
                             <div>
-                              <a href={url} download target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-xs mb-2 block">{t('admin.users.downloadImage')}</a>
+                              <a
+                                href="#"
+                                onClick={(e) => handleDownload(e, identityDocumentBlobUrl || url, `document_${selectedUserDetails.id_user || selectedUserDetails.idUser}`)}
+                                className="text-blue-600 underline text-xs mb-2 block"
+                              >
+                                {t('admin.users.downloadImage')}
+                              </a>
                               <div className="mt-2">
-                                <img src={url} alt="Document identité" className="max-h-48 rounded border" />
+                                <img src={identityDocumentBlobUrl || url} alt="Document identité" className="max-h-48 rounded border" />
                               </div>
                             </div>
                           );
