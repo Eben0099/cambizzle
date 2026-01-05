@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Clock, Star, Shield, MessageCircle, Phone } from 'lucide-react';
+import { Clock, Star, MessageCircle, Phone } from 'lucide-react';
 import WhatsappIcon from '../icons/WhatsappIcon';
 import Modal from './Modal';
 import Avatar from '../ui/Avatar';
@@ -32,9 +32,8 @@ const SellerProfile = ({ seller, onContact, onCall, adTitle }) => {
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-gray-900">{t('adDetail.seller')}</h3>
           {(seller.isVerified === true || seller.isVerified === "1" || seller.isVerified === 1) && (
-            <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-green-50 rounded-full border border-green-200">
-              <Shield className="w-3.5 h-3.5 text-green-600" />
-              <span className="text-xs text-green-700 font-medium">{t('adDetail.verifiedSeller')}</span>
+            <div className="px-3 py-1.5 bg-green-500 text-white rounded-full">
+              <span className="text-xs font-medium">verified id</span>
             </div>
           )}
         </div>

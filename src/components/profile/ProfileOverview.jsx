@@ -85,47 +85,107 @@ const ProfileOverview = ({ user, userAds, onVerifyIdentity }) => {
         {/* Account Status */}
         <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
           <div className="p-4 sm:p-6">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <Award className="w-5 h-5 mr-2 text-[#D6BA69]" />
-              {t('profileOverview.accountStatus')}
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+                <Award className="w-5 h-5 mr-2 text-[#D6BA69]" />
+                {t('profileOverview.accountStatus')}
+              </h3>
+              {user.isVerified == 1 ? (
+                <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                  Fully Verified
+                </span>
+              ) : user.isVerified == 2 ? (
+                <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                  Under Review
+                </span>
+              ) : user.isVerified == 3 ? (
+                <span className="px-3 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">
+                  Action Required
+                </span>
+              ) : user.isVerified == 4 ? (
+                <span className="px-3 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
+                  Rejected
+                </span>
+              ) : (
+                <span className="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">
+                  Not verified
+                </span>
+              )}
+            </div>
             <div className="space-y-4">
-              {/* Email Verified */}
-              <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+              {/* Identity Verification */}
+              <div className={`flex items-center justify-between p-3 rounded-lg ${
+                user.isVerified === 1 || user.isVerified === "1" ? 'bg-green-50 border border-green-200' :
+                user.isVerified === 2 || user.isVerified === "2" ? 'bg-blue-50 border border-blue-200' :
+                user.isVerified === 3 || user.isVerified === "3" ? 'bg-orange-50 border border-orange-200' :
+                user.isVerified === 4 || user.isVerified === "4" ? 'bg-red-50 border border-red-200' :
+                'bg-gray-50 border border-gray-200'
+              }`}>
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-full ${user.isVerified ? 'bg-green-100' : 'bg-gray-100'}`}>
-                    <Shield className={`w-4 h-4 ${user.isVerified ? 'text-green-600' : 'text-gray-400'}`} />
+                  <div className={`p-2 rounded-full ${
+                    user.isVerified === 1 || user.isVerified === "1" ? 'bg-green-100' :
+                    user.isVerified === 2 || user.isVerified === "2" ? 'bg-blue-100' :
+                    user.isVerified === 3 || user.isVerified === "3" ? 'bg-orange-100' :
+                    user.isVerified === 4 || user.isVerified === "4" ? 'bg-red-100' :
+                    'bg-gray-100'
+                  }`}>
+                    <User className={`w-4 h-4 ${
+                      user.isVerified === 1 || user.isVerified === "1" ? 'text-green-600' :
+                      user.isVerified === 2 || user.isVerified === "2" ? 'text-blue-600' :
+                      user.isVerified === 3 || user.isVerified === "3" ? 'text-orange-600' :
+                      user.isVerified === 4 || user.isVerified === "4" ? 'text-red-600' :
+                      'text-gray-400'
+                    }`} />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{t('profileOverview.emailVerified')}</p>
-                    <p className="text-xs text-gray-500">{t('profileOverview.emailConfirmed')}</p>
+                    <p className="text-sm font-medium text-gray-900">Identity Verification</p>
+                    <p className={`text-xs ${
+                      user.isVerified == 1 || user.isVerified == "1" ? 'text-green-600' :
+                      user.isVerified == 2 || user.isVerified == "2" ? 'text-blue-600' :
+                      user.isVerified == 3 || user.isVerified == "3" ? 'text-orange-600' :
+                      user.isVerified == 4 || user.isVerified == "4" ? 'text-red-600' :
+                      'text-gray-500'
+                    }`}>
+                      {user.isVerified == 1 || user.isVerified == "1" ? 'Verified and validated' :
+                       user.isVerified == 2 || user.isVerified == "2" ? 'Under review by moderators' :
+                       user.isVerified == 3 || user.isVerified == "3" ? 'Modifications requested' :
+                       user.isVerified == 4 || user.isVerified == "4" ? 'Document rejected' :
+                       'Not verified yet'}
+                    </p>
                   </div>
                 </div>
-                {user.isVerified ? (
+                {user.isVerified == 1 || user.isVerified == "1" ? (
                   <CheckCircle className="w-5 h-5 text-green-500" />
-                ) : (
-                  <XCircle className="w-5 h-5 text-gray-400" />
-                )}
-              </div>
-
-              {/* Identity Verified */}
-              <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-full ${user.isIdentityVerified ? 'bg-green-100' : 'bg-gray-100'}`}>
-                    <User className={`w-4 h-4 ${user.isIdentityVerified ? 'text-green-600' : 'text-gray-400'}`} />
+                ) : user.isVerified == 2 || user.isVerified == "2" ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    <span className="text-xs text-blue-600 font-medium">Pending</span>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{t('profileOverview.identityVerified')}</p>
-                    <p className="text-xs text-gray-500">{t('profileOverview.identityValidated')}</p>
-                  </div>
-                </div>
-                {user.isIdentityVerified ? (
-                  <CheckCircle className="w-5 h-5 text-green-500" />
+                ) : user.isVerified == 3 || user.isVerified == "3" ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="py-2 sm:py-3 text-xs sm:text-sm border-orange-500 text-orange-600 hover:bg-orange-500 hover:text-white"
+                    onClick={onVerifyIdentity}
+                    aria-label="Update Document"
+                  >
+                    Update
+                  </Button>
+                ) : user.isVerified == 4 || user.isVerified == "4" ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="py-2 sm:py-3 text-xs sm:text-sm border-red-500 text-red-600 hover:bg-red-500 hover:text-white"
+                    onClick={onVerifyIdentity}
+                    aria-label="Resubmit Document"
+                  >
+                    Resubmit
+                  </Button>
                 ) : (
                   <Button
                     variant="outline"
                     size="sm"
-                    className="py-2 sm:py-3 text-xs sm:text-sm"
+                    className="py-2 sm:py-3 text-xs sm:text-sm border-[#D6BA69] text-[#D6BA69] hover:bg-[#D6BA69] hover:text-black"
                     onClick={onVerifyIdentity}
                     aria-label={t('profileOverview.verify')}
                   >
@@ -134,35 +194,92 @@ const ProfileOverview = ({ user, userAds, onVerifyIdentity }) => {
                 )}
               </div>
 
-              {/* Identity Document */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-blue-900 mb-3 flex items-center">
+              {/* Identity Document - Hidden when verified */}
+              {!(user.isVerified == 1 || user.isVerified == "1") && (
+              <div className={`rounded-lg p-4 ${
+                user.isVerified == 1 || user.isVerified == "1" ? 'bg-green-50 border border-green-200' :
+                user.isVerified == 2 || user.isVerified == "2" ? 'bg-blue-50 border border-blue-200' :
+                user.isVerified == 3 || user.isVerified == "3" ? 'bg-orange-50 border border-orange-200' :
+                user.isVerified == 4 || user.isVerified == "4" ? 'bg-red-50 border border-red-200' :
+                'bg-blue-50 border border-blue-200'
+              }`}>
+                <h4 className={`text-sm font-medium mb-3 flex items-center ${
+                  user.isVerified == 1 || user.isVerified == "1" ? 'text-green-900' :
+                  user.isVerified == 2 || user.isVerified == "2" ? 'text-blue-900' :
+                  user.isVerified == 3 || user.isVerified == "3" ? 'text-orange-900' :
+                  user.isVerified == 4 || user.isVerified == "4" ? 'text-red-900' :
+                  'text-blue-900'
+                }`}>
                   <Upload className="w-4 h-4 mr-2" />
                   {t('profileOverview.identityDocument')}
                 </h4>
 
                 {user.identityDocumentUrl ? (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded border flex items-center justify-center">
-                        <Upload className="w-5 h-5 text-blue-600" />
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded border flex items-center justify-center ${
+                          user.isVerified == 1 || user.isVerified == "1" ? 'bg-green-100 border-green-300' :
+                          user.isVerified == 2 || user.isVerified == "2" ? 'bg-blue-100 border-blue-300' :
+                          user.isVerified == 3 || user.isVerified == "3" ? 'bg-orange-100 border-orange-300' :
+                          user.isVerified == 4 || user.isVerified == "4" ? 'bg-red-100 border-red-300' :
+                          'bg-blue-100 border-blue-300'
+                        }`}>
+                          <Upload className={`w-5 h-5 ${
+                            user.isVerified == 1 || user.isVerified == "1" ? 'text-green-600' :
+                            user.isVerified == 2 || user.isVerified == "2" ? 'text-blue-600' :
+                            user.isVerified == 3 || user.isVerified == "3" ? 'text-orange-600' :
+                            user.isVerified == 4 || user.isVerified == "4" ? 'text-red-600' :
+                            'text-blue-600'
+                          }`} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {user.identityDocumentType?.toUpperCase() || 'ID'} - {user.identityDocumentNumber}
+                          </p>
+                          <p className={`text-xs ${
+                            user.isVerified == 1 || user.isVerified == "1" ? 'text-green-600' :
+                            user.isVerified == 2 || user.isVerified == "2" ? 'text-blue-600' :
+                            user.isVerified == 3 || user.isVerified == "3" ? 'text-orange-600' :
+                            user.isVerified == 4 || user.isVerified == "4" ? 'text-red-600' :
+                            'text-gray-600'
+                          }`}>
+                            {user.isVerified == 1 || user.isVerified == "1" ? 'Document verified' :
+                             user.isVerified == 2 || user.isVerified == "2" ? 'Under review' :
+                             user.isVerified == 3 || user.isVerified == "3" ? 'Needs update' :
+                             user.isVerified == 4 || user.isVerified == "4" ? 'Document rejected' :
+                             'Document uploaded'}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {user.identityDocumentType?.toUpperCase() || 'ID'} - {user.identityDocumentNumber}
-                        </p>
-                        <p className="text-xs text-green-600">{t('profileOverview.documentVerified')}</p>
-                      </div>
+                      {(user.isVerified == 3 || user.isVerified == "3" || user.isVerified == 4 || user.isVerified == "4" || user.isVerified == 0 || user.isVerified == "0") && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="py-2 sm:py-3 text-xs sm:text-sm"
+                          onClick={onVerifyIdentity}
+                          aria-label={t('common.update')}
+                        >
+                          {t('common.update')}
+                        </Button>
+                      )}
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="py-2 sm:py-3 text-xs sm:text-sm"
-                      onClick={onVerifyIdentity}
-                      aria-label={t('common.update')}
-                    >
-                      {t('common.update')}
-                    </Button>
+                    {user.moderationMessage && (user.isVerified == 3 || user.isVerified == "3" || user.isVerified == 4 || user.isVerified == "4") && (
+                      <div className={`p-3 rounded-lg ${
+                        user.isVerified == 3 || user.isVerified == "3" ? 'bg-orange-100 border border-orange-200' : 'bg-red-100 border border-red-200'
+                      }`}>
+                        <p className={`text-xs font-medium mb-1 ${
+                          user.isVerified == 3 || user.isVerified == "3" ? 'text-orange-900' : 'text-red-900'
+                        }`}>
+                          {user.isVerified == 3 || user.isVerified == "3" ? 'Moderator feedback:' : 'Rejection reason:'}
+                        </p>
+                        <p className={`text-xs ${
+                          user.isVerified == 3 || user.isVerified == "3" ? 'text-orange-700' : 'text-red-700'
+                        }`}>
+                          {user.moderationMessage}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center">
@@ -182,6 +299,7 @@ const ProfileOverview = ({ user, userAds, onVerifyIdentity }) => {
                   </div>
                 )}
               </div>
+              )}
             </div>
           </div>
         </div>

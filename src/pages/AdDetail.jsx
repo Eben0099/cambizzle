@@ -175,7 +175,7 @@ const AdDetail = () => {
   const handleSendMessage = () => {
     setIsContactModalOpen(false);
     setContactMessage('');
-    alert('Message sent successfully!');
+    showToast({ type: 'success', message: 'Message sent successfully!' });
   };
 
   const handleReport = async () => {
@@ -278,28 +278,28 @@ const AdDetail = () => {
         ]}
       />
       {/* Navigation */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-20">
+        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+              className="flex items-center space-x-1 sm:space-x-2 text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span className="font-medium">{t('ads.backToResults')}</span>
+              <span className="font-medium text-sm sm:text-base">{t('ads.backToResults')}</span>
             </button>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-1 sm:space-x-3">
               <button
                 onClick={handleShare}
-                className="p-2 rounded-full text-gray-400 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                className="p-2 rounded-full text-gray-400 bg-gray-50 sm:bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
               >
-                <Share2 className="w-5 h-5" />
+                <Share2 className="w-4.5 h-4.5 sm:w-5 h-5" />
               </button>
               <button
                 onClick={() => setIsReportModalOpen(true)}
-                className="p-2 rounded-full text-gray-400 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                className="p-2 rounded-full text-gray-400 bg-gray-50 sm:bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
               >
-                <Flag className="w-5 h-5" />
+                <Flag className="w-4.5 h-4.5 sm:w-5 h-5" />
               </button>
             </div>
           </div>
@@ -307,28 +307,28 @@ const AdDetail = () => {
       </div>
 
       {/* Breadcrumb */}
-      <div className="bg-gray-50 border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <nav className="flex items-center space-x-2 text-sm">
+      <div className="bg-gray-50 border-b border-gray-200 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-3">
+          <nav className="flex items-center space-x-2 text-[10px] sm:text-xs md:text-sm overflow-x-auto no-scrollbar whitespace-nowrap">
             <button
               onClick={() => navigate('/ads')}
-              className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
+              className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer flex-shrink-0"
             >
               {t('common.home')}
             </button>
-            <ChevronRight className="w-4 h-4 text-gray-400" />
+            <ChevronRight className="w-3 h-3 text-gray-400 flex-shrink-0" />
             <button
               onClick={() => navigate('/search')}
-              className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
+              className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer flex-shrink-0 uppercase"
             >
               {t('ads.allAds')}
             </button>
             {ad?.categoryName && (
               <>
-                <ChevronRight className="w-4 h-4 text-gray-400" />
+                <ChevronRight className="w-3 h-3 text-gray-400 flex-shrink-0" />
                 <button
                   onClick={() => navigate(`/search?category=${ad.category?.slug || ad.categorySlug}`)}
-                  className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
+                  className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer flex-shrink-0 truncate max-w-[80px] sm:max-w-none"
                 >
                   {translatedCategory || ad.categoryName}
                 </button>
@@ -336,17 +336,17 @@ const AdDetail = () => {
             )}
             {ad?.subcategoryName && (
               <>
-                <ChevronRight className="w-4 h-4 text-gray-400" />
+                <ChevronRight className="w-3 h-3 text-gray-400 flex-shrink-0" />
                 <button
                   onClick={() => navigate(`/search?category=${ad.category?.slug || ad.categorySlug}&subcategory=${ad.subcategory?.slug || ad.subcategorySlug}`)}
-                  className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
+                  className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer flex-shrink-0 truncate max-w-[80px] sm:max-w-none"
                 >
                   {translatedSubcategory || ad.subcategoryName}
                 </button>
               </>
             )}
-            <ChevronRight className="w-4 h-4 text-gray-400" />
-            <span className="text-gray-900 font-medium truncate max-w-xs">
+            <ChevronRight className="w-3 h-3 text-gray-400 flex-shrink-0 sm:inline hidden" />
+            <span className="text-gray-900 font-medium truncate max-w-[120px] sm:max-w-xs sm:inline hidden">
               {translatedTitle || ad?.title}
             </span>
           </nav>
@@ -354,57 +354,57 @@ const AdDetail = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="max-w-7xl mx-auto px-0 sm:px-6 lg:px-8 py-0 sm:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 sm:gap-8">
           {/* Left Column - Images and Details */}
-          <div className="lg:col-span-8 space-y-8">
+          <div className="lg:col-span-8 space-y-0 sm:space-y-8">
             {/* Image Carousel */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="bg-white sm:rounded-xl shadow-none sm:shadow-sm overflow-hidden">
               <ImageCarousel images={ad.photos?.map(photo => getPhotoUrl(photo.originalUrl)) || []} />
             </div>
 
             {/* Ad Details */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="p-6 sm:p-8">
+            <div className="bg-white sm:rounded-xl shadow-none sm:shadow-sm overflow-hidden ring-1 ring-gray-100 sm:ring-0">
+              <div className="p-4 sm:p-8">
                 {/* Title and Location */}
-                <div className="mb-6">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">{translatedTitle || ad.title}</h1>
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                <div className="mb-4 sm:mb-6">
+                  <h1 className="text-xl sm:text-3xl font-black text-gray-900 mb-3 sm:mb-4 leading-tight">{translatedTitle || ad.title}</h1>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] sm:text-sm text-gray-500">
                     <div className="flex items-center">
-                      <MapPin className="w-4 h-4 mr-1.5" />
+                      <MapPin className="w-3.5 h-3.5 mr-1 text-gray-400" />
                       <span>{translatedLocation || `${ad.locationName}, ${ad.locationType}`}</span>
                     </div>
                     <div className="flex items-center">
-                      <Calendar className="w-4 h-4 mr-1.5" />
+                      <Calendar className="w-3.5 h-3.5 mr-1 text-gray-400" />
                       <span>{formatDate(ad.createdAt)}</span>
                     </div>
                     <div className="flex items-center">
-                      <Eye className="w-4 h-4 mr-1.5" />
+                      <Eye className="w-3.5 h-3.5 mr-1 text-gray-400" />
                       <span>{(ad.viewCount || 0).toLocaleString()} {t('ads.views')}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Price */}
-                <div className="mb-8 p-6 bg-gray-50 rounded-lg">
-                  <div className="flex items-baseline space-x-3">
-                    <span className="text-3xl sm:text-4xl font-bold text-gray-900">
+                <div className="mb-6 sm:mb-8 p-4 sm:p-6 bg-gray-50 rounded-2xl border border-gray-100/50">
+                  <div className="flex flex-wrap items-baseline gap-2 sm:space-x-3">
+                    <span className="text-2xl sm:text-4xl font-black text-[#D6BA69]">
                       {formatPrice(ad.price)} FCFA
                     </span>
                     {ad.hasDiscount && ad.originalPrice && (
-                      <>
-                        <span className="text-xl text-gray-500 line-through">
-                          {formatPrice(ad.originalPrice)} FCFA
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm sm:text-xl text-gray-400 line-through font-medium">
+                          {formatPrice(ad.originalPrice)}
                         </span>
-                        <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">
-                          -{ad.discountPercentage}% off
+                        <span className="bg-red-50 text-red-600 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold ring-1 ring-red-100">
+                          -{ad.discountPercentage}%
                         </span>
-                      </>
+                      </div>
                     )}
                   </div>
                   {ad.isNegotiable && (
-                    <div className="mt-2">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <div className="mt-2 text-left">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-600 uppercase tracking-wider">
                         <Tag className="w-3 h-3 mr-1" />
                         {t('ads.negotiable')}
                       </span>
@@ -412,35 +412,46 @@ const AdDetail = () => {
                   )}
                 </div>
 
-                {/* Quick Info Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <Package className="w-6 h-6 text-gray-400 mx-auto mb-2" />
-                    <div className="text-xs text-gray-500 mb-1">{t('ads.category')}</div>
-                    <div className="font-medium text-sm">{translatedCategory || ad.categoryName}</div>
+                {/* Quick Info Grid - Modified for iPhone mini (2 cols always, small gap) */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8 text-left">
+                  <div className="p-3 bg-white border border-gray-100 rounded-xl shadow-sm">
+                    <div className="flex items-center gap-2 mb-1.5 grayscale opacity-60">
+                      <Package className="w-4 h-4 text-[#D6BA69]" />
+                      <span className="text-[10px] sm:text-xs font-bold uppercase text-gray-400 tracking-tighter">{t('ads.category')}</span>
+                    </div>
+                    <div className="font-bold text-xs sm:text-sm truncate">{translatedCategory || ad.categoryName}</div>
                   </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <CheckCircle className="w-6 h-6 text-gray-400 mx-auto mb-2" />
-                    <div className="text-xs text-gray-500 mb-1">{t('ads.subcategory')}</div>
-                    <div className="font-medium text-sm">{translatedSubcategory || ad.subcategoryName}</div>
+                  <div className="p-3 bg-white border border-gray-100 rounded-xl shadow-sm">
+                    <div className="flex items-center gap-2 mb-1.5 grayscale opacity-60">
+                      <CheckCircle className="w-4 h-4 text-[#D6BA69]" />
+                      <span className="text-[10px] sm:text-xs font-bold uppercase text-gray-400 tracking-tighter">{t('ads.subcategory')}</span>
+                    </div>
+                    <div className="font-bold text-xs sm:text-sm truncate">{translatedSubcategory || ad.subcategoryName}</div>
                   </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <Truck className="w-6 h-6 text-gray-400 mx-auto mb-2" />
-                    <div className="text-xs text-gray-500 mb-1">{t('ads.brand')}</div>
-                    <div className="font-medium text-sm">{translatedBrand || ad.brandName}</div>
+                  <div className="p-3 bg-white border border-gray-100 rounded-xl shadow-sm">
+                    <div className="flex items-center gap-2 mb-1.5 grayscale opacity-60">
+                      <Truck className="w-4 h-4 text-[#D6BA69]" />
+                      <span className="text-[10px] sm:text-xs font-bold uppercase text-gray-400 tracking-tighter">{t('ads.brand')}</span>
+                    </div>
+                    <div className="font-bold text-xs sm:text-sm truncate">{translatedBrand || ad.brandName}</div>
                   </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <AlertTriangle className="w-6 h-6 text-gray-400 mx-auto mb-2" />
-                    <div className="text-xs text-gray-500 mb-1">{t('ads.negotiable')}</div>
-                    <div className="font-medium text-sm">{ad.isNegotiable ? t('common.yes') : t('common.no')}</div>
+                  <div className="p-3 bg-white border border-gray-100 rounded-xl shadow-sm">
+                    <div className="flex items-center gap-2 mb-1.5 grayscale opacity-60">
+                      <AlertTriangle className="w-4 h-4 text-[#D6BA69]" />
+                      <span className="text-[10px] sm:text-xs font-bold uppercase text-gray-400 tracking-tighter">{t('ads.negotiable')}</span>
+                    </div>
+                    <div className="font-bold text-xs sm:text-sm truncate">{ad.isNegotiable ? t('common.yes') : t('common.no')}</div>
                   </div>
                 </div>
 
                 {/* Characteristics */}
                 {ad.filters && ad.filters.length > 0 && (
                   <div className="mb-8">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('ads.specifications')}</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-[#D6BA69]" />
+                      {t('ads.specifications')}
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0.5">
                       {ad.filters.map((filter, index) => (
                         <TranslatedFilter
                           key={index}
@@ -553,8 +564,8 @@ const AdDetail = () => {
                         <Star
                           key={star}
                           className={`w-4 h-4 ${star <= Math.round(feedbackSummary.averageRating)
-                              ? 'text-yellow-400 fill-current'
-                              : 'text-gray-300'
+                            ? 'text-yellow-400 fill-current'
+                            : 'text-gray-300'
                             }`}
                         />
                       ))}

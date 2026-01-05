@@ -145,6 +145,8 @@ const TranslatedFilterMultiSelect = ({ filter, value, onChange, error, Select: S
       <SelectComponent
         isMulti
         closeMenuOnSelect={false}
+        blurInputOnSelect={false}
+        isSearchable={false}
         hideSelectedOptions={false}
         isClearable={true}
         name={`filters.${filter.id}`}
@@ -224,7 +226,7 @@ const CreateAd = () => {
     phone: '',
     payment_method: 'mtn_mobile_money'
   });
-  
+
   const [subcategories, setSubcategories] = useState([]);
   const [images, setImages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -276,10 +278,10 @@ const CreateAd = () => {
       ...validateStep(4),
       ...validateStep(5)
     };
-    
+
     const hasNoErrors = Object.keys(allErrors).length === 0;
     const hasMinimumImages = images.length >= 3;
-    
+
     setCanSubmit(hasNoErrors && hasMinimumImages && currentStep === 5);
   }, [formData, images, currentStep]);
 
@@ -321,9 +323,9 @@ const CreateAd = () => {
     }
 
     if (name === 'category') {
-      setFormData(prev => ({ 
-        ...prev, 
-        category: value, 
+      setFormData(prev => ({
+        ...prev,
+        category: value,
         subcategory: '',
         brandId: '',
         filters: {}
@@ -495,7 +497,7 @@ const CreateAd = () => {
       setErrors(stepErrors);
       return;
     }
-    
+
     setErrors({});
     if (currentStep < 5) {
       setCurrentStep(prev => prev + 1);
@@ -562,10 +564,10 @@ const CreateAd = () => {
       // Champs statiques
       formDataToSend.append('title', formData.title);
       formDataToSend.append('description', formData.description);
-      
+
       const priceRaw = formData.price.replace(/\s/g, '');
       const originalPriceRaw = formData.originalPrice ? formData.originalPrice.replace(/\s/g, '') : '';
-      
+
       formDataToSend.append('price', priceRaw);
       formDataToSend.append('original_price', originalPriceRaw || priceRaw);
       formDataToSend.append('discount_percentage', formData.discountPercent || 0);
@@ -573,7 +575,7 @@ const CreateAd = () => {
       formDataToSend.append('tags', formData.tags);
       formDataToSend.append('is_premium', formData.isPremium ? 1 : 0);
       formDataToSend.append('is_negotiable', formData.isNegotiable ? 1 : 0);
-      
+
       // Convertir subcategory slug en ID
       if (formData.subcategory && formData.category) {
         const selectedSubcategory = subcategories.find(sub => sub.slug === formData.subcategory);
@@ -581,7 +583,7 @@ const CreateAd = () => {
           formDataToSend.append('subcategory_id', selectedSubcategory.id);
         }
       }
-      
+
       // Convertir location_id en entier
       if (formData.locationId) {
         formDataToSend.append('location_id', parseInt(formData.locationId));
@@ -698,33 +700,29 @@ const CreateAd = () => {
               const isCompleted = currentStep > step.number;
               return (
                 <div key={step.number} className="flex items-center flex-1">
-                  <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${
-                    isCompleted
+                  <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${isCompleted
                       ? 'bg-[#D6BA69] border-[#D6BA69] text-black'
                       : isActive
                         ? 'border-[#D6BA69] bg-[#D6BA69]/10 text-[#D6BA69]'
                         : 'border-gray-300 bg-white text-gray-400'
-                  }`}>
+                    }`}>
                     {step.number === 2
                       ? <Icon style={{ width: 20, height: 20 }} />
                       : <Icon className="w-5 h-5" />}
                   </div>
                   <div className="ml-3 hidden sm:block">
-                    <p className={`text-sm font-medium ${
-                      isActive ? 'text-[#D6BA69]' : 'text-gray-500'
-                    }`}>
+                    <p className={`text-sm font-medium ${isActive ? 'text-[#D6BA69]' : 'text-gray-500'
+                      }`}>
                       {t('createAd.step')} {step.number}
                     </p>
-                    <p className={`text-xs ${
-                      isActive ? 'text-gray-900' : 'text-gray-500'
-                    }`}>
+                    <p className={`text-xs ${isActive ? 'text-gray-900' : 'text-gray-500'
+                      }`}>
                       {step.title}
                     </p>
                   </div>
                   {index < steps.length - 1 && (
-                    <div className={`flex-1 h-0.5 mx-4 ${
-                      isCompleted ? 'bg-[#D6BA69]' : 'bg-gray-200'
-                    }`} />
+                    <div className={`flex-1 h-0.5 mx-4 ${isCompleted ? 'bg-[#D6BA69]' : 'bg-gray-200'
+                      }`} />
                   )}
                 </div>
               );
@@ -974,7 +972,7 @@ const CreateAd = () => {
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                         {t('createAd.loadingBrands')}
                       </div>
-                  ) : (
+                    ) : (
                       <select
                         name="brandId"
                         value={formData.brandId}
@@ -1136,14 +1134,12 @@ const CreateAd = () => {
                 {errors.images && (
                   <p className="text-sm text-red-600">{errors.images}</p>
                 )}
-                <div className={`p-4 rounded-lg ${
-                  images.length >= 3
+                <div className={`p-4 rounded-lg ${images.length >= 3
                     ? 'bg-green-50 border border-green-200'
                     : 'bg-yellow-50 border border-yellow-200'
-                }`}>
-                  <p className={`text-sm font-medium ${
-                    images.length >= 3 ? 'text-green-800' : 'text-yellow-800'
                   }`}>
+                  <p className={`text-sm font-medium ${images.length >= 3 ? 'text-green-800' : 'text-yellow-800'
+                    }`}>
                     {images.length >= 3
                       ? t('createAd.photosRequirementMet')
                       : t('createAd.morePhotosNeeded', { count: 3 - images.length })

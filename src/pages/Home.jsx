@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search, ArrowRight, Car, Home as HomeIcon, Briefcase, Shirt, Smartphone, Sofa, Baby, Book, Dumbbell, Wrench } from 'lucide-react';
 import Button from '../components/ui/Button';
-import SearchAutocomplete from '../components/ui/SearchAutocomplete';
+// import SearchAutocomplete from '../components/ui/SearchAutocomplete';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
 import AdCard from '../components/ads/AdCard';
@@ -64,12 +64,11 @@ const Home = () => {
 
               <div className="max-w-2xl mx-auto">
                 <div className="relative group">
-                  <SearchAutocomplete
+                  <Input
                     value={search}
-                    onChange={setSearch}
-          
-                    className="text-base sm:text-lg py-3 sm:py-4 pr-12 bg-white text-black rounded-xl shadow-sm group-hover:shadow-md transition-shadow duration-300"
-                    onSearch={() => { }} // Search is handled by reactive effect
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder={t('common.search')}
+                    className="text-base sm:text-lg py-3 sm:py-4 pr-12 bg-white text-black rounded-xl shadow-sm group-hover:shadow-md transition-shadow duration-300 w-full"
                   />
                   <div className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-[#D6BA69] hover:bg-[#C5A952] rounded-lg p-2 transition-colors duration-200 pointer-events-none">
                     <Search className="w-5 h-5 text-black" />

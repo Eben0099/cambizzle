@@ -95,12 +95,12 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('Please select an image');
+      showToast({ type: 'error', message: 'Please select an image' });
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('The image must not exceed 5MB');
+      showToast({ type: 'error', message: 'The image must not exceed 5MB' });
       return;
     }
 
@@ -160,7 +160,7 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
         showToast({ type: 'error', message: errMsg });
       }
     } catch (error) {
-      alert('Error processing image');
+      showToast({ type: 'error', message: 'Error processing image' });
     } finally {
       setUploadingPhoto(false);
     }
@@ -199,6 +199,7 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
     try {
       if (!editFormData.identityDocumentType || !editFormData.identityDocumentNumber || !identityDocument) {
         setIdentityUploadError('Please provide all required fields and upload a PDF document.');
+        showToast({ type: 'error', message: 'Please provide all required fields and upload a PDF document.' });
         setIdentityUploadLoading(false);
         return;
       }
@@ -222,15 +223,19 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
       }
       if (!userId) {
         setIdentityUploadError('User ID is missing. Please reconnect.');
+        showToast({ type: 'error', message: 'User ID is missing. Please reconnect.' });
         setIdentityUploadLoading(false);
         return;
       }
       const res = await userService.submitIdentityVerification(userId, formData);
       setIdentityUploadSuccess('Document submitted successfully!');
       setIdentityUploadError(null);
+      showToast({ type: 'success', message: 'Document submitted successfully!' });
     } catch (err) {
-      setIdentityUploadError(err?.response?.data?.message || err.message || 'Failed to submit document');
+      const errMsg = err?.response?.data?.message || err.message || 'Failed to submit document';
+      setIdentityUploadError(errMsg);
       setIdentityUploadSuccess(null);
+      showToast({ type: 'error', message: errMsg });
     } finally {
       setIdentityUploadLoading(false);
     }
@@ -241,12 +246,12 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
     if (!file) return;
 
     if (!file.type.startsWith('application/pdf')) {
-      alert('Please select a PDF file');
+      showToast({ type: 'error', message: 'Please select a PDF file' });
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('The file must not exceed 5MB');
+      showToast({ type: 'error', message: 'The file must not exceed 5MB' });
       return;
     }
 

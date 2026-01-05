@@ -710,7 +710,10 @@
       "signIn": "Se connecter",
       "submitSuccess": "Avis soumis avec succès ! Il sera visible après approbation de l'administrateur.",
       "submitError": "Erreur lors de la soumission de l'avis. Veuillez réessayer.",
-      "networkError": "Erreur réseau. Veuillez vérifier votre connexion et réessayer."
+      "networkError": "Erreur réseau. Veuillez vérifier votre connexion et réessayer.",
+      "allReviews": "Tous les avis",
+      "ownerWarning": "Vous ne pouvez pas évaluer votre propre annonce",
+      "alreadyReviewed": "Vous avez déjà laissé un avis pour cette annonce"
     },
     "report": {
       "title": "Signaler l'annonce",

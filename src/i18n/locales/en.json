@@ -710,7 +710,10 @@
       "signIn": "Sign in",
       "submitSuccess": "Feedback submitted successfully! It will be visible after admin approval.",
       "submitError": "Error submitting feedback. Please try again.",
-      "networkError": "Network error. Please check your connection and try again."
+      "networkError": "Network error. Please check your connection and try again.",
+      "allReviews": "All Reviews",
+      "ownerWarning": "You cannot review your own ad",
+      "alreadyReviewed": "You have already left a review for this ad"
     },
     "report": {
       "title": "Report Ad",

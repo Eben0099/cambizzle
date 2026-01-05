@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, MapPin, Eye, Star, ShieldCheck, Zap } from 'lucide-react';
+import { Heart, MapPin, Eye, Star, Zap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { formatPrice, formatRelativeDate, getPhotoUrl } from '../../utils/helpers';
 import Card from '../ui/Card';
@@ -126,8 +126,8 @@ const AdCard = ({ ad }) => {
           <div className="absolute bottom-2 right-2 flex items-center gap-1">
             {/* Verified Badge - uses identity verification, not email verification */}
             {(ad.userIdentityVerified === 1 || ad.userIdentityVerified === "1" || ad.userIdentityVerified === true) && (
-              <div className="bg-green-500 text-white p-1.5 rounded-full" title="Verified Seller">
-                <ShieldCheck className="w-4 h-4" />
+              <div className="bg-green-500 text-white px-2 py-1 rounded-full text-[10px] font-medium" title="Verified Seller">
+                verified id
               </div>
             )}
 

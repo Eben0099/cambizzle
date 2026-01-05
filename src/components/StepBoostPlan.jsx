@@ -48,7 +48,23 @@ const StepBoostPlan = ({ formData, setFormData, errors, setErrors }) => {
 
       logger.log('Plans adaptés:', adaptedPlans);
 
-      setBoostPlans([{ id: null, name: t('boost.noBoost'), price: 0, duration_days: 0, description: t('boost.publishWithoutBoost') }, ...adaptedPlans]);
+      const finalPlans = [{ id: null, name: t('boost.noBoost'), price: 0, duration_days: 0, description: t('boost.publishWithoutBoost') }, ...adaptedPlans];
+      setBoostPlans(finalPlans);
+
+      // Select first promotion plan by default if available
+      if (adaptedPlans.length > 0 && !formData.boost_plan_id && formData.boost_plan_id !== null) {
+        const firstPlan = adaptedPlans[0];
+        setSelectedPlan(firstPlan);
+        setFormData(prev => ({
+          ...prev,
+          boost_plan_id: firstPlan.id,
+          selectedPlan: firstPlan
+        }));
+      } else if (formData.boost_plan_id || formData.boost_plan_id === null) {
+        // Find and set the already selected plan (useful if navigating back/forth between steps)
+        const found = finalPlans.find(p => p.id === formData.boost_plan_id);
+        if (found) setSelectedPlan(found);
+      }
     } catch (error) {
       logger.error('Erreur chargement plans boost:', error);
       // Still allow continuing without boost
@@ -95,11 +111,10 @@ const StepBoostPlan = ({ formData, setFormData, errors, setErrors }) => {
           <div
             key={plan.id || 'no-boost'}
             onClick={() => handlePlanSelect(plan)}
-            className={`relative cursor-pointer rounded-lg border-2 p-4 transition-all ${
-              selectedPlan?.id === plan.id
+            className={`relative cursor-pointer rounded-lg border-2 p-4 transition-all ${selectedPlan?.id === plan.id
                 ? 'border-[#D6BA69] bg-[#D6BA69]/5'
                 : 'border-gray-200 hover:border-gray-300'
-            }`}
+              }`}
           >
             {selectedPlan?.id === plan.id && (
               <div className="absolute -top-2 -right-2 bg-[#D6BA69] rounded-full p-1">

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Upload, X, Image as ImageIcon, Move } from 'lucide-react';
 import { validateImageFile } from '../../utils/helpers';
 import Button from './Button';
+import { useToast } from '../toast/useToast';
 
 const ImageUpload = ({
   images = [],
@@ -11,6 +12,7 @@ const ImageUpload = ({
   className = ''
 }) => {
   const { t } = useTranslation();
+  const { showToast } = useToast();
   const [dragOver, setDragOver] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState(null);
   const fileInputRef = useRef(null);
@@ -30,7 +32,7 @@ const ImageUpload = ({
     });
 
     if (errors.length > 0) {
-      alert(`${t('imageUpload.errors')}:\n${errors.join('\n')}`);
+      showToast({ type: 'error', message: `${t('imageUpload.errors')}:\n${errors.join('\n')}` });
     }
 
     if (validFiles.length > 0) {

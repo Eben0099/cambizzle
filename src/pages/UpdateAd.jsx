@@ -538,36 +538,50 @@ const UpdateAd = () => {
       });
       logger.log(`Total filtres ajoutés: ${filterCount}`);
 
-      // Gestion des images pour mise à jour
+      // Gestion des images pour mise à jour avec ordre unifié
       logger.log('Traitement des images:', {
         totalImages: images.length,
         imagesWithFile: images.filter(img => img.file).length,
         imagesWithoutFile: images.filter(img => !img.file).length
       });
 
-      // 1. Nouvelles images à uploader
-      let newImageCount = 0;
-      images.forEach((image, index) => {
+      // 1. Construire le tableau d'ordre unifié
+      const photoOrder = [];
+      let newImageIndex = 0;
+      
+      images.forEach((image, position) => {
         if (image.file) {
-          formDataToSend.append('photos[]', image.file, `photo-${index + 1}.jpg`);
-          newImageCount++;
-          logger.log(`Nouvelle image ${newImageCount} ajoutée: ${image.file.name} (${image.file.size} bytes)`);
+          // Nouvelle image à uploader
+          photoOrder.push({
+            type: 'new',
+            index: newImageIndex,
+            position: position
+          });
+          newImageIndex++;
+        } else if (image.originalId) {
+          // Image existante du serveur
+          photoOrder.push({
+            type: 'existing',
+            id: image.originalId,
+            position: position
+          });
         }
       });
-      logger.log(`Total nouvelles images ajoutées: ${newImageCount}`);
 
-      // 2. Ordre des images existantes (pour mise à jour de l'ordre)
-      const existingImages = images.filter(img => !img.file && img.originalId);
-      if (existingImages.length > 0) {
-        logger.log(`Envoi de l'ordre des ${existingImages.length} images existantes:`);
-        existingImages.forEach((image, index) => {
-          const realId = image.originalId;
-          formDataToSend.append('existing_photos_order[]', realId);
-          logger.log(`Image existante ${index + 1}: ID=${realId} (position ${index + 1})`);
-        });
-      } else {
-        logger.log('Aucune image existante à réorganiser');
-      }
+      // 2. Ajouter les nouvelles images physiques au FormData
+      let uploadedCount = 0;
+      images.forEach((image) => {
+        if (image.file) {
+          formDataToSend.append('photos[]', image.file, image.file.name);
+          uploadedCount++;
+          logger.log(`Nouvelle image ${uploadedCount} ajoutée: ${image.file.name} (${image.file.size} bytes)`);
+        }
+      });
+      logger.log(`Total nouvelles images ajoutées: ${uploadedCount}`);
+
+      // 3. Envoyer l'ordre unifié en JSON
+      formDataToSend.append('photo_order', JSON.stringify(photoOrder));
+      logger.log('Ordre unifié des photos envoyé:', photoOrder);
 
       // Logs détaillés du FormData envoyé
       logger.log('=== DONNÉES FORM DATA ENVOYÉES ===');
@@ -683,11 +697,6 @@ const UpdateAd = () => {
           {currentStep === 1 && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
               <div className="space-y-6">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                    General Information
-                  </h2>
-                </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -800,11 +809,6 @@ const UpdateAd = () => {
           {currentStep === 2 && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
               <div className="space-y-6">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                    Price and Location
-                  </h2>
-                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Input
                     label={<>Selling Price <span className="text-red-600">*</span></>}
@@ -905,14 +909,6 @@ const UpdateAd = () => {
           {currentStep === 3 && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
               <div className="space-y-6">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                    Specific Characteristics
-                  </h2>
-                  <p className="text-gray-600">
-                    Fill in the specific characteristics of your product
-                  </p>
-                </div>
                 {/* Brand Selection */}
                 {subcategoryFields.brands && subcategoryFields.brands.length > 0 && (
                   <div>
@@ -1032,6 +1028,8 @@ const UpdateAd = () => {
                               <Select
                                 isMulti
                                 closeMenuOnSelect={false}
+                                blurInputOnSelect={false}
+                                isSearchable={false}
                                 hideSelectedOptions={false}
                                 isClearable={true}
                                 name={`filters.${filter.id}`}
@@ -1134,14 +1132,6 @@ const UpdateAd = () => {
           {currentStep === 4 && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
               <div className="space-y-6">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                    Ad Photos
-                  </h2>
-                  <p className="text-gray-600">
-                    Add quality photos to attract more buyers
-                  </p>
-                </div>
                 <ImageUpload
                   images={images}
                   onImagesChange={handleImagesChange}

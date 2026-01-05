@@ -329,20 +329,28 @@ const Users = () => {
         </div>
         <div className="flex items-center gap-2">
           <Button
-            onClick={() => exportToExcel(filteredUsers, 'users', {
-              columns: [
-                { header: 'ID', key: 'idUser' },
-                { header: 'First Name', key: 'firstName' },
-                { header: 'Last Name', key: 'lastName' },
-                { header: 'Email', key: 'email' },
-                { header: 'Phone', key: 'phone' },
-                { header: 'Role', key: 'roleId' },
-                { header: 'Status', key: 'isSuspended' },
-                { header: 'Verified', key: 'isVerified' },
-                { header: 'Created At', key: 'createdAt' },
-              ],
-              sheetName: 'Users'
-            })}
+            onClick={() => {
+              const exportData = filteredUsers.map(user => ({
+                ...user,
+                roleLabel: user.roleId === "1" ? "Admin" : user.roleId === "2" ? "User" : "Unknown",
+                statusLabel: user.isSuspended === "1" ? "Suspended" : user.deleted ? "Deleted" : "Active",
+                verifiedLabel: (user.isVerified === "1" || user.isVerified === 1) ? "Yes" : "No"
+              }));
+              exportToExcel(exportData, 'users', {
+                columns: [
+                  { header: 'ID', key: 'idUser' },
+                  { header: 'First Name', key: 'firstName' },
+                  { header: 'Last Name', key: 'lastName' },
+                  { header: 'Email', key: 'email' },
+                  { header: 'Phone', key: 'phone' },
+                  { header: 'Role', key: 'roleLabel' },
+                  { header: 'Status', key: 'statusLabel' },
+                  { header: 'Verified', key: 'verifiedLabel' },
+                  { header: 'Created At', key: 'createdAt' },
+                ],
+                sheetName: 'Users'
+              });
+            }}
             className="h-9 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg shadow-sm flex items-center gap-1 cursor-pointer"
             disabled={filteredUsers.length === 0}
           >

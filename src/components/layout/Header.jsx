@@ -65,22 +65,6 @@ const Header = () => {
                   </Button>
                 </Link>
 
-                {/* Admin Link - Visible only for roleId === "1" */}
-                {isAuthenticated && String(user?.roleId) == "1" && (
-                  <Link
-                    to="/admin"
-                    className="group relative p-2 text-gray-400 hover:text-[#D6BA69] rounded-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-amber-50 hover:to-yellow-50 hover:shadow-md border border-transparent hover:border-amber-200"
-                    title={t('header.administration')}
-                  >
-                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-amber-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <Shield className="w-5 h-5 transform group-hover:scale-110 transition-transform duration-200" />
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-900 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                      {t('header.administration')}
-                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
-                    </div>
-                  </Link>
-                )}
-
                 <div className="relative group">
                   <button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-black/10 transition-colors cursor-pointer">
                     <Avatar
