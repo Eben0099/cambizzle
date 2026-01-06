@@ -43,7 +43,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "../../components/toast/useToast";
 import Loader from "@/components/ui/Loader";
 import adminService from "@/services/adminService";
 
@@ -108,7 +108,7 @@ const Filters = () => {
   const [form, setForm] = useState(emptyForm);
   const [submitting, setSubmitting] = useState(false);
 
-  const { toast } = useToast();
+  const { showToast } = useToast();
 
   // Load filters on mount
   useEffect(() => {
@@ -124,10 +124,9 @@ const Filters = () => {
       setFiltersData(response.data || []);
     } catch (error) {
       logger.error("Error loading filters:", error);
-      toast({
-        title: t('admin.filters.error'),
-        description: t('admin.filters.loadError'),
-        variant: "destructive",
+      showToast({
+        type: 'error',
+        message: t('admin.filters.loadError')
       });
     } finally {
       setLoading(false);
@@ -228,10 +227,10 @@ const Filters = () => {
       logger.log("Filter created:", response);
       await loadFilters();
       setCreateOpen(false);
-      toast({ description: t('admin.filters.createSuccess') });
+      showToast({ type: 'success', message: t('admin.filters.createSuccess') });
     } catch (err) {
       logger.error("Error creating filter:", err);
-      toast({ description: t('admin.filters.createError'), variant: "destructive" });
+      showToast({ type: 'error', message: t('admin.filters.createError') });
     } finally {
       setSubmitting(false);
     }
@@ -268,10 +267,10 @@ const Filters = () => {
       logger.log("Filter updated");
       await loadFilters();
       setEditOpen(false);
-      toast({ description: t('admin.filters.updateSuccess') });
+      showToast({ type: 'success', message: t('admin.filters.updateSuccess') });
     } catch (err) {
       logger.error("Error updating filter:", err);
-      toast({ description: t('admin.filters.updateError'), variant: "destructive" });
+      showToast({ type: 'error', message: t('admin.filters.updateError') });
     } finally {
       setSubmitting(false);
     }
@@ -290,10 +289,10 @@ const Filters = () => {
       logger.log("Filter deleted");
       await loadFilters();
       setDeleteCandidate(null);
-      toast({ description: t('admin.filters.deleteSuccess') });
+      showToast({ type: 'success', message: t('admin.filters.deleteSuccess') });
     } catch (err) {
       logger.error("Error deleting filter:", err);
-      toast({ description: t('admin.filters.deleteError'), variant: "destructive" });
+      showToast({ type: 'error', message: t('admin.filters.deleteError') });
     } finally {
       setSubmitting(false);
     }
@@ -309,7 +308,7 @@ const Filters = () => {
     if (!valuesOpenFor) return;
     const v = (newVal || "").trim();
     if (!v) {
-      toast({ description: t('admin.filters.valueEmpty'), variant: "destructive" });
+      showToast({ type: 'error', message: t('admin.filters.valueEmpty') });
       return;
     }
 
@@ -329,10 +328,10 @@ const Filters = () => {
         if (updatedFilter) setValuesOpenFor(updatedFilter);
       }
 
-      toast({ description: t('admin.filters.optionAdded') });
+      showToast({ type: 'success', message: t('admin.filters.optionAdded') });
     } catch (err) {
       logger.error("Error adding option:", err);
-      toast({ description: t('admin.filters.optionAddError'), variant: "destructive" });
+      showToast({ type: 'error', message: t('admin.filters.optionAddError') });
     }
   };
 
@@ -352,10 +351,10 @@ const Filters = () => {
         if (updatedFilter) setValuesOpenFor(updatedFilter);
       }
 
-      toast({ description: t('admin.filters.optionRemoved') });
+      showToast({ type: 'success', message: t('admin.filters.optionRemoved') });
     } catch (err) {
       logger.error("Error removing option:", err);
-      toast({ description: t('admin.filters.optionRemoveError'), variant: "destructive" });
+      showToast({ type: 'error', message: t('admin.filters.optionRemoveError') });
     } finally {
       setSubmitting(false);
     }
@@ -379,7 +378,6 @@ const Filters = () => {
             {/* Search */}
             <div className="relative w-full sm:w-auto">
               <Input
-                placeholder={t('admin.filters.search')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10 h-9 w-full sm:w-64 text-sm rounded-lg border-gray-200 focus:ring-[#D6BA69]"
@@ -556,7 +554,6 @@ const Filters = () => {
                   id="name"
                   value={form.name}
                   onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                  placeholder={t('admin.filters.filterNamePlaceholder')}
                   className="mt-1"
                   required
                 />
@@ -607,7 +604,6 @@ const Filters = () => {
                   id="options"
                   value={form.optionsText}
                   onChange={(e) => setForm((prev) => ({ ...prev, optionsText: e.target.value }))}
-                  placeholder={t('admin.filters.optionsPlaceholder')}
                   className="mt-1"
                   rows={3}
                 />
@@ -758,7 +754,6 @@ const Filters = () => {
 
                 <div className="flex gap-2">
                   <Input
-                    placeholder={t('admin.filters.newOption')}
                     onKeyPress={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();

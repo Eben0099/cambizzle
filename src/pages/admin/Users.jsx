@@ -371,10 +371,9 @@ const Users = () => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              placeholder={t('admin.users.search')}
-              className="pl-10 h-10 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 h-10 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -712,7 +711,6 @@ const Users = () => {
             <Label htmlFor="verifyNotes" className="text-sm font-medium text-gray-700">{t('admin.users.notesOptional')}</Label>
             <Textarea
               id="verifyNotes"
-              placeholder={t('admin.users.verificationReason')}
               value={verifyNotes}
               onChange={(e) => setVerifyNotes(e.target.value)}
               className="h-20 text-sm rounded-lg"
@@ -755,7 +753,6 @@ const Users = () => {
             </Label>
             <Input
               id="suspendReason"
-              placeholder={t('admin.users.reasonRequired')}
               value={suspendReason}
               onChange={(e) => setSuspendReason(e.target.value)}
               className="h-10 text-sm rounded-lg"
@@ -766,7 +763,6 @@ const Users = () => {
             </Label>
             <Textarea
               id="suspendNotes"
-              placeholder={t('admin.users.additionalNotes')}
               value={suspendNotes}
               onChange={(e) => setSuspendNotes(e.target.value)}
               className="h-20 text-sm rounded-lg"
@@ -809,7 +805,6 @@ const Users = () => {
             </Label>
             <Textarea
               id="unsuspendNotes"
-              placeholder={t('admin.users.reactivationReason')}
               value={unsuspendNotes}
               onChange={(e) => setUnsuspendNotes(e.target.value)}
               className="h-20 text-sm rounded-lg"

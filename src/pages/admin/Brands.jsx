@@ -258,7 +258,6 @@ const Brands = () => {
             {/* Search */}
             <div className="relative w-full sm:w-auto">
               <Input
-                placeholder={t('admin.brands.search')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10 h-9 w-full sm:w-64 text-sm rounded-lg border-gray-200 focus:ring-[#D6BA69]"
@@ -401,7 +400,6 @@ const Brands = () => {
                   id="brandDescription"
                   value={form.description}
                   onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-                  placeholder={t('admin.brands.descriptionPlaceholder')}
                   className="mt-1"
                 />
               </div>
@@ -420,7 +418,6 @@ const Brands = () => {
                   id="name"
                   value={form.name}
                   onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                  placeholder={t('admin.brands.brandNamePlaceholder')}
                   className="mt-1"
                   required
                 />

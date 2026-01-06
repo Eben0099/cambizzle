@@ -104,9 +104,7 @@ const AdDetail = () => {
   const { translatedText: translatedDescription } = useWeglotTranslate(ad?.description || '');
   const { translatedText: translatedCategory } = useWeglotTranslate(ad?.categoryName || '');
   const { translatedText: translatedSubcategory } = useWeglotTranslate(ad?.subcategoryName || '');
-  const { translatedText: translatedLocation } = useWeglotTranslate(
-    ad?.locationName && ad?.locationType ? `${ad.locationName}, ${ad.locationType}` : ''
-  );
+  const translatedLocation = useWeglotTranslate(ad?.locationName || '');
   const { translatedText: translatedBrand } = useWeglotTranslate(ad?.brandName || '');
 
   // Charger les annonces similaires et le summary des feedbacks quand l'annonce est chargée
@@ -386,7 +384,7 @@ const AdDetail = () => {
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] sm:text-sm text-gray-500">
                     <div className="flex items-center">
                       <MapPin className="w-3.5 h-3.5 mr-1 text-gray-400" />
-                      <span>{translatedLocation || `${ad.locationName}, ${ad.locationType}`}</span>
+                      <span>{translatedLocation?.translatedText || ad.locationName}</span>
                     </div>
                     <div className="flex items-center">
                       <Calendar className="w-3.5 h-3.5 mr-1 text-gray-400" />

@@ -77,25 +77,25 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         const data = await response.json();
 
         if (data.success || data.token) {
-           // Store auth data
-           storageService.setAuth(data.token, data.user);
+          // Store auth data
+          storageService.setAuth(data.token, data.user);
 
-           // Update auth context with user data
-           updateUser(data.user);
+          // Update auth context with user data
+          updateUser(data.user);
 
-           // Show success toast
-           showToast({
-             type: 'success',
-             title: t('toast.welcome'),
-             message: t('toast.loginSuccess')
-           });
+          // Show success toast
+          showToast({
+            type: 'success',
+            title: t('toast.welcome'),
+            message: t('toast.loginSuccess')
+          });
 
-           // Close modal after a short delay
-           setTimeout(() => {
-             handleClose();
-             // Refresh auth state without full page reload
-             window.location.reload();
-           }, 500);
+          // Close modal after a short delay
+          setTimeout(() => {
+            handleClose();
+            // Refresh auth state without full page reload
+            window.location.reload();
+          }, 500);
         } else {
           setErrors({ submit: data.message || t('auth.googleLoginFailed') });
           showToast({
@@ -344,14 +344,14 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
     if (!formData.firstName.trim()) newErrors.firstName = t('auth.firstNameRequired');
     if (!formData.lastName.trim()) newErrors.lastName = t('auth.lastNameRequired');
     // Email is optional on registration — do not require it here
-  if (!formData.phone.trim()) newErrors.phone = t('auth.phoneRequired');
-  else if (!isValidPhoneNumber(formData.phone)) newErrors.phone = t('auth.invalidPhone');
+    if (!formData.phone.trim()) newErrors.phone = t('auth.phoneRequired');
+    else if (!isValidPhoneNumber(formData.phone)) newErrors.phone = t('auth.invalidPhone');
     if (!formData.password) newErrors.password = t('auth.passwordRequired');
     if (formData.password.length < 6) newErrors.password = t('auth.passwordMin6');
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = t('auth.passwordsDontMatch');
     if (!formData.acceptTerms) newErrors.acceptTerms = t('auth.acceptTermsRequired');
     if (!formData.referralCode) delete formData.referralCode;
-    
+
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -467,7 +467,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
 
   const handleSellerInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
+
     if (name.includes('.')) {
       const [parent, child] = name.split('.');
       setSellerData(prev => ({
@@ -483,7 +483,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         [name]: type === 'checkbox' ? checked : value
       }));
     }
-    
+
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -494,7 +494,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
       ...prev,
       businessPhone: value
     }));
-    
+
     if (errors.businessPhone) {
       setErrors(prev => ({ ...prev, businessPhone: '' }));
     }
@@ -635,10 +635,10 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
             className="w-full flex items-center justify-center px-4 py-3 sm:py-4 border border-gray-300 rounded-lg shadow-sm bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#D6BA69] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base cursor-pointer"
           >
             <svg className="w-5 h-5 mr-3 flex-shrink-0" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
             </svg>
             <span className="truncate">{t('auth.continueWithGoogle')}</span>
           </button>
@@ -658,7 +658,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
           <button
             onClick={() => setStep('form')}
             disabled={isLoading}
-            className="w-full flex items-center justify-center px-4 py-3 sm:py-4 border border-gray-300 rounded-lg shadow-sm bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#D6BA69] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base cursor-pointer"
+            className="w-full flex items-center justify-center px-4 py-3 sm:py-4 border border-[#D6BA69] rounded-lg shadow-sm bg-[#D6BA69] text-black hover:bg-[#D6BA69]/90 focus:outline-none focus:ring-2 focus:ring-[#D6BA69] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base font-semibold cursor-pointer"
           >
             <Mail className="w-5 h-5 mr-3 flex-shrink-0" />
             <span className="truncate">{t('auth.continueWithEmailOrPhone')}</span>
@@ -1084,7 +1084,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
               <Globe className="w-5 h-5 text-[#D6BA69]" />
               <h3 className="text-lg font-medium text-gray-900">Online Presence</h3>
             </div>
-            
+
             <div className="space-y-4">
               <Input
                 label="Website"
@@ -1145,7 +1145,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
               <Clock className="w-5 h-5 text-[#D6BA69]" />
               <h3 className="text-lg font-medium text-gray-900">Opening Hours</h3>
             </div>
-            
+
             <div className="space-y-3 sm:space-y-4">
               {weekOrder.map(day => {
                 const hours = sellerData.openingHours[day];
@@ -1153,40 +1153,40 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                   <div key={day} className="space-y-2 sm:space-y-0 sm:flex sm:items-center sm:space-x-4">
                     <div className="w-full sm:w-24 text-sm font-medium text-gray-700 capitalize">
                       {day === 'monday' ? 'Monday' :
-                       day === 'tuesday' ? 'Tuesday' :
-                       day === 'wednesday' ? 'Wednesday' :
-                       day === 'thursday' ? 'Thursday' :
-                       day === 'friday' ? 'Friday' :
-                       day === 'saturday' ? 'Saturday' : 'Sunday'}
+                        day === 'tuesday' ? 'Tuesday' :
+                          day === 'wednesday' ? 'Wednesday' :
+                            day === 'thursday' ? 'Thursday' :
+                              day === 'friday' ? 'Friday' :
+                                day === 'saturday' ? 'Saturday' : 'Sunday'}
                     </div>
-                  <div className="flex items-center space-x-2 sm:space-x-3 flex-1">
-                    <input
-                      type="checkbox"
-                      checked={!hours.closed}
-                      onChange={(e) => handleOpeningHoursChange(day, 'closed', !e.target.checked)}
-                      className="h-4 w-4 text-[#D6BA69] focus:ring-[#D6BA69] border-gray-300 rounded flex-shrink-0"
-                    />
-                    {!hours.closed ? (
-                      <div className="flex items-center space-x-2 flex-1">
-                        <input
-                          type="time"
-                          value={hours.open}
-                          onChange={(e) => handleOpeningHoursChange(day, 'open', e.target.value)}
-                          className="px-2 py-1 border border-gray-300 rounded text-sm flex-1 sm:flex-initial sm:w-20"
-                        />
-                        <span className="text-gray-500 text-sm">-</span>
-                        <input
-                          type="time"
-                          value={hours.close}
-                          onChange={(e) => handleOpeningHoursChange(day, 'close', e.target.value)}
-                          className="px-2 py-1 border border-gray-300 rounded text-sm flex-1 sm:flex-initial sm:w-20"
-                        />
-                      </div>
-                    ) : (
-                      <span className="text-gray-500 text-sm">Closed</span>
-                    )}
+                    <div className="flex items-center space-x-2 sm:space-x-3 flex-1">
+                      <input
+                        type="checkbox"
+                        checked={!hours.closed}
+                        onChange={(e) => handleOpeningHoursChange(day, 'closed', !e.target.checked)}
+                        className="h-4 w-4 text-[#D6BA69] focus:ring-[#D6BA69] border-gray-300 rounded flex-shrink-0"
+                      />
+                      {!hours.closed ? (
+                        <div className="flex items-center space-x-2 flex-1">
+                          <input
+                            type="time"
+                            value={hours.open}
+                            onChange={(e) => handleOpeningHoursChange(day, 'open', e.target.value)}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm flex-1 sm:flex-initial sm:w-20"
+                          />
+                          <span className="text-gray-500 text-sm">-</span>
+                          <input
+                            type="time"
+                            value={hours.close}
+                            onChange={(e) => handleOpeningHoursChange(day, 'close', e.target.value)}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm flex-1 sm:flex-initial sm:w-20"
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-gray-500 text-sm">Closed</span>
+                      )}
+                    </div>
                   </div>
-                </div>
                 );
               })}
             </div>

@@ -34,20 +34,20 @@ const ImageCarousel = ({ images }) => {
             alt={`Image ${currentIndex + 1}`}
             className="w-full h-full object-cover"
           />
-          
+
           {/* Navigation arrows */}
           {images.length > 1 && (
             <>
               <button
                 onClick={prevImage}
-                className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70 cursor-pointer"
+                className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 text-white p-2 rounded-full opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 cursor-pointer z-10"
                 aria-label="Previous image"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <button
                 onClick={nextImage}
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70 cursor-pointer"
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 text-white p-2 rounded-full opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 cursor-pointer z-10"
                 aria-label="Next image"
               >
                 <ChevronRight className="w-5 h-5" />
@@ -58,7 +58,7 @@ const ImageCarousel = ({ images }) => {
           {/* Fullscreen button */}
           <button
             onClick={() => setIsFullscreen(true)}
-            className="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70 cursor-pointer"
+            className="absolute top-4 right-4 bg-black/60 text-white p-2 rounded-full opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 cursor-pointer z-10"
             aria-label="View in fullscreen"
           >
             <Expand className="w-5 h-5" />
@@ -79,11 +79,10 @@ const ImageCarousel = ({ images }) => {
               <button
                 key={index}
                 onClick={() => goToImage(index)}
-                className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
-                  index === currentIndex
+                className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${index === currentIndex
                     ? 'border-[#d6ba69] opacity-100'
                     : 'border-gray-200 opacity-60 hover:opacity-80'
-                }`}
+                  }`}
                 aria-label={`Select image ${index + 1}`}
               >
                 <img
@@ -108,23 +107,23 @@ const ImageCarousel = ({ images }) => {
             />
             <button
               onClick={() => setIsFullscreen(false)}
-              className="absolute top-4 right-4 text-[#D6BA69] hover:text-[#C5A952] text-2xl cursor-pointer"
+              className="absolute top-4 right-4 bg-black/60 text-[#D6BA69] hover:text-[#C5A952] p-2 rounded-full transition-colors cursor-pointer z-20"
               aria-label="Close fullscreen"
             >
-              ×
+              <span className="text-2xl leading-none">×</span>
             </button>
             {images.length > 1 && (
               <>
                 <button
                   onClick={prevImage}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D6BA69] hover:text-[#C5A952] p-2 cursor-pointer"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/60 text-[#D6BA69] hover:text-[#C5A952] p-3 rounded-full transition-colors cursor-pointer z-20"
                   aria-label="Previous image"
                 >
                   <ChevronLeft className="w-8 h-8" />
                 </button>
                 <button
                   onClick={nextImage}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#D6BA69] hover:text-[#C5A952] p-2 cursor-pointer"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/60 text-[#D6BA69] hover:text-[#C5A952] p-3 rounded-full transition-colors cursor-pointer z-20"
                   aria-label="Next image"
                 >
                   <ChevronRight className="w-8 h-8" />

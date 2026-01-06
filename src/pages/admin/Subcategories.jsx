@@ -144,7 +144,7 @@ const Subcategories = () => {
       const form = new FormData();
       form.append('category_id', formData.category_id);
       form.append('name', formData.name);
-  // slug supprimé, généré côté backend
+      // slug supprimé, généré côté backend
       form.append('is_active', formData.is_active ? '1' : '0');
       form.append('display_order', formData.display_order);
       if (iconFile) form.append('icon', iconFile);
@@ -198,7 +198,7 @@ const Subcategories = () => {
       const form = new FormData();
       form.append('category_id', formData.category_id);
       form.append('name', formData.name);
-  // slug supprimé, généré côté backend
+      // slug supprimé, généré côté backend
       form.append('is_active', formData.is_active ? '1' : '0');
       form.append('display_order', formData.display_order);
       if (iconFile) form.append('icon', iconFile);
@@ -624,7 +624,6 @@ const Subcategories = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                placeholder={t('admin.subcategories.egCars')}
                 required
                 className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
               />
@@ -678,7 +677,6 @@ const Subcategories = () => {
                 onChange={handleInputChange}
                 min="1"
                 className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
-                placeholder="1"
               />
               <p className="text-xs text-gray-500 mt-1">{t('admin.subcategories.displayOrderHint')}</p>
             </div>
@@ -765,7 +763,6 @@ const Subcategories = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                placeholder={t('admin.subcategories.egCars')}
                 required
                 className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
               />
@@ -801,7 +798,6 @@ const Subcategories = () => {
                 onChange={handleInputChange}
                 min="1"
                 className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
-                placeholder="1"
               />
               <p className="text-xs text-gray-500 mt-1">{t('admin.subcategories.displayOrderHint')}</p>
             </div>

@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/badge";
 import {
   Table,
@@ -23,7 +23,7 @@ import {
 import { Textarea } from "../../components/ui/textarea";
 import { AlertTriangle, Search, Download, RefreshCw, Phone } from "lucide-react";
 import { exportToExcel } from "../../utils/exportToExcel";
-import Input from "../../components/ui/input";
+import Input from "../../components/ui/Input";
 import { useToast } from "../../components/toast/useToast";
 import { API_BASE_URL } from "../../config/api";
 import storageService from "../../services/storageService";
@@ -321,7 +321,6 @@ const Reports = () => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder={t('admin.reports.searchPlaceholder')}
               className="pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -453,7 +452,6 @@ const Reports = () => {
               </label>
               <Textarea
                 id="admin-notes"
-                placeholder={t('admin.reports.adminNotesPlaceholder')}
                 value={adminNotes}
                 onChange={(e) => setAdminNotes(e.target.value)}
                 className="min-h-[100px]"
@@ -497,7 +495,6 @@ const Reports = () => {
               </label>
               <Textarea
                 id="whatsapp-message"
-                placeholder={t('admin.reports.messagePlaceholder')}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 className="min-h-[100px]"

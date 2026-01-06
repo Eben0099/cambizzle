@@ -6,10 +6,10 @@ import Input from "../../components/ui/Input";
 import Pagination from "../../components/ui/Pagination";
 import { useToast } from "../../components/toast/useToast";
 import {
-  Search, 
-  Calendar, 
-  User, 
-  FileText, 
+  Search,
+  Calendar,
+  User,
+  FileText,
   Shield,
   CheckCircle,
   XCircle,
@@ -32,7 +32,7 @@ const ModerationLogs = () => {
   const [filterAction, setFilterAction] = useState("");
   const [filterTarget, setFilterTarget] = useState("");
   const [error, setError] = useState(null);
-  
+
   const logsPerPage = 20;
 
   useEffect(() => {
@@ -102,14 +102,14 @@ const ModerationLogs = () => {
   };
 
   const filteredLogs = logs.filter(log => {
-    const matchesSearch = searchTerm === "" || 
+    const matchesSearch = searchTerm === "" ||
       log.reason?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.notes?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       getActionLabel(log.actionType).toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesAction = filterAction === "" || log.actionType === filterAction;
     const matchesTarget = filterTarget === "" || log.targetType === filterTarget;
-    
+
     return matchesSearch && matchesAction && matchesTarget;
   });
 
@@ -181,7 +181,6 @@ const ModerationLogs = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder={t('admin.moderationLogs.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"

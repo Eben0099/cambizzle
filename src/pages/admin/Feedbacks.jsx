@@ -70,13 +70,13 @@ export default function Feedbacks() {
     }
 
     if (filters.ad_title) {
-      filtered = filtered.filter(fb => 
+      filtered = filtered.filter(fb =>
         fb.adTitle?.toLowerCase().includes(filters.ad_title.toLowerCase())
       );
     }
 
     if (filters.author_name) {
-      filtered = filtered.filter(fb => 
+      filtered = filtered.filter(fb =>
         (fb.authorName ?? fb.authorUserId)?.toString().toLowerCase().includes(filters.author_name.toLowerCase())
       );
     }
@@ -133,7 +133,6 @@ export default function Feedbacks() {
         <input
           type="text"
           name="ad_title"
-          placeholder={t('admin.feedbacks.searchByAdTitle')}
           value={filters.ad_title}
           onChange={handleFilterChange}
           className="px-3 py-2 border rounded"
@@ -143,7 +142,6 @@ export default function Feedbacks() {
         <input
           type="text"
           name="author_name"
-          placeholder={t('admin.feedbacks.searchByAuthorName')}
           value={filters.author_name}
           onChange={handleFilterChange}
           className="px-3 py-2 border rounded"
@@ -153,7 +151,7 @@ export default function Feedbacks() {
 
       {loading && <Loader text={t('admin.feedbacks.loading')} />}
       {error && <p className="text-red-600 text-center">{error}</p>}
-      
+
       <div className="bg-white rounded-lg shadow overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -176,15 +174,14 @@ export default function Feedbacks() {
                 <td className="py-2 px-3">{fb.content}</td>
                 <td className="py-2 px-3">
                   <span
-                    className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-                      fb.status === "approved"
+                    className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${fb.status === "approved"
                         ? "bg-green-100 text-green-800"
                         : fb.status === "pending"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : fb.status === "rejected"
-                        ? "bg-red-100 text-red-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
+                          ? "bg-yellow-100 text-yellow-800"
+                          : fb.status === "rejected"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-gray-100 text-gray-800"
+                      }`}
                   >
                     {fb.status}
                   </span>

@@ -113,7 +113,7 @@ const Categories = () => {
       setSubmitting(true);
       const form = new FormData();
       form.append('name', formData.name);
-  // slug supprimé, généré côté backend
+      // slug supprimé, généré côté backend
       form.append('is_active', formData.is_active ? '1' : '0');
       form.append('display_order', formData.display_order);
       if (iconFile) form.append('icon', iconFile);
@@ -212,13 +212,13 @@ const Categories = () => {
         showToast({ type: 'success', message: t('admin.categories.categoryDeleted') });
       } else {
         if (response.status === 422) {
-          showToast({ 
-            type: 'error', 
+          showToast({
+            type: 'error',
             message: t('admin.categories.cannotDeleteNonEmpty')
           });
           setTimeout(() => {
-            showToast({ 
-              type: 'info', 
+            showToast({
+              type: 'info',
               message: t('admin.categories.deleteSubcategoriesAndAdsFirst')
             });
           }, 500);
@@ -230,13 +230,13 @@ const Categories = () => {
       }
     } catch (err) {
       if (err.response?.status === 422) {
-        showToast({ 
-          type: 'error', 
+        showToast({
+          type: 'error',
           message: t('admin.categories.cannotDeleteNonEmpty')
         });
         setTimeout(() => {
-          showToast({ 
-            type: 'info', 
+          showToast({
+            type: 'info',
             message: t('admin.categories.deleteSubcategoriesAndAdsFirst')
           });
         }, 500);
@@ -446,7 +446,6 @@ const Categories = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                placeholder="e.g. Electronics"
                 required
                 className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
               />
@@ -505,7 +504,6 @@ const Categories = () => {
                 value={formData.display_order}
                 onChange={handleInputChange}
                 min="1"
-                placeholder="1"
                 className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
               />
               <p className="text-xs text-gray-500 mt-1">

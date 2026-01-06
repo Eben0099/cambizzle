@@ -618,7 +618,6 @@ const Ads = () => {
             <Label htmlFor="approveNotes" className="text-sm font-medium text-gray-700">{t('admin.ads.notesOptional')}</Label>
             <Textarea
               id="approveNotes"
-              placeholder={t('admin.ads.approvalNotes')}
               value={approveNotes}
               onChange={(e) => setApproveNotes(e.target.value)}
               className="h-20 text-sm rounded-lg"
@@ -693,7 +692,6 @@ const Ads = () => {
               <Label htmlFor="rejectNotes" className="text-sm font-medium text-gray-700">{t('admin.ads.notesOptional')}</Label>
               <Textarea
                 id="rejectNotes"
-                placeholder={t('admin.ads.additionalDetails')}
                 value={rejectNotes}
                 onChange={(e) => setRejectNotes(e.target.value)}
                 className="h-20 text-sm rounded-lg"

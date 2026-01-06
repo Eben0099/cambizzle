@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Filter, Grid, List, SlidersHorizontal, MapPin, DollarSign } from 'lucide-react';
+import { Filter, Grid, List, SlidersHorizontal, MapPin, DollarSign, ArrowLeft } from 'lucide-react';
 import { useWeglotTranslate } from '../hooks/useWeglotRetranslate';
 import { useAds } from '../contexts/AdsContext';
 import { adsService } from '../services/adsService';
@@ -213,7 +213,7 @@ const Search = () => {
 
     setCategoryAds(null);
     setSubcategoryAds(null);
-    
+
     const generalFilters = {
       subcategory: subcategoryParam,
       priceMin: searchParams.get('priceMin'),
@@ -310,9 +310,9 @@ const Search = () => {
   // Frontend sorting function (new API format)
   const sortAds = (adsArray, sortBy) => {
     if (!adsArray || adsArray.length === 0) return adsArray;
-    
+
     const sortedAds = [...adsArray];
-    
+
     switch (sortBy) {
       case 'price-asc':
         return sortedAds.sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
@@ -329,7 +329,7 @@ const Search = () => {
   // INDEPENDENT DATA MANAGEMENT
   const categoryParam = searchParams.get('category');
   const subcategoryParam = searchParams.get('subcategory');
-  
+
   let rawAds, displayInfo, currentLoading;
 
   if (subcategoryParam && subcategoryAds) {
@@ -386,9 +386,9 @@ const Search = () => {
   // Fonction de filtrage par mots-clés (frontend)
   const filterByKeywords = (adsArray) => {
     if (!keywordFilter.trim()) return adsArray;
-    
+
     const keywords = keywordFilter.toLowerCase().trim().split(/\s+/);
-    
+
     return adsArray.filter(ad => {
       const searchableText = [
         ad.title,
@@ -398,7 +398,7 @@ const Search = () => {
         ad.location,
         ad.brand?.name
       ].filter(Boolean).join(' ').toLowerCase();
-      
+
       return keywords.every(keyword => searchableText.includes(keyword));
     });
   };
@@ -406,12 +406,12 @@ const Search = () => {
   // Fonction de filtrage frontend supplémentaire (Location, Price)
   const filterAdsFrontend = (adsArray) => {
     let result = adsArray;
-    
+
     // Filter by Location
     if (localFilters.location && localFilters.location !== 'all') {
       result = result.filter(ad => ad.locationName === localFilters.location);
     }
-    
+
     // Filter by Price
     if (localFilters.priceMin) {
       result = result.filter(ad => parseFloat(ad.price) >= parseFloat(localFilters.priceMin));
@@ -419,7 +419,7 @@ const Search = () => {
     if (localFilters.priceMax) {
       result = result.filter(ad => parseFloat(ad.price) <= parseFloat(localFilters.priceMax));
     }
-    
+
     return result;
   };
 
@@ -428,11 +428,11 @@ const Search = () => {
   const displayedAds = sortAds(frontendFilteredAds, sortBy);
   const hasActiveFilters = Object.values(localFilters).some(value => value !== '');
 
-  const searchTitle = query ? `Search results for "${query}"` : 
-                      subcategoryParam ? `${subcategoryParam} ads` :
-                      categoryParam ? `${categoryParam} ads` :
-                      'All ads';
-  
+  const searchTitle = query ? `Search results for "${query}"` :
+    subcategoryParam ? `${subcategoryParam} ads` :
+      categoryParam ? `${categoryParam} ads` :
+        'All ads';
+
   const searchDescription = `Browse ${displayedAds.length} classified ads in Cameroon. ${query ? `Find ${query}` : 'Buy and sell items'} on Cambizzle.`;
 
   return (
@@ -447,6 +447,13 @@ const Search = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center text-gray-600 hover:text-[#D6BA69] transition-colors mb-4 group"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium">{t('common.back')}</span>
+          </button>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             <TranslatedTitle title={displayInfo.title} />
           </h1>

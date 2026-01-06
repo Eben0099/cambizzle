@@ -59,9 +59,8 @@ export default function Payments() {
       if (statsStart) params.append("start_date", statsStart);
       if (statsEnd) params.append("end_date", statsEnd);
 
-      const url = `${API_BASE_URL}/admin/reporting/payments-stats${
-        params.toString() ? `?${params}` : ""
-      }`;
+      const url = `${API_BASE_URL}/admin/reporting/payments-stats${params.toString() ? `?${params}` : ""
+        }`;
 
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -170,29 +169,27 @@ export default function Payments() {
         <Button
           type="button"
           onClick={() => setActiveTab("overview")}
-          className={`pb-2 px-1 font-medium transition-colors ${
-            activeTab === "overview"
+          className={`pb-2 px-1 font-medium transition-colors ${activeTab === "overview"
               ? "border-b-2 border-[#D6BA69] text-[#D6BA69]"
               : "text-gray-500"
-          }`}
+            }`}
         >
           {t('admin.payments.overview')}
         </Button>
         <Button
           type="button"
           onClick={() => setActiveTab("transactions")}
-          className={`pb-2 px-1 font-medium transition-colors ${
-            activeTab === "transactions"
+          className={`pb-2 px-1 font-medium transition-colors ${activeTab === "transactions"
               ? "border-b-2 border-[#D6BA69] text-[#D6BA69]"
               : "text-gray-500"
-          }`}
+            }`}
         >
           {t('admin.payments.transactions')}
         </Button>
       </div>
 
       {/* Global loading / error */}
-  {loading && <Loader text={t('common.loading')} />}
+      {loading && <Loader text={t('common.loading')} />}
       {error && <p className="text-red-600 text-center">{error}</p>}
 
       {/* ==================== OVERVIEW TAB ==================== */}
@@ -205,14 +202,12 @@ export default function Payments() {
               value={statsStart}
               onChange={(e) => setStatsStart(e.target.value)}
               className="border rounded px-3 py-1"
-              placeholder="Start Date"
             />
             <input
               type="date"
               value={statsEnd}
               onChange={(e) => setStatsEnd(e.target.value)}
               className="border rounded px-3 py-1"
-              placeholder="End Date"
             />
             <Button
               type="submit"
@@ -370,15 +365,14 @@ export default function Payments() {
                       <td className="py-1">{tx.amount} FCFA</td>
                       <td className="py-1">
                         <span
-                          className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-                            tx.status === "paid"
+                          className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${tx.status === "paid"
                               ? "bg-green-100 text-green-800"
                               : tx.status === "pending"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : tx.status === "failed"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
+                                ? "bg-yellow-100 text-yellow-800"
+                                : tx.status === "failed"
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-gray-100 text-gray-800"
+                            }`}
                         >
                           {tx.status}
                         </span>
@@ -418,7 +412,6 @@ export default function Payments() {
             <input
               type="text"
               name="method"
-              placeholder={t('admin.payments.paymentMethod')}
               value={txFilters.method}
               onChange={changeTxFilter}
               className="border rounded px-3 py-1"
@@ -496,15 +489,14 @@ export default function Payments() {
                       <td className="py-2 px-3">{tx.paymentMethod ?? tx.payment_method ?? "-"}</td>
                       <td className="py-2 px-3">
                         <span
-                          className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-                            tx.status === "paid"
+                          className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${tx.status === "paid"
                               ? "bg-green-100 text-green-800"
                               : tx.status === "pending"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : tx.status === "failed"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
+                                ? "bg-yellow-100 text-yellow-800"
+                                : tx.status === "failed"
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-gray-100 text-gray-800"
+                            }`}
                         >
                           {tx.status}
                         </span>

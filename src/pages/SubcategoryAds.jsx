@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Grid, List, SlidersHorizontal } from 'lucide-react';
+import { Grid, List, SlidersHorizontal, ArrowLeft } from 'lucide-react';
 import AdCard from '../components/ads/AdCard';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
@@ -20,6 +20,7 @@ const TranslatedTitle = ({ title }) => {
 };
 
 const SubcategoryAds = () => {
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedFilters, setSelectedFilters] = useState({});
@@ -243,6 +244,13 @@ const SubcategoryAds = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-6">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center text-gray-600 hover:text-[#D6BA69] transition-colors mb-4 group"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium">{t('common.back')}</span>
+          </button>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             <TranslatedTitle title={displayInfo.title} />
           </h1>
@@ -364,11 +372,10 @@ const SubcategoryAds = () => {
               </Card>
             ) : displayedAds.length > 0 ? (
               <>
-                <div className={`grid gap-6 ${
-                  viewMode === 'grid'
+                <div className={`grid gap-6 ${viewMode === 'grid'
                     ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
                     : 'grid-cols-1'
-                }`}>
+                  }`}>
                   {displayedAds.map((ad) => (
                     <AdCard key={ad.id} ad={ad} />
                   ))}

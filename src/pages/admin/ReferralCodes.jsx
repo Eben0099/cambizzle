@@ -170,7 +170,6 @@ const ReferralCodes = () => {
           <div className="relative">
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              placeholder={t('admin.referralCodes.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -185,7 +184,7 @@ const ReferralCodes = () => {
           <Card key={code.id} className="bg-white border border-gray-200 hover:shadow-md transition-shadow">
             <CardContent className="p-0">
               {/* Main Code Info */}
-              <div 
+              <div
                 className="p-4 cursor-pointer hover:bg-gray-50"
                 onClick={() => toggleExpand(code.id)}
               >
@@ -219,7 +218,7 @@ const ReferralCodes = () => {
                         <div className="text-2xl font-bold text-[#D6BA69]">{code.currentUses}</div>
                         <div className="text-xs text-gray-600">{t('admin.referralCodes.uses')}</div>
                       </div>
-                      
+
                       <Badge
                         className={
                           code.isActive === "1"
@@ -256,8 +255,8 @@ const ReferralCodes = () => {
                   </h4>
                   <div className="space-y-2">
                     {code.filleuls.map((filleul) => (
-                      <div 
-                        key={filleul.idUser} 
+                      <div
+                        key={filleul.idUser}
                         className="bg-white p-3 rounded-lg border border-gray-200 flex items-center justify-between"
                       >
                         <div className="flex items-center gap-3">

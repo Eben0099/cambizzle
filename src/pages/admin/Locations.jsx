@@ -54,6 +54,8 @@ const Locations = () => {
   const [newRegion, setNewRegion] = useState("");
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [newCity, setNewCity] = useState("");
+  const [isAddRegionOpen, setIsAddRegionOpen] = useState(false);
+  const [isAddCityOpen, setIsAddCityOpen] = useState(false);
 
   // ---- CRUD FUNCTIONS ----
   const handleAddRegion = () => {
@@ -69,6 +71,7 @@ const Locations = () => {
     };
     setLocations([...locations, newLoc]);
     setNewRegion("");
+    setIsAddRegionOpen(false);
     showToast({ type: 'success', message: `${newLoc.region} ${t('admin.locations.regionCreated')}` });
   };
 
@@ -89,6 +92,7 @@ const Locations = () => {
     );
     setLocations(updated);
     setNewCity("");
+    setIsAddCityOpen(false);
     showToast({ type: 'success', message: `${newCity} ${t('admin.locations.cityAddedTo')} ${selectedRegion.region}.` });
   };
 
@@ -142,7 +146,7 @@ const Locations = () => {
             <Download className="h-4 w-4" />
             {t('admin.locations.export')}
           </Button>
-          <Dialog>
+          <Dialog open={isAddRegionOpen} onOpenChange={setIsAddRegionOpen}>
             <DialogTrigger asChild>
               <Button
                 className="bg-[#D6BA69] text-white hover:bg-[#c3a55d] transition-colors"
@@ -151,29 +155,28 @@ const Locations = () => {
                 {t('admin.locations.newRegion')}
               </Button>
             </DialogTrigger>
-          <DialogContent className="max-w-md bg-white rounded-xl p-6">
-            <DialogHeader>
-              <DialogTitle className="text-lg font-semibold">{t('admin.locations.addNewRegion')}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label htmlFor="regionname">{t('admin.locations.regionName')}</Label>
-                <Input
-                  id="regionname"
-                  placeholder={t('admin.locations.regionPlaceholder')}
-                  value={newRegion}
-                  onChange={(e) => setNewRegion(e.target.value)}
-                />
+            <DialogContent className="max-w-md bg-white rounded-xl p-6">
+              <DialogHeader>
+                <DialogTitle className="text-lg font-semibold">{t('admin.locations.addNewRegion')}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="regionname">{t('admin.locations.regionName')}</Label>
+                  <Input
+                    id="regionname"
+                    value={newRegion}
+                    onChange={(e) => setNewRegion(e.target.value)}
+                  />
+                </div>
+                <Button
+                  className="w-full bg-[#D6BA69] text-white hover:bg-[#c3a55d] transition"
+                  onClick={handleAddRegion}
+                >
+                  {t('admin.locations.addRegion')}
+                </Button>
               </div>
-              <Button
-                className="w-full bg-[#D6BA69] text-white hover:bg-[#c3a55d] transition"
-                onClick={handleAddRegion}
-              >
-                {t('admin.locations.addRegion')}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -186,7 +189,6 @@ const Locations = () => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder={t('admin.locations.searchPlaceholder')}
               className="pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -211,7 +213,7 @@ const Locations = () => {
                 </div>
               </div>
               <div className="flex gap-2 mt-3 md:mt-0">
-                <Dialog>
+                <Dialog open={isAddCityOpen} onOpenChange={setIsAddCityOpen}>
                   <DialogTrigger asChild>
                     <Button
                       size="sm"
@@ -232,7 +234,6 @@ const Locations = () => {
                         <Label htmlFor="cityname">{t('admin.locations.cityName')}</Label>
                         <Input
                           id="cityname"
-                          placeholder={t('admin.locations.cityPlaceholder')}
                           value={newCity}
                           onChange={(e) => setNewCity(e.target.value)}
                         />
