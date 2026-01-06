@@ -997,8 +997,7 @@ const CreateAd = () => {
                 {/* Dynamic Filters */}
                 {subcategoryFields.filters && subcategoryFields.filters.length > 0 && (
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-gray-900">{t('createAd.technicalCharacteristics')}</h3>
-                    {fieldsLoading ? (
+                     {fieldsLoading ? (
                       <div className="flex items-center justify-center py-8">
                         <Loader2 className="w-6 h-6 animate-spin mr-2" />
                         {t('createAd.loadingFilters')}

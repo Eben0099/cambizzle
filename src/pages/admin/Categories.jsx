@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { SERVER_BASE_URL } from "../../config/api";
 import { API_BASE_URL } from "../../config/api";
 import { Card } from "@/components/ui/card";
+import Pagination from "../../components/ui/Pagination";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -211,7 +212,16 @@ const Categories = () => {
         showToast({ type: 'success', message: t('admin.categories.categoryDeleted') });
       } else {
         if (response.status === 422) {
-          showToast({ type: 'error', message: t('admin.categories.cannotDeleteNonEmpty') });
+          showToast({ 
+            type: 'error', 
+            message: t('admin.categories.cannotDeleteNonEmpty')
+          });
+          setTimeout(() => {
+            showToast({ 
+              type: 'info', 
+              message: t('admin.categories.deleteSubcategoriesAndAdsFirst')
+            });
+          }, 500);
           setShowDeleteDialog(false);
           setSelectedCategory(null);
         } else {
@@ -220,7 +230,16 @@ const Categories = () => {
       }
     } catch (err) {
       if (err.response?.status === 422) {
-        showToast({ type: 'error', message: t('admin.categories.cannotDeleteNonEmpty') });
+        showToast({ 
+          type: 'error', 
+          message: t('admin.categories.cannotDeleteNonEmpty')
+        });
+        setTimeout(() => {
+          showToast({ 
+            type: 'info', 
+            message: t('admin.categories.deleteSubcategoriesAndAdsFirst')
+          });
+        }, 500);
         setShowDeleteDialog(false);
         setSelectedCategory(null);
       } else {
@@ -294,9 +313,6 @@ const Categories = () => {
             <TableHeader>
               <TableRow className="bg-gray-50 hover:bg-gray-50">
                 <TableHead className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">
-                  {t('admin.categories.order')}
-                </TableHead>
-                <TableHead className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">
                   {t('admin.categories.name')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">
@@ -317,7 +333,7 @@ const Categories = () => {
               {paginatedCategories.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={5}
                     className="py-8 text-center text-gray-500"
                   >
                     <AlertCircle className="h-10 w-10 mx-auto mb-3 text-gray-400" />
@@ -333,11 +349,6 @@ const Categories = () => {
                     key={category.id}
                     className="hover:bg-gray-50 transition-colors"
                   >
-                    <TableCell className="px-4 py-3">
-                      <Badge className="bg-gray-100 text-gray-800 text-xs">
-                        {category.displayOrder}
-                      </Badge>
-                    </TableCell>
                     <TableCell className="px-4 py-3 text-sm font-medium text-gray-900">
                       {category.name}
                     </TableCell>
@@ -406,29 +417,13 @@ const Categories = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex justify-center mt-6">
-            <div className="flex items-center gap-2 bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-2">
-              <Button
-                size="sm"
-                className="h-8 w-8 p-0 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-full"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1 || submitting}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="text-xs text-gray-600">
-                {t('admin.categories.page')} {currentPage} / {totalPages}
-              </span>
-              <Button
-                size="sm"
-                className="h-8 w-8 p-0 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-full"
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage >= totalPages || submitting}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            hasNext={currentPage < totalPages}
+            hasPrevious={currentPage > 1}
+            onPageChange={handlePageChange}
+          />
         )}
       </Card>
 

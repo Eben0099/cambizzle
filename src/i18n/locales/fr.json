@@ -1157,7 +1157,8 @@
       "errorCreating": "Erreur lors de la création de la catégorie.",
       "errorUpdating": "Erreur lors de la mise à jour de la catégorie.",
       "errorDeleting": "Erreur lors de la suppression de la catégorie.",
-      "cannotDeleteNonEmpty": "Vous ne pouvez pas supprimer une catégorie non vide.",
+      "cannotDeleteNonEmpty": "Vous ne pouvez pas supprimer une catégorie contenant des données (même si elle est désactivée).",
+      "deleteSubcategoriesAndAdsFirst": "💡 Astuce : Supprimez d'abord toutes les sous-catégories et annonces associées à cette catégorie.",
       "errorLoading": "Erreur lors du chargement des catégories."
     },
     "filters": {

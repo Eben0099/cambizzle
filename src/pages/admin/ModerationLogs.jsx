@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/badge";
 import Input from "../../components/ui/Input";
+import Pagination from "../../components/ui/Pagination";
 import { useToast } from "../../components/toast/useToast";
 import {
   Search, 
@@ -291,27 +292,13 @@ const ModerationLogs = () => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="flex items-center gap-2 px-3 py-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-sm"
-          >
-            <ChevronLeft className="h-4 w-4" /> {t('admin.moderationLogs.previous')}
-          </button>
-
-          <span className="px-4 py-2 text-sm text-muted-foreground">
-            {t('admin.moderationLogs.pageOf', { current: currentPage, total: totalPages })}
-          </span>
-
-          <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="flex items-center gap-2 px-3 py-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-sm"
-          >
-            {t('admin.moderationLogs.next')} <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          hasNext={currentPage < totalPages}
+          hasPrevious={currentPage > 1}
+          onPageChange={setCurrentPage}
+        />
       )}
     </div>
   );

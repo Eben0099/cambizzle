@@ -108,7 +108,7 @@ const ImageCarousel = ({ images }) => {
             />
             <button
               onClick={() => setIsFullscreen(false)}
-              className="absolute top-4 right-4 text-white hover:text-gray-300 text-2xl cursor-pointer"
+              className="absolute top-4 right-4 text-[#D6BA69] hover:text-[#C5A952] text-2xl cursor-pointer"
               aria-label="Close fullscreen"
             >
               ×
@@ -117,14 +117,14 @@ const ImageCarousel = ({ images }) => {
               <>
                 <button
                   onClick={prevImage}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 p-2 cursor-pointer"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D6BA69] hover:text-[#C5A952] p-2 cursor-pointer"
                   aria-label="Previous image"
                 >
                   <ChevronLeft className="w-8 h-8" />
                 </button>
                 <button
                   onClick={nextImage}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 p-2 cursor-pointer"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#D6BA69] hover:text-[#C5A952] p-2 cursor-pointer"
                   aria-label="Next image"
                 >
                   <ChevronRight className="w-8 h-8" />

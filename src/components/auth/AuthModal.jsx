@@ -529,9 +529,6 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
           </button>
           <div className="flex-1">
             <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{t('auth.resetPassword')}</h2>
-            <p className="text-sm sm:text-base text-gray-600 mt-1">
-              {t('auth.resetPasswordSubtitle')}
-            </p>
           </div>
         </div>
 

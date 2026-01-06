@@ -1157,7 +1157,8 @@
       "errorCreating": "Error creating category.",
       "errorUpdating": "Error updating category.",
       "errorDeleting": "Error deleting category.",
-      "cannotDeleteNonEmpty": "You cannot delete a non-empty category.",
+      "cannotDeleteNonEmpty": "You cannot delete a category that contains data (even if disabled).",
+      "deleteSubcategoriesAndAdsFirst": "💡 Tip: First delete all subcategories and ads associated with this category.",
       "errorLoading": "Error loading categories."
     },
     "filters": {

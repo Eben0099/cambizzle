@@ -626,14 +626,14 @@ const CategorySidebar = ({ className = '' }) => {
                         );
                       })}
                     </div>
-                    <div className="p-3 border-t border-gray-200 bg-gray-50 rounded-b-lg flex-shrink-0">
+                    {/* <div className="p-3 border-t border-gray-200 bg-gray-50 rounded-b-lg flex-shrink-0">
                       <button
                         onClick={() => handleCategoryClick(cat.slug)}
                         className="w-full text-center py-2.5 text-sm font-medium text-[#D6BA69] border border-[#D6BA69] rounded-lg hover:bg-[#D6BA69] hover:text-white transition-all cursor-pointer"
                       >
                         {t('sidebar.viewAll')} →
                       </button>
-                    </div>
+                    </div> */}
                   </div>
                 );
               })()

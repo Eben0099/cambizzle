@@ -51,16 +51,12 @@ const Home = () => {
       <WebsiteSchema />
       <div className="min-h-screen bg-gray-50">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-black via-gray-900 to-black text-white py-16 sm:py-20 lg:py-24">
+        <section className="bg-gradient-to-br from-black via-gray-900 to-black text-white py-8 sm:py-10 lg:py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center space-y-6">
+            <div className="text-center space-y-4">
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                {t('home.heroTitle')}{' '}
                 <span className="text-[#D6BA69] drop-shadow-md">Cambizzle</span>
               </h1>
-              <p className="text-lg sm:text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto">
-                {t('home.heroSubtitle')}
-              </p>
 
               <div className="max-w-2xl mx-auto">
                 <div className="relative group">
@@ -114,7 +110,7 @@ const Home = () => {
                       Explore the latest offers
                     </p> */}
                   </div>
-                  <Link to="/search">
+                  {/* <Link to="/search">
                     <Button
                       variant="outline"
                       className="flex items-center space-x-2 mt-4 sm:mt-0 border-[#D6BA69] text-[#D6BA69] hover:bg-[#D6BA69]/10 hover:text-[#C5A952] transition-colors duration-200"
@@ -123,7 +119,7 @@ const Home = () => {
                       <span className="sm:hidden">{t('common.viewAll')}</span>
                       <ArrowRight className="w-4 h-4" />
                     </Button>
-                  </Link>
+                  </Link> */}
                 </div>
 
                 {adsError ? (

@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
+import Pagination from "../../components/ui/Pagination";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { API_BASE_URL, SERVER_BASE_URL } from "../../config/api";
@@ -573,27 +574,13 @@ const Subcategories = () => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center mt-6">
-          <div className="flex items-center gap-2 bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-2">
-            <Button
-              size="sm"
-              className="h-8 w-8 p-0 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-full"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1 || submitting}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-xs text-gray-600">{t('admin.subcategories.page')} {currentPage} / {totalPages}</span>
-            <Button
-              size="sm"
-              className="h-8 w-8 p-0 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-full"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage >= totalPages || submitting}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          hasNext={currentPage < totalPages}
+          hasPrevious={currentPage > 1}
+          onPageChange={handlePageChange}
+        />
       )}
 
       {/* CREATE Modal */}

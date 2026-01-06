@@ -2,6 +2,7 @@ import { SERVER_BASE_URL, API_BASE_URL } from '../../config/api';
 import { getPhotoUrl } from '../../utils/helpers';
 // Ads.jsx
 import { useState, useEffect } from 'react';
+import Pagination from '../../components/ui/Pagination';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import adminService from '../../services/adminService';
@@ -594,33 +595,13 @@ const Ads = () => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center mt-6">
-          <div className="flex items-center gap-2 bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-2">
-            <Button
-              size="sm"
-              className="h-8 w-8 p-0 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-full"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1 || loading}
-              aria-label="Previous page"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-
-            <span className="text-xs text-gray-600">
-              {t('admin.ads.page')} {currentPage} / {totalPages}
-            </span>
-
-            <Button
-              size="sm"
-              className="h-8 w-8 p-0 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-full"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage >= totalPages || loading}
-              aria-label="Next page"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          hasNext={currentPage < totalPages}
+          hasPrevious={currentPage > 1}
+          onPageChange={handlePageChange}
+        />
       )}
 
       {/* Approve Modal */}
