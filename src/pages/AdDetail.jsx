@@ -231,11 +231,25 @@ const AdDetail = () => {
       }
     } catch (error) {
       console.error('Report error:', error);
-      showToast({
-        type: 'error',
-        title: t('adDetail.report.failed'),
-        message: error.message || t('adDetail.report.failedMessage')
-      });
+
+      const rawMessage = (error && error.message) ? String(error.message) : '';
+      const tokenErrorPattern = /(token|jwt|unauthenticated|unauthorized|expired)/i;
+
+      if (tokenErrorPattern.test(rawMessage)) {
+        // Erreurs techniques de token (JWT expiré, invalide, non authentifié) → message humain clair
+        showToast({
+          type: 'error',
+          title: t('adDetail.report.authRequired'),
+          message: t('adDetail.report.mustBeLoggedIn')
+        });
+      } else {
+        // Autres erreurs → message générique user-friendly
+        showToast({
+          type: 'error',
+          title: t('adDetail.report.failed'),
+          message: rawMessage || t('adDetail.report.failedMessage')
+        });
+      }
     } finally {
       setIsReporting(false);
     }
