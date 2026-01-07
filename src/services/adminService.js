@@ -67,6 +67,22 @@ class AdminService {
       throw error;
     }
   }
+
+  // Supprimer une marque
+  async deleteBrand(brandId) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.delete(`${API_BASE_URL}/admin/referentials/brands/${brandId}`);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        storageService.removeToken();
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
   constructor() {
     // S'assurer que le token est toujours dans les headers
     this.setAuthHeader();

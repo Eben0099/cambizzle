@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Search, ArrowRight, Car, Home as HomeIcon, Briefcase, Shirt, Smartphone, Sofa, Baby, Book, Dumbbell, Wrench } from 'lucide-react';
+import { Search, ArrowRight, Car, Home as HomeIcon, Briefcase, Shirt, Smartphone, Sofa, Baby, Book, Dumbbell, Wrench, ChevronRight } from 'lucide-react';
 import Button from '../components/ui/Button';
 // import SearchAutocomplete from '../components/ui/SearchAutocomplete';
 import Input from '../components/ui/Input';
@@ -12,6 +12,7 @@ import Loader from '../components/ui/Loader';
 import CategoryGrid from '../components/categories/CategoryGrid';
 import SEO from '../components/SEO';
 import { OrganizationSchema, WebsiteSchema } from '../components/StructuredData';
+import { SERVER_BASE_URL } from '../config/api';
 import useCategories from '../hooks/useCategories';
 import useHomeAds from '../hooks/useHomeAds';
 import useDebouncedValue from '../hooks/useDebouncedValue';
@@ -22,21 +23,72 @@ const Home = () => {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 500);
   const { categories, isLoading: categoriesLoading, error: categoriesError } = useCategories();
-  const { ads, pagination, isLoading: adsLoading, error: adsError, goToPage } = useHomeAds(1, 8, debouncedSearch);
+  const { ads, pagination, isLoading: adsLoading, error: adsError, goToPage } = useHomeAds(1, 30, debouncedSearch);
   const navigate = useNavigate();
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
-  // Icon mapping for categories
+  const handleCategoryClick = (category) => {
+    if (category.subcategories && category.subcategories.length > 0) {
+      setSelectedCategory(category);
+    } else {
+      navigate(`/search?category=${category.slug}`);
+    }
+  };
+
+  const handleSubcategoryClick = (categorySlug, subcategorySlug) => {
+    navigate(`/subcategory?category=${categorySlug}&subcategory=${subcategorySlug}`);
+  };
+
+  // Icon mapping for categories (aligned with CategorySidebar slugs)
   const categoryIcons = {
-    'car': Car,
-    'home': HomeIcon,
-    'briefcase': Briefcase,
-    'shirt': Shirt,
-    'smartphone': Smartphone,
-    'sofa': Sofa,
-    'baby': Baby,
-    'book': Book,
-    'dumbbell': Dumbbell,
-    'wrench': Wrench
+    'electronics': Smartphone,
+    'vehicles': Car,
+    'real-estate': HomeIcon,
+    'jobs': Briefcase,
+    'services': Wrench,
+    'fashion': Shirt,
+    'home': Sofa,
+    'sports': Dumbbell,
+    'animals': Smartphone, // Fallback
+    'agriculture': Smartphone, // Fallback
+    'phones-tablets': Smartphone,
+    'automobiles': Car,
+    'immobilier': HomeIcon,
+    'emplois': Briefcase,
+  };
+
+  const getIconUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    return `${SERVER_BASE_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+  };
+
+  // Safe icon renderer
+  const CategoryIcon = ({ category, className = "w-6 h-6" }) => {
+    const IconComponent = categoryIcons[category.slug] || Smartphone;
+    const iconPath = category.iconPath || category.iconUrl || category.icon;
+
+    if (iconPath) {
+      return (
+        <div className="relative flex items-center justify-center">
+          <img
+            src={getIconUrl(iconPath)}
+            alt={category.name}
+            className={`${className} object-contain`}
+            onError={(e) => {
+              e.target.style.display = 'none';
+              const fallback = e.target.nextSibling;
+              if (fallback) fallback.style.display = 'block';
+            }}
+          />
+          <div style={{ display: 'none' }}>
+            <IconComponent className={className} />
+          </div>
+        </div>
+      );
+    }
+
+    return <IconComponent className={className} />;
   };
 
   return (
@@ -93,9 +145,60 @@ const Home = () => {
 
           {/* Main Content */}
           <div className="flex-1 overflow-x-hidden">
-            {/* Mobile Categories */}
-            <div className="lg:hidden bg-white shadow-sm">
-              <CategorySidebar />
+            {/* Mobile Categories Flow */}
+            <div className="lg:hidden bg-white shadow-sm p-4">
+              {!selectedCategory ? (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold text-gray-900 border-b pb-2">{t('sidebar.categories')}</h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    {categories
+                      ?.sort((a, b) => a.name.localeCompare(b.name))
+                      .map((category) => (
+                        <button
+                          key={category.id}
+                          onClick={() => handleCategoryClick(category)}
+                          className="flex flex-col items-center space-y-2 p-2 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer group"
+                        >
+                          <div className="w-12 h-12 bg-[#D6BA69]/10 rounded-full flex items-center justify-center text-[#D6BA69] group-hover:bg-[#D6BA69]/20 transition-all">
+                            <CategoryIcon category={category} className="w-6 h-6" />
+                          </div>
+                          <span className="text-[10px] font-medium text-center line-clamp-2 text-gray-700 group-hover:text-[#D6BA69]">{category.name}</span>
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4 animate-fadeIn">
+                  <div className="flex items-center justify-between border-b pb-2">
+                    <button
+                      onClick={() => setSelectedCategory(null)}
+                      className="text-[#D6BA69] flex items-center text-sm font-medium"
+                    >
+                      <ChevronRight className="w-4 h-4 rotate-180 mr-1" />
+                      {t('common.back')}
+                    </button>
+                    <h3 className="text-sm font-bold text-gray-900">{selectedCategory.name}</h3>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedCategory.subcategories
+                      ?.sort((a, b) => a.name.localeCompare(b.name))
+                      .map((sub) => (
+                        <button
+                          key={sub.id}
+                          onClick={() => handleSubcategoryClick(selectedCategory.slug, sub.slug)}
+                          className="flex flex-col items-center justify-center p-4 bg-white border border-gray-100 rounded-2xl text-center hover:bg-gray-50 hover:border-[#D6BA69] transition-all cursor-pointer group shadow-sm active:scale-95"
+                        >
+                          <div className="w-14 h-14 bg-[#D6BA69]/10 rounded-full flex items-center justify-center text-[#D6BA69] mb-3 group-hover:bg-[#D6BA69]/20 transition-colors">
+                            <CategoryIcon category={sub} className="w-7 h-7" />
+                          </div>
+                          <span className="text-xs font-bold text-gray-800 group-hover:text-[#D6BA69] line-clamp-2 leading-tight">
+                            {sub.name}
+                          </span>
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Recent Ads Section */}
@@ -159,24 +262,22 @@ const Home = () => {
                     ) : (
                       <>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-                          {ads.map((ad) => (
-                            <AdCard key={ad.id} ad={ad} className="hover:shadow-lg hover:-translate-y-1/1 transition-all duration-300" />
-                          ))}
+                          {ads
+                            .sort((a, b) => {
+                              // Prioritize boosted ads (isBoosted === "1" or true)
+                              const aBoosted = a.isBoosted === "1" || a.isBoosted === 1 || a.isBoosted === true;
+                              const bBoosted = b.isBoosted === "1" || b.isBoosted === 1 || b.isBoosted === true;
+                              if (aBoosted && !bBoosted) return -1;
+                              if (!aBoosted && bBoosted) return 1;
+                              return 0;
+                            })
+                            .slice(0, 30) // Ensure only 30 are shown
+                            .map((ad) => (
+                              <AdCard key={ad.id} ad={ad} className="hover:shadow-lg hover:-translate-y-1 transition-all duration-300" />
+                            ))}
                         </div>
 
-                        {/* Pagination */}
-                        {pagination && pagination.totalPages > 1 && (
-                          <div className="mt-12 flex justify-center">
-                            <Pagination
-                              currentPage={pagination.currentPage}
-                              totalPages={pagination.totalPages}
-                              hasNext={pagination.hasNext}
-                              hasPrevious={pagination.hasPrevious}
-                              onPageChange={goToPage}
-                              className="bg-white shadow-sm rounded-lg"
-                            />
-                          </div>
-                        )}
+                        {/* Pagination removed from Home page per request */}
                       </>
                     )}
                   </>

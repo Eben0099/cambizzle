@@ -108,12 +108,20 @@ export default function AdFeedbacks() {
           return;
         }
 
-        // Try to find a specific validation message
-        let msg = errorData.message || errorData.error || t('adDetail.feedback.submitError');
-        if (errorData.messages) {
+        // Check for specific API error structure
+        let msg = t('adDetail.feedback.submitError');
+
+        if (errorData.message) {
+          // If the message is a known key in our translations, use it
+          // Otherwise use the message from API directly if it's safe
+          msg = errorData.message;
+        } else if (errorData.error) {
+          msg = errorData.error;
+        } else if (errorData.messages) {
           const firstErr = Object.values(errorData.messages)[0];
-          if (firstErr) msg = Array.isArray(firstErr) ? firstErr[0] : firstErr;
+          msg = Array.isArray(firstErr) ? firstErr[0] : firstErr;
         }
+
         setErrorMessage(msg);
       }
     } catch (error) {

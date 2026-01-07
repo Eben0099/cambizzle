@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { adsService } from '../services/adsService';
 
-const useHomeAds = (initialPage = 1, perPage = 8, search = '') => {
+const useHomeAds = (initialPage = 1, perPage = 30, search = '') => {
   const [currentPage, setCurrentPage] = useState(initialPage);
 
   useEffect(() => {

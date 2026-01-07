@@ -6,6 +6,7 @@ import Loader from "../../components/ui/Loader";
 import { API_BASE_URL } from "../../config/api";
 import storageService from "../../services/storageService";
 import { useToast } from "../../components/toast/useToast";
+import { formatDate } from "../../utils/helpers";
 
 export default function Feedbacks() {
   const { t } = useTranslation();
@@ -135,6 +136,7 @@ export default function Feedbacks() {
           name="ad_title"
           value={filters.ad_title}
           onChange={handleFilterChange}
+          placeholder={t('admin.feedbacks.searchByAdTitle')}
           className="px-3 py-2 border rounded"
           style={{ minWidth: 200 }}
         />
@@ -144,6 +146,7 @@ export default function Feedbacks() {
           name="author_name"
           value={filters.author_name}
           onChange={handleFilterChange}
+          placeholder={t('admin.feedbacks.searchByAuthorName')}
           className="px-3 py-2 border rounded"
           style={{ minWidth: 200 }}
         />
@@ -175,18 +178,18 @@ export default function Feedbacks() {
                 <td className="py-2 px-3">
                   <span
                     className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${fb.status === "approved"
-                        ? "bg-green-100 text-green-800"
-                        : fb.status === "pending"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : fb.status === "rejected"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-gray-100 text-gray-800"
+                      ? "bg-green-100 text-green-800"
+                      : fb.status === "pending"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : fb.status === "rejected"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-gray-100 text-gray-800"
                       }`}
                   >
-                    {fb.status}
+                    {t(`admin.feedbacks.${fb.status}`)}
                   </span>
                 </td>
-                <td className="py-2 px-3">{fb.createdAt}</td>
+                <td className="py-2 px-3 whitespace-nowrap">{formatDate(fb.createdAt)}</td>
                 <td className="py-2 px-3">
                   {fb.status === "pending" && (
                     <div className="flex gap-2">
