@@ -91,17 +91,9 @@ const AdminLayout = ({ children }) => {
   }
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex h-screen overflow-hidden bg-white">
       {/* Mobile Menu Button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="fixed top-4 right-4 z-50 md:hidden bg-gray-950 text-[#D6BA69] hover:bg-gray-800 h-10 w-10"
-        onClick={toggleSidebar}
-        aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
-      >
-        {isSidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-      </Button>
+
 
       {/* Sidebar */}
       <aside
@@ -111,7 +103,7 @@ const AdminLayout = ({ children }) => {
         )}
       >
         {/* Header */}
-        <div className="p-2 sm:p-4 bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-700">
+        <div className="p-2 sm:p-4 bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-700 flex justify-between items-center">
           <NavLink to="/" className="flex items-center gap-2">
             <img
               src="/cambizzle.png"
@@ -123,6 +115,14 @@ const AdminLayout = ({ children }) => {
               <p className="text-xs text-gray-400">{t('admin.sidebar.adminPanel')}</p>
             </div>
           </NavLink>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden text-gray-400 hover:text-white"
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            <X className="h-5 w-5" />
+          </Button>
         </div>
 
         {/* Navigation */}
@@ -277,13 +277,23 @@ const AdminLayout = ({ children }) => {
             />
             <span className="text-lg font-bold text-gray-900">Cambizzle</span>
           </NavLink>
-          <NavLink
-            to="/"
-            className="flex items-center gap-1 text-sm text-gray-600 hover:text-[#D6BA69] transition-colors"
-          >
-            <Home className="h-4 w-4" />
-            <span>{t('admin.sidebar.backToSite')}</span>
-          </NavLink>
+          <div className="flex items-center gap-3">
+            <NavLink
+              to="/"
+              className="flex items-center gap-1 text-sm text-gray-600 hover:text-[#D6BA69] transition-colors"
+            >
+              <Home className="h-4 w-4" />
+              <span>{t('admin.sidebar.backToSite')}</span>
+            </NavLink>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="bg-gray-950 text-[#D6BA69] hover:bg-gray-800 h-9 w-9"
+              onClick={toggleSidebar}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
         <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-8">{children}</div>
       </main>

@@ -1,0 +1,467 @@
+{
+	"info": {
+		"_postman_id": "crud-referentials-cms-2026",
+		"name": "Cambizzle - CRUD Referentials & CMS",
+		"description": "Collection pour le CRUD des localisations, marques et contenus CMS",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Localisations",
+			"item": [
+				{
+					"name": "Lister Localisations (Public)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/locations",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"locations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Créer Localisation (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"city\": \"Yaoundé\",\n    \"region\": \"Centre\",\n    \"country\": \"Cameroun\",\n    \"is_active\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/referentials/locations",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"referentials",
+								"locations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Modifier Localisation (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"city\": \"Yaoundé Modifiée\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/referentials/locations/{{location_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"referentials",
+								"locations",
+								"{{location_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Supprimer Localisation (Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/referentials/locations/{{location_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"referentials",
+								"locations",
+								"{{location_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Marques",
+			"item": [
+				{
+					"name": "Lister Marques (Public)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/brands",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"brands"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Lister Marques par Sous-catégorie",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/brands?subcategory_id=1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"brands"
+							],
+							"query": [
+								{
+									"key": "subcategory_id",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Créer Marque (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"subcategory_id\": 1,\n    \"name\": \"Toyota\",\n    \"description\": \"Constructeur japonais\",\n    \"is_active\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/referentials/brands",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"referentials",
+								"brands"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Modifier Marque (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Toyota Modifiée\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/referentials/brands/{{brand_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"referentials",
+								"brands",
+								"{{brand_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Supprimer Marque (Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/referentials/brands/{{brand_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"referentials",
+								"brands",
+								"{{brand_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. CMS Contenu",
+			"item": [
+				{
+					"name": "Lister Tout le Contenu CMS",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/settings",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"settings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Créer FAQ",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"question\": \"Nouvelle question FAQ ?\",\n    \"answer\": \"Voici la réponse détaillée.\",\n    \"display_order\": 1,\n    \"is_active\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/settings/faqs",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"settings",
+								"faqs"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Modifier FAQ",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"question\": \"Question FAQ modifiée\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/settings/faqs/{{faq_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"settings",
+								"faqs",
+								"{{faq_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Supprimer FAQ",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/settings/faqs/{{faq_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"settings",
+								"faqs",
+								"{{faq_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Créer Section CMS",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"page_type\": \"about_us\",\n    \"title\": \"Notre Mission\",\n    \"content\": \"<p>Contenu HTML ici...</p>\",\n    \"display_order\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/settings/sections",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"settings",
+								"sections"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Modifier Section CMS",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Mission Cambizzle Modifiée\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/settings/sections/{{section_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"settings",
+								"sections",
+								"{{section_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Supprimer Section CMS",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/settings/sections/{{section_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"settings",
+								"sections",
+								"{{section_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

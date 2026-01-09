@@ -2,7 +2,7 @@ import axios from 'axios';
 import storageService from '../services/storageService';
 
 // Configuration centralisée de l'API via variables d'environnement
-export const SERVER_ENV = import.meta.env.VITE_SERVER_ENV || 'prod';
+export const SERVER_ENV = import.meta.env.VITE_SERVER_ENV || 'local';
 
 // URLs depuis les variables d'environnement
 const API_URL_PROD = import.meta.env.VITE_API_URL_PROD || 'https://www.cambizzle.seed-innov.com/api';

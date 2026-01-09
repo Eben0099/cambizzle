@@ -26,6 +26,7 @@ import {
   List,
   Search as IconSearch,
   Loader2,
+  ChevronsUpDown,
 } from "lucide-react";
 import {
   Dialog,
@@ -387,7 +388,7 @@ const Filters = () => {
 
             {/* Subcategory filter */}
             <Select value={selectedSubcategoryFilter} onValueChange={setSelectedSubcategoryFilter}>
-              <SelectTrigger className="h-9 w-full sm:w-44 text-sm rounded-lg border-gray-200 focus:ring-[#D6BA69] bg-white">
+              <SelectTrigger icon={ChevronsUpDown} className="h-9 w-full sm:w-44 text-sm rounded-lg border-gray-200 focus:ring-[#D6BA69] bg-white text-gray-700">
                 <SelectValue placeholder={t('admin.filters.subcategory')} />
               </SelectTrigger>
               <SelectContent className="bg-white">
@@ -402,7 +403,7 @@ const Filters = () => {
 
             {/* Sort */}
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="h-9 w-full sm:w-40 text-sm rounded-lg border-gray-200 focus:ring-[#D6BA69] bg-white">
+              <SelectTrigger icon={ChevronsUpDown} className="h-9 w-full sm:w-40 text-sm rounded-lg border-gray-200 focus:ring-[#D6BA69] bg-white text-gray-700">
                 <SelectValue placeholder={t('admin.filters.sort')} />
               </SelectTrigger>
               <SelectContent className="bg-white">

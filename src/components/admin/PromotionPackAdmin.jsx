@@ -101,8 +101,8 @@ export default function PromotionPackAdmin() {
     const payload = {
       name: form.name.trim(),
       description: form.description.trim(),
-      duration_days: Number(form.duration_days),
-      price: Number(form.price),
+      duration_days: parseInt(form.duration_days, 10),
+      price: Math.floor(Number(form.price)),
       is_active: form.is_active ? 1 : 0,
     };
 
@@ -227,9 +227,8 @@ export default function PromotionPackAdmin() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{pack.price} FCFA</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                        }`}
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                          }`}
                       >
                         {isActive ? 'Active' : 'Inactive'}
                       </span>
@@ -378,6 +377,12 @@ export default function PromotionPackAdmin() {
                         onChange={handleInputChange}
                         required
                         min="0"
+                        step="1"
+                        onKeyDown={(e) => {
+                          if (e.key === '.' || e.key === ',') {
+                            e.preventDefault();
+                          }
+                        }}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                       />
                     </div>
@@ -419,10 +424,10 @@ export default function PromotionPackAdmin() {
                       className="flex items-center gap-2 px-5 py-2 bg-[#D6BA69] text-black font-medium rounded-lg hover:bg-[#c9a63a] transition disabled:opacity-50"
                     >
                       {loading ? (
-                          <Loader className="w-6 h-6" text="Saving..." />
-                        ) : (
-                          <>{editingId ? 'Update' : 'Create'}</>
-                        )}
+                        <Loader className="w-6 h-6" text="Saving..." />
+                      ) : (
+                        <>{editingId ? 'Update' : 'Create'}</>
+                      )}
                     </button>
                   </div>
                 </form>

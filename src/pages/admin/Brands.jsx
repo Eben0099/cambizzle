@@ -39,6 +39,7 @@ import {
 import { useToast } from "../../components/toast/useToast";
 import Loader from "@/components/ui/Loader";
 import adminService from '@/services/adminService';
+import categoriesService from '@/services/categoriesService';
 
 /**
  * Brands management screen
@@ -56,6 +57,7 @@ const Brands = () => {
 
   // Data state
   const [brandsData, setBrandsData] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
@@ -75,9 +77,10 @@ const Brands = () => {
   const [form, setForm] = useState(emptyForm);
   const [submitting, setSubmitting] = useState(false);
 
-  // Load brands on mount
+  // Load brands and subcategories on mount
   useEffect(() => {
     loadBrands();
+    loadSubcategories();
   }, []);
 
   const loadBrands = async () => {
@@ -108,11 +111,33 @@ const Brands = () => {
     }
   };
 
-  // Unique subcategory options for select (for create/edit)
+  const loadSubcategories = async () => {
+    try {
+      const res = await categoriesService.getCategoriesWithStats();
+      if (res.status === 'success' && Array.isArray(res.data)) {
+        // Flatten subcategories from all categories
+        const allSubs = res.data.flatMap(cat =>
+          (cat.subcategories || []).map(sub => ({
+            id: sub.id,
+            name: sub.name,
+            category_name: cat.name
+          }))
+        );
+        setSubcategories(allSubs);
+      }
+    } catch (err) {
+      logger.error("Error loading subcategories:", err);
+    }
+  };
+
+  // Use fetched subcategories for options, falling back to derived ones if needed
   const subcategoryOptions = useMemo(() => {
-    const subs = brandsData.map((g) => g.subcategory);
-    return subs.sort((a, b) => a.name.localeCompare(b.name));
-  }, [brandsData]);
+    if (subcategories.length > 0) {
+      return [...subcategories].sort((a, b) => a.name.localeCompare(b.name));
+    }
+    const derivedSubs = brandsData.map((g) => g.subcategory);
+    return derivedSubs.sort((a, b) => a.name.localeCompare(b.name));
+  }, [subcategories, brandsData]);
 
   // Flatten brands for export
   const allBrandsFlat = useMemo(() => {
@@ -188,7 +213,7 @@ const Brands = () => {
       name: brand.name,
       subcategory_id: subcategoryId.toString(),
       description: brand.description || "",
-      is_active: brand.isActive !== undefined ? brand.isActive : true,
+      is_active: brand.is_active === 1 || brand.is_active === true,
     });
     setEditOpen(true);
   };

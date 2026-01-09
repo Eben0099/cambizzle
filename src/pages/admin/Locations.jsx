@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,98 +19,136 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, MapPin, Search, Download } from "lucide-react";
+import { Plus, Edit, Trash2, MapPin, Search, Download, Loader2 } from "lucide-react";
 import { exportToExcel } from "../../utils/exportToExcel";
 import { useToast } from "../../components/toast/useToast";
+import adminService from "@/services/adminService";
+import Loader from "@/components/ui/Loader";
 
 const Locations = () => {
   const { t } = useTranslation();
   const { showToast } = useToast();
 
-  const [locations, setLocations] = useState([
-    {
-      id: 1,
-      region: "Centre",
-      cities: ["Yaoundé", "Mbalmayo", "Obala", "Mfou"],
-      adsCount: 892,
-    },
-    {
-      id: 2,
-      region: "Littoral",
-      cities: ["Douala", "Edéa", "Nkongsamba", "Dibombari"],
-      adsCount: 1243,
-    },
-    {
-      id: 3,
-      region: "West",
-      cities: ["Bafoussam", "Dschang", "Mbouda", "Foumban"],
-      adsCount: 456,
-    },
-  ]);
-
+  const [locationsRaw, setLocationsRaw] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [newRegion, setNewRegion] = useState("");
-  const [selectedRegion, setSelectedRegion] = useState(null);
-  const [newCity, setNewCity] = useState("");
-  const [isAddRegionOpen, setIsAddRegionOpen] = useState(false);
-  const [isAddCityOpen, setIsAddCityOpen] = useState(false);
 
-  // ---- CRUD FUNCTIONS ----
-  const handleAddRegion = () => {
-    if (!newRegion.trim()) {
-      showToast({ type: 'error', message: t('admin.locations.regionEmpty') });
+  const emptyForm = {
+    id: null,
+    city: "",
+    region: "",
+    country: "Cameroun",
+    is_active: 1
+  };
+  const [form, setForm] = useState(emptyForm);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [deleteCandidate, setDeleteCandidate] = useState(null);
+
+  useEffect(() => {
+    loadLocations();
+  }, []);
+
+  const loadLocations = async () => {
+    try {
+      setLoading(true);
+      const res = await adminService.getLocations();
+      // Expecting array of {id, city, region, country, is_active}
+      setLocationsRaw(Array.isArray(res?.data) ? res.data : (res?.data?.locations || []));
+    } catch (err) {
+      showToast({ type: 'error', message: t('admin.locations.loadError') || "Erreur lors du chargement des localisations" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Group raw locations by region for the grouped UI
+  const groupedLocations = useMemo(() => {
+    const grouped = locationsRaw.reduce((acc, loc) => {
+      const region = loc.region || "Autre";
+      if (!acc[region]) {
+        acc[region] = {
+          region,
+          items: [],
+          adsCount: 0
+        };
+      }
+      acc[region].items.push(loc);
+      return acc;
+    }, {});
+    return Object.values(grouped).sort((a, b) => a.region.localeCompare(b.region));
+  }, [locationsRaw]);
+
+  const filteredGroups = useMemo(() => {
+    if (!searchTerm.trim()) return groupedLocations;
+    const q = searchTerm.toLowerCase();
+    return groupedLocations.map(group => ({
+      ...group,
+      items: group.items.filter(item =>
+        item.city.toLowerCase().includes(q) ||
+        group.region.toLowerCase().includes(q)
+      )
+    })).filter(group => group.items.length > 0 || group.region.toLowerCase().includes(q));
+  }, [groupedLocations, searchTerm]);
+
+  const handleOpenCreate = (region = "") => {
+    setForm({ ...emptyForm, region });
+    setIsDialogOpen(true);
+  };
+
+  const handleOpenEdit = (location) => {
+    setForm({
+      id: location.id,
+      city: location.city,
+      region: location.region,
+      country: location.country || "Cameroun",
+      is_active: location.is_active
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.city.trim() || !form.region.trim()) {
+      showToast({ type: 'error', message: t('admin.locations.fieldsRequired') || "City and Region are required" });
       return;
     }
-    const newLoc = {
-      id: Date.now(),
-      region: newRegion,
-      cities: [],
-      adsCount: 0,
-    };
-    setLocations([...locations, newLoc]);
-    setNewRegion("");
-    setIsAddRegionOpen(false);
-    showToast({ type: 'success', message: `${newLoc.region} ${t('admin.locations.regionCreated')}` });
-  };
 
-  const handleDeleteRegion = (id) => {
-    setLocations(locations.filter((loc) => loc.id !== id));
-    showToast({ type: 'success', message: t('admin.locations.regionRemoved') });
-  };
-
-  const handleAddCity = () => {
-    if (!newCity.trim() || !selectedRegion) {
-      showToast({ type: 'error', message: t('admin.locations.cityEmpty') });
-      return;
+    setSubmitting(true);
+    try {
+      if (form.id) {
+        await adminService.updateLocation(form.id, form);
+        showToast({ type: 'success', message: t('admin.locations.updateSuccess') || "Localisation mise à jour" });
+      } else {
+        await adminService.createLocation(form);
+        showToast({ type: 'success', message: t('admin.locations.createSuccess') || "Localisation créée" });
+      }
+      await loadLocations();
+      setIsDialogOpen(false);
+    } catch (err) {
+      showToast({ type: 'error', message: t('admin.locations.saveError') || "Erreur lors de l'enregistrement" });
+    } finally {
+      setSubmitting(false);
     }
-    const updated = locations.map((loc) =>
-      loc.id === selectedRegion.id
-        ? { ...loc, cities: [...loc.cities, newCity] }
-        : loc
-    );
-    setLocations(updated);
-    setNewCity("");
-    setIsAddCityOpen(false);
-    showToast({ type: 'success', message: `${newCity} ${t('admin.locations.cityAddedTo')} ${selectedRegion.region}.` });
   };
 
-  const handleDeleteCity = (regionId, city) => {
-    const updated = locations.map((loc) =>
-      loc.id === regionId
-        ? { ...loc, cities: loc.cities.filter((c) => c !== city) }
-        : loc
-    );
-    setLocations(updated);
-    showToast({ type: 'success', message: `${city} ${t('admin.locations.cityRemoved')}` });
+  const handleDelete = async () => {
+    if (!deleteCandidate) return;
+    setSubmitting(true);
+    try {
+      await adminService.deleteLocation(deleteCandidate.id);
+      showToast({ type: 'success', message: t('admin.locations.deleteSuccess') || "Localisation supprimée" });
+      await loadLocations();
+      setDeleteCandidate(null);
+    } catch (err) {
+      showToast({ type: 'error', message: t('admin.locations.deleteError') || "Erreur lors de la suppression" });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const filteredLocations = locations.filter(
-    (loc) =>
-      loc.region.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      loc.cities.some((c) => c.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  if (loading) return <Loader text={t('admin.locations.loading')} />;
 
   return (
     <div className="space-y-6">
@@ -125,58 +163,39 @@ const Locations = () => {
         <div className="flex items-center gap-2">
           <Button
             onClick={() => exportToExcel(
-              locations.flatMap(loc => loc.cities.map(city => ({
+              locationsRaw.map(loc => ({
+                id: loc.id,
                 region: loc.region,
-                city: city,
-                adsCount: loc.adsCount,
-              }))),
+                city: loc.city,
+                country: loc.country,
+                status: loc.is_active ? 'Active' : 'Inactive'
+              })),
               'locations',
               {
                 columns: [
+                  { header: 'ID', key: 'id' },
                   { header: 'Region', key: 'region' },
                   { header: t('admin.locations.city'), key: 'city' },
-                  { header: 'Ads Count', key: 'adsCount' },
+                  { header: 'Country', key: 'country' },
+                  { header: 'Status', key: 'status' },
                 ],
                 sheetName: 'Locations'
               }
             )}
             className="bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center gap-1 cursor-pointer"
-            disabled={locations.length === 0}
+            disabled={locationsRaw.length === 0}
           >
             <Download className="h-4 w-4" />
             {t('admin.locations.export')}
           </Button>
-          <Dialog open={isAddRegionOpen} onOpenChange={setIsAddRegionOpen}>
-            <DialogTrigger asChild>
-              <Button
-                className="bg-[#D6BA69] text-white hover:bg-[#c3a55d] transition-colors"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                {t('admin.locations.newRegion')}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md bg-white rounded-xl p-6">
-              <DialogHeader>
-                <DialogTitle className="text-lg font-semibold">{t('admin.locations.addNewRegion')}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="regionname">{t('admin.locations.regionName')}</Label>
-                  <Input
-                    id="regionname"
-                    value={newRegion}
-                    onChange={(e) => setNewRegion(e.target.value)}
-                  />
-                </div>
-                <Button
-                  className="w-full bg-[#D6BA69] text-white hover:bg-[#c3a55d] transition"
-                  onClick={handleAddRegion}
-                >
-                  {t('admin.locations.addRegion')}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+
+          <Button
+            className="bg-[#D6BA69] text-white hover:bg-[#c3a55d] transition-colors"
+            onClick={() => handleOpenCreate()}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {t('admin.locations.newRegion') || "Nouvelle Localisation"}
+          </Button>
         </div>
       </div>
 
@@ -190,6 +209,7 @@ const Locations = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               className="pl-10"
+              placeholder={t('admin.locations.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -199,117 +219,178 @@ const Locations = () => {
 
       {/* Region List */}
       <div className="grid gap-6">
-        {filteredLocations.map((location) => (
-          <Card
-            key={location.id}
-            className="border border-border bg-white shadow-sm hover:shadow-lg transition rounded-2xl"
-          >
-            <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between">
-              <div className="flex items-center gap-3">
-                <MapPin className="h-6 w-6 text-[#D6BA69]" />
-                <div>
-                  <CardTitle className="text-xl font-semibold">{location.region}</CardTitle>
-                  {/* Nombre de villes retiré */}
+        {filteredGroups.length === 0 ? (
+          <div className="text-center py-10 text-muted-foreground">
+            {t('common.noResults') || "Aucune localisation trouvée."}
+          </div>
+        ) : (
+          filteredGroups.map((group) => (
+            <Card
+              key={group.region}
+              className="border border-border bg-white shadow-sm hover:shadow-lg transition rounded-2xl overflow-hidden"
+            >
+              <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between bg-muted/20">
+                <div className="flex items-center gap-3">
+                  <MapPin className="h-6 w-6 text-[#D6BA69]" />
+                  <div>
+                    <CardTitle className="text-xl font-semibold">{group.region}</CardTitle>
+                    <p className="text-xs text-muted-foreground">{group.items.length} villes</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex gap-2 mt-3 md:mt-0">
-                <Dialog open={isAddCityOpen} onOpenChange={setIsAddCityOpen}>
-                  <DialogTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="hover:border-[#D6BA69] hover:text-[#D6BA69] transition"
-                      onClick={() => setSelectedRegion(location)}
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      {t('admin.locations.addCity')}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md bg-white rounded-xl p-6">
-                    <DialogHeader>
-                      <DialogTitle>{t('admin.locations.addCityTo')} {selectedRegion?.region}</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 pt-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="cityname">{t('admin.locations.cityName')}</Label>
-                        <Input
-                          id="cityname"
-                          value={newCity}
-                          onChange={(e) => setNewCity(e.target.value)}
-                        />
-                      </div>
-                      <Button
-                        className="w-full bg-[#D6BA69] text-white hover:bg-[#c3a55d] transition"
-                        onClick={handleAddCity}
-                      >
-                        {t('admin.locations.addCity')}
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="hover:border-[#D6BA69] hover:text-[#D6BA69] transition"
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="hover:border-red-500 hover:text-red-500 transition"
-                  onClick={() => handleDeleteRegion(location.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardHeader>
+                <div className="flex gap-2 mt-3 md:mt-0">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="hover:border-[#D6BA69] hover:text-[#D6BA69] transition"
+                    onClick={() => handleOpenCreate(group.region)}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    {t('admin.locations.addCity')}
+                  </Button>
+                </div>
+              </CardHeader>
 
-            {/* Cities Table */}
-            <CardContent>
-              <div className="overflow-x-auto rounded-lg border mt-3">
-                <Table>
-                  <TableHeader className="bg-muted/40">
-                    <TableRow>
-                      <TableHead>{t('admin.locations.city')}</TableHead>
-                      <TableHead className="text-right">{t('admin.locations.actions')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {location.cities.map((city, i) => (
-                      <TableRow
-                        key={i}
-                        className="hover:bg-muted/30 transition cursor-pointer"
-                      >
-                        <TableCell className="font-medium">{city}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="hover:border-[#D6BA69] hover:text-[#D6BA69]"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="hover:border-red-500 hover:text-red-500"
-                              onClick={() => handleDeleteCity(location.id, city)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+              {/* Cities Table */}
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader className="bg-muted/10">
+                      <TableRow>
+                        <TableHead className="pl-6">{t('admin.locations.city')}</TableHead>
+                        <TableHead>Pays</TableHead>
+                        <TableHead>Statut</TableHead>
+                        <TableHead className="text-right pr-6">{t('admin.locations.actions')}</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                    </TableHeader>
+                    <TableBody>
+                      {group.items.map((location) => (
+                        <TableRow
+                          key={location.id}
+                          className="hover:bg-muted/30 transition"
+                        >
+                          <TableCell className="font-medium pl-6">{location.city}</TableCell>
+                          <TableCell>{location.country}</TableCell>
+                          <TableCell>
+                            <Badge className={location.is_active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
+                              {location.is_active ? t('common.active') : t('common.inactive')}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right pr-6">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 w-8 p-0 hover:border-[#D6BA69] hover:text-[#D6BA69]"
+                                onClick={() => handleOpenEdit(location)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 w-8 p-0 hover:border-red-500 hover:text-red-500"
+                                onClick={() => setDeleteCandidate(location)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
+
+      {/* Create/Edit Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-md bg-white rounded-xl p-6">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold">
+              {form.id ? t('admin.locations.editLocation') || "Modifier Localisation" : t('admin.locations.addNewLocation') || "Ajouter une Localisation"}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleFormSubmit} className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="city">{t('admin.locations.cityName')}</Label>
+              <Input
+                id="city"
+                value={form.city}
+                onChange={(e) => setForm({ ...form, city: e.target.value })}
+                placeholder={t('admin.locations.cityPlaceholder')}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="region">{t('admin.locations.regionName')}</Label>
+              <Input
+                id="region"
+                value={form.region}
+                onChange={(e) => setForm({ ...form, region: e.target.value })}
+                placeholder={t('admin.locations.regionPlaceholder')}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="country">Pays</Label>
+              <Input
+                id="country"
+                value={form.country}
+                onChange={(e) => setForm({ ...form, country: e.target.value })}
+              />
+            </div>
+            <div className="flex items-center gap-2 pt-2">
+              <input
+                type="checkbox"
+                id="isActive"
+                checked={form.is_active === 1}
+                onChange={(e) => setForm({ ...form, is_active: e.target.checked ? 1 : 0 })}
+                className="rounded border-gray-300 text-[#D6BA69] focus:ring-[#D6BA69] w-4 h-4"
+              />
+              <Label htmlFor="isActive" className="cursor-pointer">{t('common.active')}</Label>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full bg-[#D6BA69] text-white hover:bg-[#c3a55d] transition mt-2"
+              disabled={submitting}
+            >
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {form.id ? t('common.save') : t('common.create')}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <Dialog open={!!deleteCandidate} onOpenChange={() => setDeleteCandidate(null)}>
+        <DialogContent className="max-w-md bg-white rounded-xl p-6">
+          <DialogHeader>
+            <DialogTitle>{t('common.confirm') || "Confirmer la suppression"}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-muted-foreground">
+              Êtes-vous sûr de vouloir supprimer la localisation <strong>{deleteCandidate?.city}</strong> ({deleteCandidate?.region}) ? Cette action est irréversible.
+            </p>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setDeleteCandidate(null)}>{t('common.cancel')}</Button>
+            <Button
+              variant="destructive"
+              className="bg-red-600 hover:bg-red-700"
+              onClick={handleDelete}
+              disabled={submitting}
+            >
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {t('common.delete')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

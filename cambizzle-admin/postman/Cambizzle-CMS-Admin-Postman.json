@@ -1,0 +1,423 @@
+{
+	"info": {
+		"_postman_id": "7f8e9d0a-1b2c-4d3e-5f6g-7h8i9j0k1l2m",
+		"name": "Cambizzle CMS & Admin",
+		"description": "Collection pour tester les fonctionnalités CMS et Admin de Cambizzle",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Admin: Users",
+			"item": [
+				{
+					"name": "Update User Role",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"role_id\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/users/{{user_id}}/role",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"users",
+								"{{user_id}}",
+								"role"
+							]
+						},
+						"description": "Passe un utilisateur en Admin (1) ou User normal (2)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin: CMS Settings",
+			"item": [
+				{
+					"name": "Get All Settings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/settings",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"settings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Settings (Partial)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sections\": {\n        \"terms\": [\n            {\n                \"title\": \"Nouveau Termes\",\n                \"content\": \"<p>Contenu mis à jour...</p>\"\n            }\n        ]\n    },\n    \"contact\": {\n        \"support_phone\": \"+237 600 000 000\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/settings",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"settings"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Public: CMS Content",
+			"item": [
+				{
+					"name": "Get Terms",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/settings/terms",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"settings",
+								"terms"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get About Us",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/settings/about",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"settings",
+								"about"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Safety Tips",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/settings/safety-tips",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"settings",
+								"safety-tips"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get FAQs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/settings/faqs",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"settings",
+								"faqs"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Contact Info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/settings/contact-info",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"settings",
+								"contact-info"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin: Locations",
+			"item": [
+				{
+					"name": "Create Location (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Nouvelle Ville\",\n    \"type\": \"city\",\n    \"parent_id\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/locations",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"locations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Location (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Ville Modifiée\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/locations/{{location_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"locations",
+								"{{location_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Location (Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/locations/{{location_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"locations",
+								"{{location_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin: Brands",
+			"item": [
+				{
+					"name": "Create Brand (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Nouvelle Marque\",\n    \"subcategory_id\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/brands",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"brands"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Brand (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Marque Modifiée\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/brands/{{brand_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"brands",
+								"{{brand_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Brand (Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/brands/{{brand_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"brands",
+								"{{brand_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080/api",
+			"type": "string"
+		},
+		{
+			"key": "admin_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "location_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "brand_id",
+			"value": "1",
+			"type": "string"
+		}
+	]
+}

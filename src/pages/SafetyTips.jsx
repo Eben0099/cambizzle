@@ -1,16 +1,22 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import SEO from '../components/SEO';
-import { Shield, AlertTriangle, Eye, CreditCard, Users, Lock, MapPin, Phone } from 'lucide-react';
+import { useSettings } from '../contexts/SettingsContext';
+import { Shield, AlertTriangle, Eye, CreditCard, Users, Lock, MapPin, Phone, Loader2 } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "../components/ui/accordion";
+import cmsService from '../services/cmsService';
+import logger from '../utils/logger';
 
 const SafetyTipsPage = () => {
   const { t } = useTranslation();
+  const { contact, sections, loading } = useSettings();
+  const safetySections = sections?.safetyTips || [];
 
   const tips = [
     {
@@ -86,169 +92,196 @@ const SafetyTipsPage = () => {
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-          {/* Introduction */}
-          <section className="mb-16">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('safetyPage.welcomeTitle')}</h2>
-              <p className="text-lg text-gray-600 leading-relaxed mb-4">
-                {t('safetyPage.welcomeText1')}
-              </p>
-              <p className="text-lg text-gray-600 leading-relaxed">
-                {t('safetyPage.welcomeText2')}
-              </p>
+          {loading ? (
+            <div className="flex justify-center py-12 bg-white rounded-lg shadow-sm border border-gray-200 mb-16">
+              <Loader2 className="h-8 w-8 animate-spin text-[#D6BA69]" />
             </div>
-          </section>
+          ) : safetySections.length > 0 ? (
+            <div className="space-y-16">
+              <section>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <Accordion type="multiple" className="w-full">
+                    {safetySections.map((section, index) => (
+                      <AccordionItem key={section.id || index} value={`sec-${index}`}>
+                        <AccordionTrigger className="text-left text-xl font-bold hover:text-[#D6BA69]">
+                          {section.title}
+                        </AccordionTrigger>
+                        <AccordionContent className="text-lg text-gray-600 leading-relaxed pt-4">
+                          <div className="whitespace-pre-wrap">{section.content}</div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </div>
+              </section>
+            </div>
+          ) : (
+            <>
+              {/* Fallback Introduction */}
+              <section className="mb-16">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                  <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('safetyPage.welcomeTitle')}</h2>
+                  <p className="text-lg text-gray-600 leading-relaxed mb-4">
+                    {t('safetyPage.welcomeText1')}
+                  </p>
+                  <p className="text-lg text-gray-600 leading-relaxed">
+                    {t('safetyPage.welcomeText2')}
+                  </p>
+                </div>
+              </section>
 
-          {/* Safety Tips Accordion */}
-          <section className="mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">{t('safetyPage.essentialTips')}</h2>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <Accordion type="multiple" className="w-full">
-                {tips.map((tip, index) => {
-                  const IconComponent = tip.icon;
-                  return (
-                    <AccordionItem key={index} value={`tip-${index}`}>
-                      <AccordionTrigger className="text-left hover:text-[#D6BA69]">
-                        <div className="flex items-center gap-3">
-                          <IconComponent className={`${tip.color} w-6 h-6 flex-shrink-0`} />
-                          <span className="font-semibold">{tip.title}</span>
-                        </div>
+              {/* Fallback Safety Tips Accordion */}
+              <section className="mb-16">
+                <h2 className="text-3xl font-bold text-gray-900 mb-8">{t('safetyPage.essentialTips')}</h2>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <Accordion type="multiple" className="w-full">
+                    {tips.map((tip, index) => {
+                      const IconComponent = tip.icon;
+                      return (
+                        <AccordionItem key={index} value={`tip-${index}`}>
+                          <AccordionTrigger className="text-left hover:text-[#D6BA69]">
+                            <div className="flex items-center gap-3">
+                              <IconComponent className={`${tip.color} w-6 h-6 flex-shrink-0`} />
+                              <span className="font-semibold">{tip.title}</span>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="text-gray-600 leading-relaxed pt-2 pl-9">
+                            {tip.description}
+                          </AccordionContent>
+                        </AccordionItem>
+                      );
+                    })}
+                  </Accordion>
+                </div>
+              </section>
+
+              {/* Fallback For Buyers, Sellers, and Red Flags Accordion */}
+              <section className="mb-16">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <Accordion type="multiple" className="w-full">
+                    {/* For Buyers */}
+                    <AccordionItem value="buyers">
+                      <AccordionTrigger className="text-left text-2xl font-bold hover:text-[#D6BA69]">
+                        {t('safetyPage.tipsForBuyers')}
                       </AccordionTrigger>
-                      <AccordionContent className="text-gray-600 leading-relaxed pt-2 pl-9">
-                        {tip.description}
+                      <AccordionContent className="pt-4">
+                        <div className="bg-blue-50 rounded-lg border border-blue-200 p-6">
+                          <ul className="space-y-4">
+                            <li className="flex gap-3">
+                              <span className="text-blue-600 font-bold flex-shrink-0">✓</span>
+                              <span className="text-gray-700"><strong>{t('safetyPage.buyerTip1Title')}</strong> {t('safetyPage.buyerTip1Desc')}</span>
+                            </li>
+                            <li className="flex gap-3">
+                              <span className="text-blue-600 font-bold flex-shrink-0">✓</span>
+                              <span className="text-gray-700"><strong>{t('safetyPage.buyerTip2Title')}</strong> {t('safetyPage.buyerTip2Desc')}</span>
+                            </li>
+                            <li className="flex gap-3">
+                              <span className="text-blue-600 font-bold flex-shrink-0">✓</span>
+                              <span className="text-gray-700"><strong>{t('safetyPage.buyerTip3Title')}</strong> {t('safetyPage.buyerTip3Desc')}</span>
+                            </li>
+                            <li className="flex gap-3">
+                              <span className="text-blue-600 font-bold flex-shrink-0">✓</span>
+                              <span className="text-gray-700"><strong>{t('safetyPage.buyerTip4Title')}</strong> {t('safetyPage.buyerTip4Desc')}</span>
+                            </li>
+                            <li className="flex gap-3">
+                              <span className="text-blue-600 font-bold flex-shrink-0">✓</span>
+                              <span className="text-gray-700"><strong>{t('safetyPage.buyerTip5Title')}</strong> {t('safetyPage.buyerTip5Desc')}</span>
+                            </li>
+                            <li className="flex gap-3">
+                              <span className="text-blue-600 font-bold flex-shrink-0">✓</span>
+                              <span className="text-gray-700"><strong>{t('safetyPage.buyerTip6Title')}</strong> {t('safetyPage.buyerTip6Desc')}</span>
+                            </li>
+                          </ul>
+                        </div>
                       </AccordionContent>
                     </AccordionItem>
-                  );
-                })}
-              </Accordion>
-            </div>
-          </section>
 
-          {/* For Buyers, Sellers, and Red Flags Accordion */}
-          <section className="mb-16">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <Accordion type="multiple" className="w-full">
-                {/* For Buyers */}
-                <AccordionItem value="buyers">
-                  <AccordionTrigger className="text-left text-2xl font-bold hover:text-[#D6BA69]">
-                    {t('safetyPage.tipsForBuyers')}
-                  </AccordionTrigger>
-                  <AccordionContent className="pt-4">
-                    <div className="bg-blue-50 rounded-lg border border-blue-200 p-6">
-                      <ul className="space-y-4">
-                        <li className="flex gap-3">
-                          <span className="text-blue-600 font-bold flex-shrink-0">✓</span>
-                          <span className="text-gray-700"><strong>{t('safetyPage.buyerTip1Title')}</strong> {t('safetyPage.buyerTip1Desc')}</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="text-blue-600 font-bold flex-shrink-0">✓</span>
-                          <span className="text-gray-700"><strong>{t('safetyPage.buyerTip2Title')}</strong> {t('safetyPage.buyerTip2Desc')}</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="text-blue-600 font-bold flex-shrink-0">✓</span>
-                          <span className="text-gray-700"><strong>{t('safetyPage.buyerTip3Title')}</strong> {t('safetyPage.buyerTip3Desc')}</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="text-blue-600 font-bold flex-shrink-0">✓</span>
-                          <span className="text-gray-700"><strong>{t('safetyPage.buyerTip4Title')}</strong> {t('safetyPage.buyerTip4Desc')}</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="text-blue-600 font-bold flex-shrink-0">✓</span>
-                          <span className="text-gray-700"><strong>{t('safetyPage.buyerTip5Title')}</strong> {t('safetyPage.buyerTip5Desc')}</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="text-blue-600 font-bold flex-shrink-0">✓</span>
-                          <span className="text-gray-700"><strong>{t('safetyPage.buyerTip6Title')}</strong> {t('safetyPage.buyerTip6Desc')}</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
+                    {/* For Sellers */}
+                    <AccordionItem value="sellers">
+                      <AccordionTrigger className="text-left text-2xl font-bold hover:text-[#D6BA69]">
+                        {t('safetyPage.tipsForSellers')}
+                      </AccordionTrigger>
+                      <AccordionContent className="pt-4">
+                        <div className="bg-green-50 rounded-lg border border-green-200 p-6">
+                          <ul className="space-y-4">
+                            <li className="flex gap-3">
+                              <span className="text-green-600 font-bold flex-shrink-0">✓</span>
+                              <span className="text-gray-700"><strong>{t('safetyPage.sellerTip1Title')}</strong> {t('safetyPage.sellerTip1Desc')}</span>
+                            </li>
+                            <li className="flex gap-3">
+                              <span className="text-green-600 font-bold flex-shrink-0">✓</span>
+                              <span className="text-gray-700"><strong>{t('safetyPage.sellerTip2Title')}</strong> {t('safetyPage.sellerTip2Desc')}</span>
+                            </li>
+                            <li className="flex gap-3">
+                              <span className="text-green-600 font-bold flex-shrink-0">✓</span>
+                              <span className="text-gray-700"><strong>{t('safetyPage.sellerTip3Title')}</strong> {t('safetyPage.sellerTip3Desc')}</span>
+                            </li>
+                            <li className="flex gap-3">
+                              <span className="text-green-600 font-bold flex-shrink-0">✓</span>
+                              <span className="text-gray-700"><strong>{t('safetyPage.sellerTip4Title')}</strong> {t('safetyPage.sellerTip4Desc')}</span>
+                            </li>
+                            <li className="flex gap-3">
+                              <span className="text-green-600 font-bold flex-shrink-0">✓</span>
+                              <span className="text-gray-700"><strong>{t('safetyPage.sellerTip5Title')}</strong> {t('safetyPage.sellerTip5Desc')}</span>
+                            </li>
+                            <li className="flex gap-3">
+                              <span className="text-green-600 font-bold flex-shrink-0">✓</span>
+                              <span className="text-gray-700"><strong>{t('safetyPage.sellerTip6Title')}</strong> {t('safetyPage.sellerTip6Desc')}</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
 
-                {/* For Sellers */}
-                <AccordionItem value="sellers">
-                  <AccordionTrigger className="text-left text-2xl font-bold hover:text-[#D6BA69]">
-                    {t('safetyPage.tipsForSellers')}
-                  </AccordionTrigger>
-                  <AccordionContent className="pt-4">
-                    <div className="bg-green-50 rounded-lg border border-green-200 p-6">
-                      <ul className="space-y-4">
-                        <li className="flex gap-3">
-                          <span className="text-green-600 font-bold flex-shrink-0">✓</span>
-                          <span className="text-gray-700"><strong>{t('safetyPage.sellerTip1Title')}</strong> {t('safetyPage.sellerTip1Desc')}</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="text-green-600 font-bold flex-shrink-0">✓</span>
-                          <span className="text-gray-700"><strong>{t('safetyPage.sellerTip2Title')}</strong> {t('safetyPage.sellerTip2Desc')}</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="text-green-600 font-bold flex-shrink-0">✓</span>
-                          <span className="text-gray-700"><strong>{t('safetyPage.sellerTip3Title')}</strong> {t('safetyPage.sellerTip3Desc')}</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="text-green-600 font-bold flex-shrink-0">✓</span>
-                          <span className="text-gray-700"><strong>{t('safetyPage.sellerTip4Title')}</strong> {t('safetyPage.sellerTip4Desc')}</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="text-green-600 font-bold flex-shrink-0">✓</span>
-                          <span className="text-gray-700"><strong>{t('safetyPage.sellerTip5Title')}</strong> {t('safetyPage.sellerTip5Desc')}</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="text-green-600 font-bold flex-shrink-0">✓</span>
-                          <span className="text-gray-700"><strong>{t('safetyPage.sellerTip6Title')}</strong> {t('safetyPage.sellerTip6Desc')}</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-
-                {/* Red Flags */}
-                <AccordionItem value="red-flags">
-                  <AccordionTrigger className="text-left text-2xl font-bold hover:text-[#D6BA69]">
-                    {t('safetyPage.redFlagsTitle')}
-                  </AccordionTrigger>
-                  <AccordionContent className="pt-4">
-                    <div className="bg-red-50 rounded-lg border border-red-200 p-6">
-                      <ul className="space-y-3">
-                        <li className="flex gap-3">
-                          <span className="text-red-600 font-bold flex-shrink-0">!</span>
-                          <span className="text-gray-700">{t('safetyPage.redFlag1')}</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="text-red-600 font-bold flex-shrink-0">!</span>
-                          <span className="text-gray-700">{t('safetyPage.redFlag2')}</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="text-red-600 font-bold flex-shrink-0">!</span>
-                          <span className="text-gray-700">{t('safetyPage.redFlag3')}</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="text-red-600 font-bold flex-shrink-0">!</span>
-                          <span className="text-gray-700">{t('safetyPage.redFlag4')}</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="text-red-600 font-bold flex-shrink-0">!</span>
-                          <span className="text-gray-700">{t('safetyPage.redFlag5')}</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="text-red-600 font-bold flex-shrink-0">!</span>
-                          <span className="text-gray-700">{t('safetyPage.redFlag6')}</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="text-red-600 font-bold flex-shrink-0">!</span>
-                          <span className="text-gray-700">{t('safetyPage.redFlag7')}</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="text-red-600 font-bold flex-shrink-0">!</span>
-                          <span className="text-gray-700">{t('safetyPage.redFlag8')}</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
-          </section>
+                    {/* Red Flags */}
+                    <AccordionItem value="red-flags">
+                      <AccordionTrigger className="text-left text-2xl font-bold hover:text-[#D6BA69]">
+                        {t('safetyPage.redFlagsTitle')}
+                      </AccordionTrigger>
+                      <AccordionContent className="pt-4">
+                        <div className="bg-red-50 rounded-lg border border-red-200 p-6">
+                          <ul className="space-y-3">
+                            <li className="flex gap-3">
+                              <span className="text-red-600 font-bold flex-shrink-0">!</span>
+                              <span className="text-gray-700">{t('safetyPage.redFlag1')}</span>
+                            </li>
+                            <li className="flex gap-3">
+                              <span className="text-red-600 font-bold flex-shrink-0">!</span>
+                              <span className="text-gray-700">{t('safetyPage.redFlag2')}</span>
+                            </li>
+                            <li className="flex gap-3">
+                              <span className="text-red-600 font-bold flex-shrink-0">!</span>
+                              <span className="text-gray-700">{t('safetyPage.redFlag3')}</span>
+                            </li>
+                            <li className="flex gap-3">
+                              <span className="text-red-600 font-bold flex-shrink-0">!</span>
+                              <span className="text-gray-700">{t('safetyPage.redFlag4')}</span>
+                            </li>
+                            <li className="flex gap-3">
+                              <span className="text-red-600 font-bold flex-shrink-0">!</span>
+                              <span className="text-gray-700">{t('safetyPage.redFlag5')}</span>
+                            </li>
+                            <li className="flex gap-3">
+                              <span className="text-red-600 font-bold flex-shrink-0">!</span>
+                              <span className="text-gray-700">{t('safetyPage.redFlag6')}</span>
+                            </li>
+                            <li className="flex gap-3">
+                              <span className="text-red-600 font-bold flex-shrink-0">!</span>
+                              <span className="text-gray-700">{t('safetyPage.redFlag7')}</span>
+                            </li>
+                            <li className="flex gap-3">
+                              <span className="text-red-600 font-bold flex-shrink-0">!</span>
+                              <span className="text-gray-700">{t('safetyPage.redFlag8')}</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                </div>
+              </section>
+            </>
+          )}
 
           {/* Emergency Contact */}
           <section className="mb-16">
@@ -260,10 +293,18 @@ const SafetyTipsPage = () => {
               <div className="space-y-3">
                 <p className="flex items-center gap-3">
                   <span className="text-[#D6BA69] font-bold">•</span>
-                  <a href="mailto:info@cambizzle.com" className="text-white hover:text-[#D6BA69] transition-colors underline">
-                    info@cambizzle.com
+                  <a href={`mailto:${contact?.supportEmail || 'info@cambizzle.com'}`} className="text-white hover:text-[#D6BA69] transition-colors underline">
+                    {contact?.supportEmail || 'info@cambizzle.com'}
                   </a>
                 </p>
+                {contact?.supportPhone && (
+                  <p className="flex items-center gap-3">
+                    <span className="text-[#D6BA69] font-bold">•</span>
+                    <a href={`tel:${contact.supportPhone}`} className="text-white hover:text-[#D6BA69] transition-colors underline">
+                      {contact.supportPhone}
+                    </a>
+                  </p>
+                )}
                 <p className="text-sm text-gray-300 mt-6">
                   {t('safetyPage.reportNote')}
                 </p>
@@ -301,3 +342,4 @@ const SafetyTipsPage = () => {
 };
 
 export default SafetyTipsPage;
+

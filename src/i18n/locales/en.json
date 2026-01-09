@@ -53,6 +53,7 @@
     "support": "Support",
     "helpCenter": "Help Center",
     "safetyCenter": "Safety Center",
+    "faq": "FAQ",
     "communityGuidelines": "Community Guidelines",
     "legal": "Legal",
     "terms": "Terms of Service",
@@ -652,6 +653,15 @@
     "aboutLink": "About Cambizzle",
     "termsLink": "Terms & Conditions"
   },
+  "faq": {
+    "seoTitle": "Frequently Asked Questions | Cambizzle",
+    "seoDescription": "Find answers to the most frequently asked questions about Cambizzle. Learn how to buy, sell, and manage your account.",
+    "title": "FAQ",
+    "subtitle": "How can we help you?",
+    "noFaqs": "No FAQs available at the moment.",
+    "stillHaveQuestions": "Still have questions?",
+    "contactSupport": "Feel free to contact us if you can't find the answer to your question."
+  },
   "toast": {
     "welcome": "Welcome!",
     "goodbye": "Goodbye!",
@@ -746,6 +756,7 @@
     "newAd": "New Ad",
     "statusActive": "Active",
     "statusPending": "Pending",
+    "statusRejected": "Rejected",
     "statusInactive": "Inactive",
     "boosted": "Boosted",
     "boost": "Boost",
@@ -772,6 +783,9 @@
   },
   "profileStats": {
     "activeAds": "Active Ads",
+    "validatedAds": "Validated Ads",
+    "pendingAds": "Pending Ads",
+    "rejectedAds": "Rejected Ads",
     "totalViews": "Total Views",
     "favorites": "Favorites",
     "memberSince": "Member Since"
@@ -978,7 +992,9 @@
       "description": "Description",
       "allStatuses": "All Statuses",
       "startDate": "Start Date",
-      "endDate": "End Date"
+      "endDate": "End Date",
+      "dateFrom": "Date From",
+      "dateTo": "Date To"
     },
     "ads": {
       "title": "Ads Management",
@@ -1114,7 +1130,17 @@
       "errorReactivation": "Error during reactivation",
       "identityVerified": "Identity verified successfully",
       "errorVerification": "Error during verification",
-      "unknown": "Unknown"
+      "unknown": "Unknown",
+      "promote": "Promote",
+      "demote": "Demote",
+      "promoteToAdmin": "Promote to Admin",
+      "demoteToUser": "Demote to User",
+      "promoteConfirm": "Are you sure you want to promote {{name}} to Admin?",
+      "demoteConfirm": "Are you sure you want to demote {{name}} to User?",
+      "promoteWarning": "This user will have full access to the administration panel.",
+      "demoteWarning": "This user will lose all administrative privileges.",
+      "roleUpdated": "User role updated successfully",
+      "errorRoleUpdate": "Error updating user role"
     },
     "categories": {
       "title": "Category Management",
@@ -1220,10 +1246,10 @@
       "typeNumber": "Number",
       "typeBoolean": "Boolean",
       "typeDate": "Date",
-      "sortNameAsc": "Name ▲",
-      "sortNameDesc": "Name ▼",
-      "sortSubcategoryAsc": "Subcategory ▲",
-      "sortSubcategoryDesc": "Subcategory ▼"
+      "sortNameAsc": "Name (A-Z)",
+      "sortNameDesc": "Name (Z-A)",
+      "sortSubcategoryAsc": "Subcategory (A-Z)",
+      "sortSubcategoryDesc": "Subcategory (Z-A)"
     },
     "locations": {
       "title": "Location Management",
@@ -1438,8 +1464,38 @@
       "contentManagement": "Content Management",
       "promotionReports": "Promotion & Reports",
       "settings": "Settings",
+      "cms": "Content Management",
       "logOut": "Log Out",
       "backToSite": "Back to site"
+    },
+    "settings": {
+      "title": "Settings & CMS",
+      "subtitle": "Manage your site content and contact information",
+      "general": "General",
+      "socialMedia": "Social Media",
+      "legal": "Legal Pages",
+      "faq": "FAQ",
+      "contactInfo": "Contact Information",
+      "supportPhone": "Support Phone",
+      "whatsappNumber": "WhatsApp Number",
+      "supportEmail": "Support Email",
+      "socialLinks": "Social Links",
+      "facebook": "Facebook",
+      "twitter": "Twitter",
+      "instagram": "Instagram",
+      "linkedin": "LinkedIn",
+      "legalPages": "Legal Pages Content",
+      "terms": "Terms & Conditions",
+      "about": "About Us",
+      "safety": "Safety Tips",
+      "faqManagement": "FAQ Management",
+      "addFaq": "Add FAQ",
+      "question": "Question",
+      "answer": "Answer",
+      "noFaqs": "No FAQs added yet",
+      "saveSuccess": "Settings saved successfully",
+      "saveError": "Error saving settings",
+      "saving": "Saving..."
     },
     "feedbacks": {
       "title": "Ad Feedback Management",

@@ -358,9 +358,8 @@ const CategorySidebar = ({ className = '' }) => {
       return (
         <div
           ref={mobileMenuRef}
-          className={`lg:hidden bg-white transition-all duration-300 ease-in-out ${
-            isMobileMenuOpen ? 'max-h-[9999px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
-          }`}
+          className={`lg:hidden bg-white transition-all duration-300 ease-in-out ${isMobileMenuOpen ? 'max-h-[9999px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
+            }`}
         >
           <div className="p-6">
             <Loader text={t('sidebar.loading')} />
@@ -373,9 +372,8 @@ const CategorySidebar = ({ className = '' }) => {
       return (
         <div
           ref={mobileMenuRef}
-          className={`lg:hidden bg-white transition-all duration-300 ${
-            isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
-          }`}
+          className={`lg:hidden bg-white transition-all duration-300 ${isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
+            }`}
         >
           <div className="p-6 text-center text-red-500">
             {t('sidebar.error')}
@@ -387,9 +385,8 @@ const CategorySidebar = ({ className = '' }) => {
     return (
       <div
         ref={mobileMenuRef}
-        className={`lg:hidden bg-white transition-all duration-300 ease-in-out overflow-hidden ${
-          isMobileMenuOpen ? 'max-h-[9999px] opacity-100' : 'max-h-0 opacity-0'
-        }`}
+        className={`lg:hidden bg-white transition-all duration-300 ease-in-out overflow-hidden ${isMobileMenuOpen ? 'max-h-[9999px] opacity-100' : 'max-h-0 opacity-0'
+          }`}
       >
         <div className="p-4 pb-6">
           <div className="grid grid-cols-3 gap-3">
@@ -531,15 +528,14 @@ const CategorySidebar = ({ className = '' }) => {
                 >
                   <button
                     onClick={() => handleCategoryClick(category.slug)}
-                    className={`w-full flex items-center justify-between px-5 py-3 transition-all rounded-r-full mx-2 group cursor-pointer ${
-                      isActive
+                    className={`w-full flex items-center justify-between px-5 py-3 transition-all rounded-r-full mx-2 group cursor-pointer ${isActive
                         ? 'bg-[#D6BA69]/20 border-l-4 border-[#D6BA69]'
                         : 'hover:bg-[#D6BA69]/10'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center space-x-3 flex-1">
-                      <span className={`flex-shrink-0 w-5 h-5 ${isActive ? 'text-[#D6BA69]' : 'text-gray-600 group-hover:text-[#D6BA69]'}`}>
-                        <CategoryIcon category={category} size="w-5 h-5" />
+                      <span className={`flex-shrink-0 w-7 h-7 ${isActive ? 'text-[#D6BA69]' : 'text-gray-600 group-hover:text-[#D6BA69]'}`}>
+                        <CategoryIcon category={category} size="w-7 h-7" />
                       </span>
                       <TranslatedName
                         name={category.name}
@@ -588,8 +584,8 @@ const CategorySidebar = ({ className = '' }) => {
                   <div className="flex flex-col h-full">
                     <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg flex-shrink-0">
                       <h3 className="flex items-center text-sm font-semibold text-gray-900">
-                        <span className="w-5 h-5 text-[#D6BA69] mr-2 flex-shrink-0">
-                          <CategoryIcon category={cat} size="w-5 h-5" />
+                        <span className="w-7 h-7 text-[#D6BA69] mr-2 flex-shrink-0">
+                          <CategoryIcon category={cat} size="w-7 h-7" />
                         </span>
                         <TranslatedName name={cat.name} />
                       </h3>
@@ -602,15 +598,14 @@ const CategorySidebar = ({ className = '' }) => {
                           <button
                             key={sub.slug}
                             onClick={() => handleSubcategoryClick(cat.slug, sub.slug)}
-                            className={`w-full flex items-center justify-between px-4 py-2.5 transition-all group cursor-pointer ${
-                              isSubActive
+                            className={`w-full flex items-center justify-between px-4 py-2.5 transition-all group cursor-pointer ${isSubActive
                                 ? 'bg-[#D6BA69]/20 border-l-4 border-[#D6BA69]'
                                 : 'hover:bg-[#D6BA69]/10'
-                            }`}
+                              }`}
                           >
                             <div className="flex items-center space-x-3 min-w-0">
-                              <span className={`flex-shrink-0 w-4 h-4 ${isSubActive ? 'text-[#D6BA69]' : 'text-gray-500 group-hover:text-[#D6BA69]'}`}>
-                                <SubcategoryIcon subcategory={sub} size="w-4 h-4" />
+                              <span className={`flex-shrink-0 w-6 h-6 ${isSubActive ? 'text-[#D6BA69]' : 'text-gray-500 group-hover:text-[#D6BA69]'}`}>
+                                <SubcategoryIcon subcategory={sub} size="w-6 h-6" />
                               </span>
                               <TranslatedName
                                 name={sub.name}

@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ToastProvider from './components/toast/ToastProvider';
 import { AuthProvider } from './contexts/AuthContext';
 import { AdsProvider } from './contexts/AdsContext';
+import { SettingsProvider } from './contexts/SettingsContext';
 import { Toaster } from './components/ui/toaster';
 import { Toaster as Sonner } from './components/ui/sonner';
 import { TooltipProvider } from './components/ui/tooltip';
@@ -26,6 +27,7 @@ import TestPromotionPacks from './pages/TestPromotionPacks';
 import About from './pages/About';
 import Terms from './pages/Terms';
 import SafetyTipsPage from './pages/SafetyTips';
+import Faq from './pages/Faq';
 import Dashboard from './pages/admin/Dashboard';
 import Users from './pages/admin/Users';
 import Ads from './pages/admin/Ads';
@@ -40,6 +42,7 @@ import ReferralCodes from './pages/admin/ReferralCodes';
 import PromotionPackAdmin from './components/admin/PromotionPackAdmin';
 import Payments from './pages/admin/Payments';
 import Feedbacks from './pages/admin/Feedbacks';
+import Settings from './pages/admin/Settings';
 import ScrollToTop from './components/ScrollToTop';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import './App.css';
@@ -69,45 +72,49 @@ function App() {
               <Sonner />
               <AuthProvider>
                 <AdsProvider>
-                  <Routes>
-                    {/* Routes publiques avec Header et Footer */}
-                    <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
-                    <Route path="/login" element={<PublicLayout><Login /></PublicLayout>} />
-                    <Route path="/register" element={<PublicLayout><Register /></PublicLayout>} />
-                    <Route path="/forgot-password" element={<PublicLayout><ForgotPassword /></PublicLayout>} />
-                    <Route path="/search" element={<PublicLayout><Search /></PublicLayout>} />
-                    <Route path="/category/:categoryId" element={<PublicLayout><CategoryAds /></PublicLayout>} />
-                    <Route path="/subcategory" element={<PublicLayout><SubcategoryAds /></PublicLayout>} />
-                    <Route path="/create-ad" element={<PublicLayout><CreateAd /></PublicLayout>} />
-                    <Route path="/profile" element={<Navigate to="/profile/overview" replace />} />
-                    <Route path="/profile/*" element={<PublicLayout><Profile /></PublicLayout>} />
-                    <Route path="/test/promotion-packs" element={<PublicLayout><TestPromotionPacks /></PublicLayout>} />
-                    <Route path="/ads/:slug" element={<PublicLayout><AdDetail /></PublicLayout>} />
-                    <Route path="/ads/:slug/feedbacks" element={<PublicLayout><AdFeedbacks /></PublicLayout>} />
-                    <Route path="/edit-ad/:slug" element={<PublicLayout><UpdateAd /></PublicLayout>} />
+                  <SettingsProvider>
+                    <Routes>
+                      {/* ... existing routes ... */}
+                      <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
+                      <Route path="/login" element={<PublicLayout><Login /></PublicLayout>} />
+                      <Route path="/register" element={<PublicLayout><Register /></PublicLayout>} />
+                      <Route path="/forgot-password" element={<PublicLayout><ForgotPassword /></PublicLayout>} />
+                      <Route path="/search" element={<PublicLayout><Search /></PublicLayout>} />
+                      <Route path="/category/:categoryId" element={<PublicLayout><CategoryAds /></PublicLayout>} />
+                      <Route path="/subcategory" element={<PublicLayout><SubcategoryAds /></PublicLayout>} />
+                      <Route path="/create-ad" element={<PublicLayout><CreateAd /></PublicLayout>} />
+                      <Route path="/profile" element={<Navigate to="/profile/overview" replace />} />
+                      <Route path="/profile/*" element={<PublicLayout><Profile /></PublicLayout>} />
+                      <Route path="/test/promotion-packs" element={<PublicLayout><TestPromotionPacks /></PublicLayout>} />
+                      <Route path="/ads/:slug" element={<PublicLayout><AdDetail /></PublicLayout>} />
+                      <Route path="/ads/:slug/feedbacks" element={<PublicLayout><AdFeedbacks /></PublicLayout>} />
+                      <Route path="/edit-ad/:slug" element={<PublicLayout><UpdateAd /></PublicLayout>} />
 
-                    {/* Info Pages */}
-                    <Route path="/about" element={<PublicLayout><About /></PublicLayout>} />
-                    <Route path="/terms" element={<PublicLayout><Terms /></PublicLayout>} />
-                    <Route path="/safety-tips" element={<PublicLayout><SafetyTipsPage /></PublicLayout>} />
+                      {/* Info Pages */}
+                      <Route path="/about" element={<PublicLayout><About /></PublicLayout>} />
+                      <Route path="/terms" element={<PublicLayout><Terms /></PublicLayout>} />
+                      <Route path="/safety-tips" element={<PublicLayout><SafetyTipsPage /></PublicLayout>} />
+                      <Route path="/faq" element={<PublicLayout><Faq /></PublicLayout>} />
 
-                    {/* Routes admin sans header */}
-                    <Route path="/admin" element={<AdminLayout><Dashboard /></AdminLayout>} />
-                    <Route path="/admin/users" element={<AdminLayout><Users /></AdminLayout>} />
-                    <Route path="/admin/ads" element={<AdminLayout><Ads /></AdminLayout>} />
-                    <Route path="/admin/categories" element={<AdminLayout><Categories /></AdminLayout>} />
-                    <Route path="/admin/subcategories" element={<AdminLayout><Subcategories /></AdminLayout>} />
-                    <Route path="/admin/filters" element={<AdminLayout><Filters /></AdminLayout>} />
-                    <Route path="/admin/brands" element={<AdminLayout><Brands /></AdminLayout>} />
-                    <Route path="/admin/locations" element={<AdminLayout><Locations /></AdminLayout>} />
-                    <Route path="/admin/reports" element={<AdminLayout><Reports /></AdminLayout>} />
-                    <Route path="/admin/moderation-logs" element={<AdminLayout><ModerationLogs /></AdminLayout>} />
-                    <Route path="/admin/referralcodes" element={<AdminLayout><ReferralCodes /></AdminLayout>} />
-                    <Route path="/admin/promotion-packs" element={<AdminLayout><PromotionPackAdmin /></AdminLayout>} />
-                    <Route path="/admin/payments" element={<AdminLayout><Payments /></AdminLayout>} />
-                    <Route path="/admin/feedbacks" element={<AdminLayout><Feedbacks /></AdminLayout>} />
-                    {/* Autres routes admin seront ajoutées ici */}
-                  </Routes>
+                      {/* Routes admin sans header */}
+                      <Route path="/admin" element={<AdminLayout><Dashboard /></AdminLayout>} />
+                      <Route path="/admin/users" element={<AdminLayout><Users /></AdminLayout>} />
+                      <Route path="/admin/ads" element={<AdminLayout><Ads /></AdminLayout>} />
+                      <Route path="/admin/categories" element={<AdminLayout><Categories /></AdminLayout>} />
+                      <Route path="/admin/subcategories" element={<AdminLayout><Subcategories /></AdminLayout>} />
+                      <Route path="/admin/filters" element={<AdminLayout><Filters /></AdminLayout>} />
+                      <Route path="/admin/brands" element={<AdminLayout><Brands /></AdminLayout>} />
+                      <Route path="/admin/locations" element={<AdminLayout><Locations /></AdminLayout>} />
+                      <Route path="/admin/reports" element={<AdminLayout><Reports /></AdminLayout>} />
+                      <Route path="/admin/moderation-logs" element={<AdminLayout><ModerationLogs /></AdminLayout>} />
+                      <Route path="/admin/referralcodes" element={<AdminLayout><ReferralCodes /></AdminLayout>} />
+                      <Route path="/admin/promotion-packs" element={<AdminLayout><PromotionPackAdmin /></AdminLayout>} />
+                      <Route path="/admin/payments" element={<AdminLayout><Payments /></AdminLayout>} />
+                      <Route path="/admin/feedbacks" element={<AdminLayout><Feedbacks /></AdminLayout>} />
+                      <Route path="/admin/settings" element={<AdminLayout><Settings /></AdminLayout>} />
+                      {/* Autres routes admin seront ajoutées ici */}
+                    </Routes>
+                  </SettingsProvider>
                 </AdsProvider>
               </AuthProvider>
             </TooltipProvider>

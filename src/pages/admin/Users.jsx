@@ -53,6 +53,7 @@ const Users = () => {
   const [suspendModalOpen, setSuspendModalOpen] = useState(false);
   const [unsuspendModalOpen, setUnsuspendModalOpen] = useState(false);
   const [verifyModalOpen, setVerifyModalOpen] = useState(false);
+  const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [userDetailsModalOpen, setUserDetailsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedUserDetails, setSelectedUserDetails] = useState(null);
@@ -61,6 +62,7 @@ const Users = () => {
   const [suspendNotes, setSuspendNotes] = useState("");
   const [unsuspendNotes, setUnsuspendNotes] = useState("");
   const [verifyNotes, setVerifyNotes] = useState("");
+  const [newRoleId, setNewRoleId] = useState("");
   const [identityDocumentBlobUrl, setIdentityDocumentBlobUrl] = useState(null);
 
   const USERS_PER_PAGE = 8;
@@ -205,6 +207,26 @@ const Users = () => {
     } catch (err) {
       logger.error('Verification error:', err);
       showToast({ type: 'error', message: err.message || t('admin.users.errorVerification') });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleUpdateRole = async () => {
+    if (!selectedUser || !newRoleId) return;
+    try {
+      setActionLoading(true);
+      const response = await adminService.updateUserRole(selectedUser.idUser, newRoleId);
+      if (response.status === 'success') {
+        setRoleModalOpen(false);
+        fetchUsers();
+        showToast({ type: 'success', message: t('admin.users.roleUpdated') });
+      } else {
+        throw new Error(response.message || t('admin.users.errorRoleUpdate'));
+      }
+    } catch (err) {
+      logger.error('Role update error:', err);
+      showToast({ type: 'error', message: err.message || t('admin.users.errorRoleUpdate') });
     } finally {
       setActionLoading(false);
     }
@@ -489,6 +511,18 @@ const Users = () => {
                         {t('admin.users.verify')}
                       </Button>
                     )}
+                    <Button
+                      size="sm"
+                      className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 h-8 text-xs px-3 rounded-lg"
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setNewRoleId(user.roleId === "1" ? "2" : "1");
+                        setRoleModalOpen(true);
+                      }}
+                    >
+                      <Shield className="h-3 w-3 mr-1" />
+                      {user.roleId === "1" ? t('admin.users.demote') : t('admin.users.promote')}
+                    </Button>
                   </div>
                   <Button
                     size="sm"
@@ -829,6 +863,50 @@ const Users = () => {
                 </>
               ) : (
                 t('admin.users.reactivate')
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Change Role */}
+      <Dialog open={roleModalOpen} onOpenChange={setRoleModalOpen}>
+        <DialogContent className="max-w-md bg-white rounded-xl shadow-xl border border-gray-200">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-gray-900">
+              {newRoleId === "1" ? t('admin.users.promoteToAdmin') : t('admin.users.demoteToUser')}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4 text-sm text-gray-600">
+            <p>
+              {newRoleId === "1"
+                ? t('admin.users.promoteConfirm', { name: `${selectedUser?.firstName} ${selectedUser?.lastName}` })
+                : t('admin.users.demoteConfirm', { name: `${selectedUser?.firstName} ${selectedUser?.lastName}` })
+              }
+            </p>
+            <p className="font-medium text-red-600">
+              {newRoleId === "1" ? t('admin.users.promoteWarning') : t('admin.users.demoteWarning')}
+            </p>
+          </div>
+          <div className="mt-4 flex justify-end gap-2">
+            <Button
+              onClick={() => setRoleModalOpen(false)}
+              className="h-9 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300"
+            >
+              {t('admin.users.cancel')}
+            </Button>
+            <Button
+              onClick={handleUpdateRole}
+              disabled={actionLoading}
+              className={`h-9 text-white text-sm rounded-lg ${newRoleId === "1" ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"}`}
+            >
+              {actionLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {t('common.processing')}
+                </>
+              ) : (
+                newRoleId === "1" ? t('admin.users.promote') : t('admin.users.demote')
               )}
             </Button>
           </div>

@@ -1,4 +1,4 @@
-import { Package, Eye, Heart, Calendar } from 'lucide-react';
+import { Package, Eye, Heart, Calendar, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import useFavorites from '../../hooks/useFavorites';
 
@@ -11,11 +11,25 @@ const ProfileStats = ({ user, userAds }) => {
 
   const stats = [
     {
-      label: t('profileStats.activeAds'),
-      value: userAds.filter(ad => ad.status === 'active').length,
-      icon: Package,
-      color: 'text-primary',
-      bgColor: 'bg-primary/10'
+      label: t('profileStats.validatedAds'),
+      value: userAds.filter(ad => ad.moderationStatus === 'approved').length,
+      icon: CheckCircle,
+      color: 'text-green-600',
+      bgColor: 'bg-green-100'
+    },
+    {
+      label: t('profileStats.pendingAds'),
+      value: userAds.filter(ad => ad.moderationStatus === 'pending').length,
+      icon: Clock,
+      color: 'text-yellow-600',
+      bgColor: 'bg-yellow-100'
+    },
+    {
+      label: t('profileStats.rejectedAds'),
+      value: userAds.filter(ad => ad.moderationStatus === 'rejected').length,
+      icon: XCircle,
+      color: 'text-red-600',
+      bgColor: 'bg-red-100'
     },
     {
       label: t('profileStats.totalViews'),
@@ -23,23 +37,6 @@ const ProfileStats = ({ user, userAds }) => {
       icon: Eye,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100'
-    },
-    {
-      label: t('profileStats.favorites'),
-      value: typeof totalFavorites === 'number' ? totalFavorites : parseInt(totalFavorites) || 0,
-      icon: Heart,
-      color: 'text-red-500',
-      bgColor: 'bg-red-100'
-    },
-    {
-      label: t('profileStats.memberSince'),
-      value: user ? new Date(user.createdAt).toLocaleDateString(dateLocale, {
-        month: 'short',
-        year: 'numeric'
-      }) : '-',
-      icon: Calendar,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100'
     }
   ];
 

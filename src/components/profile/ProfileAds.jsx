@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Package, Plus, Eye, Calendar, Edit, Trash2, Zap } from 'lucide-react';
+import { Package, Plus, Eye, Calendar, Edit, Trash2, Zap, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Button from '../ui/Button';
@@ -73,8 +73,8 @@ const ProfileAds = ({ userAds, onCreateAd, onEditAd, onDeleteAd, user }) => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {userAds.map((ad) => (
-          <div 
-            key={ad.id} 
+          <div
+            key={ad.id}
             className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
           >
             <div className="relative cursor-pointer" onClick={() => handleAdClick(ad)}>
@@ -90,14 +90,21 @@ const ProfileAds = ({ userAds, onCreateAd, onEditAd, onDeleteAd, user }) => {
                 </div>
               )}
               <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  ad.status === 'active'
-                    ? 'bg-green-100 text-green-800'
+                <span className={`px-2 py-1 rounded-full text-[10px] sm:text-xs font-semibold uppercase tracking-wider shadow-sm ${ad.status === 'active' && ad.moderationStatus === 'approved'
+                    ? 'bg-green-100 text-green-800 border border-green-200'
                     : ad.moderationStatus === 'pending'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {ad.status === 'active' ? t('profileAds.statusActive') : ad.moderationStatus === 'pending' ? t('profileAds.statusPending') : t('profileAds.statusInactive')}
+                      ? 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                      : ad.moderationStatus === 'rejected'
+                        ? 'bg-red-100 text-red-800 border border-red-200'
+                        : 'bg-gray-100 text-gray-800 border border-gray-200'
+                  }`}>
+                  {ad.status === 'active' && ad.moderationStatus === 'approved'
+                    ? t('profileAds.statusActive')
+                    : ad.moderationStatus === 'pending'
+                      ? t('profileAds.statusPending')
+                      : ad.moderationStatus === 'rejected'
+                        ? t('profileAds.statusRejected')
+                        : t('profileAds.statusInactive')}
                 </span>
               </div>
             </div>
@@ -111,7 +118,7 @@ const ProfileAds = ({ userAds, onCreateAd, onEditAd, onDeleteAd, user }) => {
               <p className="text-xl sm:text-2xl font-bold text-[#D6BA69] mb-3">
                 {formatPrice(ad.price)} FCFA
               </p>
-              
+
               <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
                 <div className="flex items-center gap-1">
                   <Eye className="w-4 h-4" />
@@ -122,6 +129,16 @@ const ProfileAds = ({ userAds, onCreateAd, onEditAd, onDeleteAd, user }) => {
                   {formatRelativeDate(ad.createdAt)}
                 </div>
               </div>
+
+              {ad.moderationStatus === 'rejected' && (ad.rejectReason || ad.moderationNotes) && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-lg flex gap-2 items-start">
+                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                  <div className="text-xs text-red-700">
+                    <p className="font-semibold mb-1 uppercase tracking-tight">Raison du rejet :</p>
+                    <p className="italic leading-relaxed">{ad.rejectReason || ad.moderationNotes}</p>
+                  </div>
+                </div>
+              )}
 
               <div className="flex gap-2">
                 {(ad.isBoosted === '1' || ad.is_boosted === '1') ? (

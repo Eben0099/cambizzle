@@ -8,6 +8,7 @@ import { useToast } from "../../components/toast/useToast";
 import storageService from "../../services/storageService";
 import { Download } from "lucide-react";
 import { exportToExcel } from "../../utils/exportToExcel";
+import Pagination from "../../components/ui/Pagination";
 import {
   LineChart,
   Line,
@@ -47,7 +48,9 @@ export default function Payments() {
     end_date: "",
   });
   const [txPage, setTxPage] = useState(1);
-  const [txPerPage] = useState(25);
+  const [txPerPage] = useState(5);
+  const [latestTxPage, setLatestTxPage] = useState(1);
+  const LATEST_TX_PER_PAGE = 5;
 
   /* ---------- FETCH HELPERS ---------- */
   const fetchStats = async () => {
@@ -170,8 +173,8 @@ export default function Payments() {
           type="button"
           onClick={() => setActiveTab("overview")}
           className={`pb-2 px-1 font-medium transition-colors ${activeTab === "overview"
-              ? "border-b-2 border-[#D6BA69] text-[#D6BA69]"
-              : "text-gray-500"
+            ? "border-b-2 border-[#D6BA69] text-[#D6BA69]"
+            : "text-gray-500"
             }`}
         >
           {t('admin.payments.overview')}
@@ -180,8 +183,8 @@ export default function Payments() {
           type="button"
           onClick={() => setActiveTab("transactions")}
           className={`pb-2 px-1 font-medium transition-colors ${activeTab === "transactions"
-              ? "border-b-2 border-[#D6BA69] text-[#D6BA69]"
-              : "text-gray-500"
+            ? "border-b-2 border-[#D6BA69] text-[#D6BA69]"
+            : "text-gray-500"
             }`}
         >
           {t('admin.payments.transactions')}
@@ -196,22 +199,28 @@ export default function Payments() {
       {activeTab === "overview" && stats && !loading && (
         <div className="space-y-8">
           {/* Date filter */}
-          <form onSubmit={applyStatsFilter} className="flex flex-col sm:flex-row gap-3">
-            <input
-              type="date"
-              value={statsStart}
-              onChange={(e) => setStatsStart(e.target.value)}
-              className="border rounded px-3 py-1"
-            />
-            <input
-              type="date"
-              value={statsEnd}
-              onChange={(e) => setStatsEnd(e.target.value)}
-              className="border rounded px-3 py-1"
-            />
+          <form onSubmit={applyStatsFilter} className="flex flex-col sm:flex-row gap-3 items-end">
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">{t('admin.payments.dateFrom')}</label>
+              <input
+                type="date"
+                value={statsStart}
+                onChange={(e) => setStatsStart(e.target.value)}
+                className="border rounded px-3 py-1"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">{t('admin.payments.dateTo')}</label>
+              <input
+                type="date"
+                value={statsEnd}
+                onChange={(e) => setStatsEnd(e.target.value)}
+                className="border rounded px-3 py-1"
+              />
+            </div>
             <Button
               type="submit"
-              className="bg-[#D6BA69] text-black px-4 py-1 rounded hover:bg-[#c9a63a]"
+              className="bg-[#D6BA69] text-black px-4 py-1 rounded hover:bg-[#c9a63a] h-[34px]"
             >
               {t('admin.payments.apply')}
             </Button>
@@ -346,7 +355,9 @@ export default function Payments() {
 
           {/* Latest Transactions */}
           <div>
-            <h2 className="text-lg font-semibold mb-2">{t('admin.payments.latestTransactions')}</h2>
+            <h2 className="text-lg font-semibold mb-2">
+              {t('admin.payments.latestTransactions')}
+            </h2>
             <div className="bg-white rounded-lg shadow p-4 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -359,30 +370,46 @@ export default function Payments() {
                   </tr>
                 </thead>
                 <tbody>
-                  {stats.latest_transactions.map((tx) => (
-                    <tr key={tx.id} className="border-b">
-                      <td className="py-1">{tx.reference}</td>
-                      <td className="py-1">{tx.amount} FCFA</td>
-                      <td className="py-1">
-                        <span
-                          className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${tx.status === "paid"
+                  {(() => {
+                    const startIdx = (latestTxPage - 1) * LATEST_TX_PER_PAGE;
+                    const endIdx = startIdx + LATEST_TX_PER_PAGE;
+                    const paginatedTx = stats.latest_transactions.slice(startIdx, endIdx);
+                    return paginatedTx.map((tx) => (
+                      <tr key={tx.id} className="border-b">
+                        <td className="py-1">{tx.reference}</td>
+                        <td className="py-1">{tx.amount} FCFA</td>
+                        <td className="py-1">
+                          <span
+                            className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${tx.status === "paid"
                               ? "bg-green-100 text-green-800"
                               : tx.status === "pending"
                                 ? "bg-yellow-100 text-yellow-800"
                                 : tx.status === "failed"
                                   ? "bg-red-100 text-red-800"
                                   : "bg-gray-100 text-gray-800"
-                            }`}
-                        >
-                          {tx.status}
-                        </span>
-                      </td>
-                      <td className="py-1">{tx.payment_method ?? "-"}</td>
-                      <td className="py-1">{tx.created_at ?? "-"}</td>
-                    </tr>
-                  ))}
+                              }`}
+                          >
+                            {tx.status}
+                          </span>
+                        </td>
+                        <td className="py-1">{tx.payment_method ?? "-"}</td>
+                        <td className="py-1">{tx.created_at ?? "-"}</td>
+                      </tr>
+                    ));
+                  })()}
                 </tbody>
               </table>
+              {stats.latest_transactions && stats.latest_transactions.length > 0 && (
+                <div className="mt-4">
+                  <Pagination
+                    currentPage={latestTxPage}
+                    totalPages={Math.ceil(stats.latest_transactions.length / LATEST_TX_PER_PAGE)}
+                    hasNext={latestTxPage < Math.ceil(stats.latest_transactions.length / LATEST_TX_PER_PAGE)}
+                    hasPrevious={latestTxPage > 1}
+                    onPageChange={(page) => setLatestTxPage(page)}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -391,47 +418,62 @@ export default function Payments() {
       {/* ==================== TRANSACTIONS TAB ==================== */}
       {activeTab === "transactions" && !loading && (
         <div className="space-y-8">
+
+
           {/* Filters */}
           <form
             onSubmit={applyTxFilter}
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 items-end"
           >
-            <select
-              name="status"
-              value={txFilters.status}
-              onChange={changeTxFilter}
-              className="border rounded px-3 py-1"
-            >
-              <option value="">{t('admin.payments.allStatuses')}</option>
-              <option value="paid">{t('admin.payments.paid')}</option>
-              <option value="pending">{t('admin.payments.pending')}</option>
-              <option value="failed">{t('admin.payments.failed')}</option>
-              <option value="refunded">{t('admin.payments.refunded')}</option>
-            </select>
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">{t('admin.payments.status')}</label>
+              <select
+                name="status"
+                value={txFilters.status}
+                onChange={changeTxFilter}
+                className="border rounded px-3 py-1 w-full"
+              >
+                <option value="">{t('admin.payments.allStatuses')}</option>
+                <option value="paid">{t('admin.payments.paid')}</option>
+                <option value="pending">{t('admin.payments.pending')}</option>
+                <option value="failed">{t('admin.payments.failed')}</option>
+                <option value="refunded">{t('admin.payments.refunded')}</option>
+              </select>
+            </div>
 
-            <input
-              type="text"
-              name="method"
-              value={txFilters.method}
-              onChange={changeTxFilter}
-              className="border rounded px-3 py-1"
-            />
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">{t('admin.payments.method')}</label>
+              <input
+                type="text"
+                name="method"
+                value={txFilters.method}
+                onChange={changeTxFilter}
+                className="border rounded px-3 py-1 w-full"
+                placeholder={t('admin.payments.method')}
+              />
+            </div>
 
-            <input
-              type="date"
-              name="start_date"
-              value={txFilters.start_date}
-              onChange={changeTxFilter}
-              className="border rounded px-3 py-1"
-            />
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">{t('admin.payments.dateFrom')}</label>
+              <input
+                type="date"
+                name="start_date"
+                value={txFilters.start_date}
+                onChange={changeTxFilter}
+                className="border rounded px-3 py-1"
+              />
+            </div>
 
-            <input
-              type="date"
-              name="end_date"
-              value={txFilters.end_date}
-              onChange={changeTxFilter}
-              className="border rounded px-3 py-1"
-            />
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">{t('admin.payments.dateTo')}</label>
+              <input
+                type="date"
+                name="end_date"
+                value={txFilters.end_date}
+                onChange={changeTxFilter}
+                className="border rounded px-3 py-1"
+              />
+            </div>
 
             <Button
               type="submit"
@@ -490,12 +532,12 @@ export default function Payments() {
                       <td className="py-2 px-3">
                         <span
                           className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${tx.status === "paid"
-                              ? "bg-green-100 text-green-800"
-                              : tx.status === "pending"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : tx.status === "failed"
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-gray-100 text-gray-800"
+                            ? "bg-green-100 text-green-800"
+                            : tx.status === "pending"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : tx.status === "failed"
+                                ? "bg-red-100 text-red-800"
+                                : "bg-gray-100 text-gray-800"
                             }`}
                         >
                           {tx.status}
@@ -514,31 +556,20 @@ export default function Payments() {
           </div>
 
           {/* Pagination */}
-          {pagination.total_pages > 1 && (
-            <div className="flex justify-between items-center">
-              <Button
-                type="button"
-                onClick={() => setTxPage((p) => Math.max(p - 1, 1))}
-                disabled={txPage === 1}
-                className="bg-[#D6BA69] text-black px-4 py-2 rounded disabled:opacity-50"
-              >
-                {t('admin.payments.previous')}
-              </Button>
-              <span>
-                {t('admin.payments.page')} {pagination.current_page} / {pagination.total_pages}
-              </span>
-              <Button
-                type="button"
-                onClick={() =>
-                  setTxPage((p) => Math.min(p + 1, pagination.total_pages))
-                }
-                disabled={txPage === pagination.total_pages}
-                className="bg-[#D6BA69] text-black px-4 py-2 rounded disabled:opacity-50"
-              >
-                {t('admin.payments.next')}
-              </Button>
-            </div>
-          )}
+          {(() => {
+            const totalPages = pagination.total_pages || pagination.last_page || pagination.lastPage || (pagination.total ? Math.ceil(pagination.total / txPerPage) : 0);
+            return totalPages >= 1 ? (
+              <div className="mt-4">
+                <Pagination
+                  currentPage={txPage}
+                  totalPages={totalPages}
+                  hasNext={txPage < totalPages}
+                  hasPrevious={txPage > 1}
+                  onPageChange={(page) => setTxPage(page)}
+                />
+              </div>
+            ) : null;
+          })()}
         </div>
       )}
     </div>

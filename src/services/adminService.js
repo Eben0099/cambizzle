@@ -88,6 +88,51 @@ class AdminService {
     this.setAuthHeader();
   }
 
+  // ============= GESTION DES LOCALISATIONS =============
+  // Récupérer la liste des localisations
+  async getLocations() {
+    try {
+      // Lister public ou admin ? Postman montre les deux. Utilisons le public pour la liste.
+      const response = await axios.get(`${API_BASE_URL}/locations`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Créer une localisation
+  async createLocation(locationData) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.post(`${API_BASE_URL}/admin/referentials/locations`, locationData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Mettre à jour une localisation
+  async updateLocation(locationId, locationData) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.put(`${API_BASE_URL}/admin/referentials/locations/${locationId}`, locationData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Supprimer une localisation
+  async deleteLocation(locationId) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.delete(`${API_BASE_URL}/admin/referentials/locations/${locationId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   // Set authorization header pour les requêtes admin
   setAuthHeader() {
     const token = storageService.getToken();
@@ -555,6 +600,114 @@ class AdminService {
         delete axios.defaults.headers.common['Authorization'];
         throw new Error('Session expirée. Veuillez vous reconnecter.');
       }
+      throw error;
+    }
+  }
+
+  // ============= GESTION DES RÔLES =============
+  async updateUserRole(userId, roleId) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.put(`${API_BASE_URL}/admin/users/${userId}/role`, {
+        role_id: Number(roleId)
+      });
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        storageService.removeToken();
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
+
+  // ============= GESTION DU CONTENU (CMS) =============
+  async getSettings() {
+    try {
+      this.setAuthHeader();
+      const response = await axios.get(`${API_BASE_URL}/settings/cms`);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        storageService.removeToken();
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
+
+  async updateSettings(settingsData) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.put(`${API_BASE_URL}/settings/cms`, settingsData);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        storageService.removeToken();
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      throw error;
+    }
+  }
+
+  // ============= GESTION DES FAQS (CMS) =============
+  async createFaq(faqData) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.post(`${API_BASE_URL}/settings/cms/faqs`, faqData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateFaq(faqId, faqData) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.put(`${API_BASE_URL}/settings/cms/faqs/${faqId}`, faqData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async deleteFaq(faqId) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.delete(`${API_BASE_URL}/settings/cms/faqs/${faqId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // ============= GESTION DES SECTIONS (CMS) =============
+  async createSection(sectionData) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.post(`${API_BASE_URL}/settings/cms/sections`, sectionData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateSection(sectionId, sectionData) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.put(`${API_BASE_URL}/settings/cms/sections/${sectionId}`, sectionData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async deleteSection(sectionId) {
+    try {
+      this.setAuthHeader();
+      const response = await axios.delete(`${API_BASE_URL}/settings/cms/sections/${sectionId}`);
+      return response.data;
+    } catch (error) {
       throw error;
     }
   }

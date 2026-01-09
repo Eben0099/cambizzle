@@ -27,10 +27,12 @@ import Input from "../../components/ui/Input";
 import { useToast } from "../../components/toast/useToast";
 import { API_BASE_URL } from "../../config/api";
 import storageService from "../../services/storageService";
+import { useSettings } from "../../contexts/SettingsContext";
 
 const Reports = () => {
   const { t } = useTranslation();
   const { showToast } = useToast();
+  const { contact } = useSettings();
 
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -358,7 +360,7 @@ const Reports = () => {
                     <TableHead>{t('admin.reports.priority')}</TableHead>
                     <TableHead>{t('admin.reports.status')}</TableHead>
                     <TableHead>{t('admin.reports.date')}</TableHead>
-                    <TableHead className="text-right">{t('admin.reports.actions')}</TableHead>
+                    <TableHead className="text-right">{t('admin.reports.adminNotes')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -418,7 +420,7 @@ const Reports = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            {report.status === "pending" && (
+                            {report.status === "pending" ? (
                               <Button
                                 size="sm"
                                 className="bg-[#D6BA69] text-white hover:bg-[#c3a55d] transition"
@@ -426,6 +428,10 @@ const Reports = () => {
                               >
                                 {t('admin.reports.resolve')}
                               </Button>
+                            ) : (
+                              <span className="text-sm text-gray-600 italic">
+                                {report.admin_notes || "-"}
+                              </span>
                             )}
                           </div>
                         </TableCell>
@@ -486,6 +492,11 @@ const Reports = () => {
             <DialogTitle>{t('admin.reports.contactSellerWhatsApp')}</DialogTitle>
             <DialogDescription>
               {t('admin.reports.sendMessageToSeller')}
+              {contact?.supportPhone && (
+                <span className="block mt-1 text-xs text-[#D6BA69]">
+                  {t('admin.settings.supportPhone')}: {contact.supportPhone}
+                </span>
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">

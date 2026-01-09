@@ -1,7 +1,8 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import SEO from '../components/SEO';
-import { CheckCircle, Users, Globe, Zap } from 'lucide-react';
+import { CheckCircle, Users, Globe, Zap, Loader2 } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -9,8 +10,14 @@ import {
   AccordionTrigger,
 } from "../components/ui/accordion";
 
+import { useSettings } from '../contexts/SettingsContext';
+import cmsService from '../services/cmsService';
+import logger from '../utils/logger';
+
 const About = () => {
   const { t } = useTranslation();
+  const { contact, sections, loading } = useSettings();
+  const aboutSections = sections?.aboutUs || [];
 
   return (
     <>
@@ -38,38 +45,55 @@ const About = () => {
           {/* Accordion Sections */}
           <section className="mb-16">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sm:p-8">
-              <Accordion type="multiple" className="w-full">
-                {/* Who We Are */}
-                <AccordionItem value="item-1">
-                  <AccordionTrigger className="text-left text-2xl font-bold hover:text-[#D6BA69]">
-                    {t('about.whoWeAre')}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-lg text-gray-600 leading-relaxed pt-4">
-                    <p>{t('about.whoWeAreText')}</p>
-                  </AccordionContent>
-                </AccordionItem>
+              {loading ? (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-[#D6BA69]" />
+                </div>
+              ) : aboutSections.length > 0 ? (
+                <Accordion type="multiple" className="w-full">
+                  {aboutSections.map((section, index) => (
+                    <AccordionItem key={section.id || index} value={`item-${index}`}>
+                      <AccordionTrigger className="text-left text-2xl font-bold hover:text-[#D6BA69]">
+                        {section.title}
+                      </AccordionTrigger>
+                      <AccordionContent className="text-lg text-gray-600 leading-relaxed pt-4">
+                        <div className="whitespace-pre-wrap">{section.content}</div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              ) : (
+                <Accordion type="multiple" className="w-full">
+                  {/* Fallback to translations if no sections in DB */}
+                  <AccordionItem value="item-1">
+                    <AccordionTrigger className="text-left text-2xl font-bold hover:text-[#D6BA69]">
+                      {t('about.whoWeAre')}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-lg text-gray-600 leading-relaxed pt-4">
+                      <p>{t('about.whoWeAreText')}</p>
+                    </AccordionContent>
+                  </AccordionItem>
 
-                {/* Our Mission */}
-                <AccordionItem value="item-2">
-                  <AccordionTrigger className="text-left text-2xl font-bold hover:text-[#D6BA69]">
-                    {t('about.ourMission')}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-lg text-gray-600 leading-relaxed pt-4">
-                    <p>{t('about.ourMissionText')}</p>
-                  </AccordionContent>
-                </AccordionItem>
+                  <AccordionItem value="item-2">
+                    <AccordionTrigger className="text-left text-2xl font-bold hover:text-[#D6BA69]">
+                      {t('about.ourMission')}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-lg text-gray-600 leading-relaxed pt-4">
+                      <p>{t('about.ourMissionText')}</p>
+                    </AccordionContent>
+                  </AccordionItem>
 
-                {/* Our Vision */}
-                <AccordionItem value="item-3">
-                  <AccordionTrigger className="text-left text-2xl font-bold hover:text-[#D6BA69]">
-                    {t('about.ourVision')}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-lg text-gray-600 leading-relaxed space-y-4 pt-4">
-                    <p>{t('about.ourVisionText1')}</p>
-                    <p>{t('about.ourVisionText2')}</p>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+                  <AccordionItem value="item-3">
+                    <AccordionTrigger className="text-left text-2xl font-bold hover:text-[#D6BA69]">
+                      {t('about.ourVision')}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-lg text-gray-600 leading-relaxed space-y-4 pt-4">
+                      <p>{t('about.ourVisionText1')}</p>
+                      <p>{t('about.ourVisionText2')}</p>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              )}
             </div>
           </section>
 
@@ -79,8 +103,8 @@ const About = () => {
               <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('about.haveQuestions')}</h2>
               <p className="text-gray-600 mb-6">
                 {t('about.contactUs')}{' '}
-                <a href="mailto:info@cambizzle.com" className="text-[#D6BA69] hover:underline">
-                  info@cambizzle.com
+                <a href={`mailto:${contact?.supportEmail || 'info@cambizzle.com'}`} className="text-[#D6BA69] hover:underline">
+                  {contact?.supportEmail || 'info@cambizzle.com'}
                 </a>
               </p>
               <p className="text-gray-600">
@@ -95,3 +119,4 @@ const About = () => {
 };
 
 export default About;
+

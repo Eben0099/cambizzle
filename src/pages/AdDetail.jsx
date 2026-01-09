@@ -105,7 +105,10 @@ const AdDetail = () => {
   const { translatedText: translatedCategory } = useWeglotTranslate(ad?.categoryName || '');
   const { translatedText: translatedSubcategory } = useWeglotTranslate(ad?.subcategoryName || '');
   const translatedLocation = useWeglotTranslate(ad?.locationName || '');
-  const { translatedText: translatedBrand } = useWeglotTranslate(ad?.brandName || '');
+
+  // Extract brand from filters if not available directly
+  const brandFromFilter = ad?.filters?.find(f => f.filterName?.toLowerCase() === 'brand' || f.filterName?.toLowerCase() === 'marque')?.value;
+  const { translatedText: translatedBrand } = useWeglotTranslate(ad?.brandName || brandFromFilter || '');
 
   // Charger les annonces similaires et le summary des feedbacks quand l'annonce est chargée
   useEffect(() => {
@@ -445,7 +448,7 @@ const AdDetail = () => {
                       <Truck className="w-4 h-4 text-[#D6BA69]" />
                       <span className="text-[10px] sm:text-xs font-bold uppercase text-gray-400 tracking-tighter">{t('ads.brand')}</span>
                     </div>
-                    <div className="font-bold text-xs sm:text-sm truncate">{translatedBrand || ad.brandName}</div>
+                    <div className="font-bold text-xs sm:text-sm truncate">{translatedBrand || ad.brandName || brandFromFilter}</div>
                   </div>
                   <div className="p-3 bg-white border border-gray-100 rounded-xl shadow-sm">
                     <div className="flex items-center gap-2 mb-1.5 grayscale opacity-60">
