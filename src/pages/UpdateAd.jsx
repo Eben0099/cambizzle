@@ -1147,8 +1147,8 @@ const UpdateAd = () => {
                   <p className={`text-sm font-medium ${images.length >= 3 ? 'text-green-800' : 'text-yellow-800'
                     }`}>
                     {images.length >= 3
-                      ? 'Minimum 3 photos requirement met!'
-                      : `${3 - images.length} more photo(s) needed (minimum 3 required)`
+                      ? t('createAd.photosRequirementMet')
+                      : t('createAd.minPhotos')
                     }
                   </p>
                 </div>

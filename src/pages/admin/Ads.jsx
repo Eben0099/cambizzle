@@ -348,16 +348,16 @@ const Ads = () => {
             onClick={() => exportToExcel(filteredAds, 'ads', {
               columns: [
                 { header: 'ID', key: 'id' },
-                { header: 'Title', key: 'title' },
-                { header: 'Price', key: 'price' },
-                { header: 'Category', key: 'categoryName' },
-                { header: 'Subcategory', key: 'subcategoryName' },
-                { header: 'Location', key: 'locationName' },
-                { header: 'Status', key: 'status' },
-                { header: 'Moderation', key: 'moderationStatus' },
-                { header: 'Boosted', key: 'isBoosted' },
-                { header: 'Views', key: 'viewCount' },
-                { header: 'Created At', key: 'createdAt' },
+                { header: t('admin.ads.titleLabel'), key: 'title' },
+                { header: t('admin.ads.priceLabel'), key: 'price' },
+                { header: t('admin.ads.categoryLabel'), key: 'categoryName' },
+                { header: t('admin.ads.subcategory'), key: 'subcategoryName' },
+                { header: t('admin.ads.locationLabel'), key: 'locationName' },
+                { header: t('admin.ads.status'), key: 'status' },
+                { header: t('admin.ads.moderation'), key: 'moderationStatus' },
+                { header: t('admin.ads.boosted'), key: 'isBoosted' },
+                { header: t('admin.ads.views'), key: 'viewCount' },
+                { header: t('admin.ads.createdAt'), key: 'createdAt' },
               ],
               sheetName: 'Ads'
             })}

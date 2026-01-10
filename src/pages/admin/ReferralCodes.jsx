@@ -92,15 +92,15 @@ const ReferralCodes = () => {
           <Button
             onClick={() => exportToExcel(filteredCodes, 'referral_codes', {
               columns: [
-                { header: 'Code', key: 'code' },
-                { header: 'First Name', key: 'firstName' },
-                { header: 'Last Name', key: 'lastName' },
-                { header: 'Email', key: 'email' },
-                { header: 'Phone', key: 'phone' },
-                { header: 'Current Uses', key: 'currentUses' },
-                { header: 'Max Uses', key: 'maxUses' },
-                { header: 'Active', key: 'isActive' },
-                { header: 'Created At', key: 'createdAt' },
+                { header: t('admin.referralCodes.code'), key: 'code' },
+                { header: t('admin.referralCodes.firstName'), key: 'firstName' },
+                { header: t('admin.referralCodes.lastName'), key: 'lastName' },
+                { header: t('admin.referralCodes.email'), key: 'email' },
+                { header: t('admin.referralCodes.phone'), key: 'phone' },
+                { header: t('admin.referralCodes.currentUses'), key: 'currentUses' },
+                { header: t('admin.referralCodes.maxUses'), key: 'maxUses' },
+                { header: t('admin.referralCodes.active'), key: 'isActive' },
+                { header: t('admin.referralCodes.createdAt'), key: 'createdAt' },
               ],
               sheetName: 'ReferralCodes'
             })}

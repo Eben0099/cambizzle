@@ -234,7 +234,7 @@ const Locations = () => {
                   <MapPin className="h-6 w-6 text-[#D6BA69]" />
                   <div>
                     <CardTitle className="text-xl font-semibold">{group.region}</CardTitle>
-                    <p className="text-xs text-muted-foreground">{group.items.length} villes</p>
+                    <p className="text-xs text-muted-foreground">{group.items.length} {t('admin.locations.cities')}</p>
                   </div>
                 </div>
                 <div className="flex gap-2 mt-3 md:mt-0">
@@ -257,8 +257,8 @@ const Locations = () => {
                     <TableHeader className="bg-muted/10">
                       <TableRow>
                         <TableHead className="pl-6">{t('admin.locations.city')}</TableHead>
-                        <TableHead>Pays</TableHead>
-                        <TableHead>Statut</TableHead>
+                        <TableHead>{t('admin.locations.country')}</TableHead>
+                        <TableHead>{t('admin.locations.status')}</TableHead>
                         <TableHead className="text-right pr-6">{t('admin.locations.actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -336,7 +336,7 @@ const Locations = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="country">Pays</Label>
+              <Label htmlFor="country">{t('admin.locations.country')}</Label>
               <Input
                 id="country"
                 value={form.country}
@@ -374,7 +374,7 @@ const Locations = () => {
           </DialogHeader>
           <div className="py-4">
             <p className="text-muted-foreground">
-              Êtes-vous sûr de vouloir supprimer la localisation <strong>{deleteCandidate?.city}</strong> ({deleteCandidate?.region}) ? Cette action est irréversible.
+              {t('admin.locations.deleteConfirmMessage', { city: deleteCandidate?.city, region: deleteCandidate?.region })}
             </p>
           </div>
           <div className="flex justify-end gap-3">

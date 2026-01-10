@@ -1141,7 +1141,7 @@ const CreateAd = () => {
                     }`}>
                     {images.length >= 3
                       ? t('createAd.photosRequirementMet')
-                      : t('createAd.morePhotosNeeded', { count: 3 - images.length })
+                      : t('createAd.minPhotos')
                     }
                   </p>
                 </div>

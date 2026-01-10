@@ -253,14 +253,14 @@ const Reports = () => {
             onClick={() => exportToExcel(filteredReports, 'reports', {
               columns: [
                 { header: 'ID', key: 'id' },
-                { header: 'Type', key: 'type' },
-                { header: 'Title', key: 'title' },
-                { header: 'Reporter', key: 'reporter' },
-                { header: 'Reason', key: 'reason' },
-                { header: 'Description', key: 'description' },
-                { header: 'Status', key: 'status' },
-                { header: 'Priority', key: 'priority' },
-                { header: 'Date', key: 'date' },
+                { header: t('admin.reports.type'), key: 'type' },
+                { header: t('admin.reports.reportedContent'), key: 'title' },
+                { header: t('admin.reports.reporter'), key: 'reporter' },
+                { header: t('admin.reports.reason'), key: 'reason' },
+                { header: t('admin.reports.description'), key: 'description' },
+                { header: t('admin.reports.status'), key: 'status' },
+                { header: t('admin.reports.priority'), key: 'priority' },
+                { header: t('admin.reports.date'), key: 'date' },
               ],
               sheetName: 'Reports'
             })}

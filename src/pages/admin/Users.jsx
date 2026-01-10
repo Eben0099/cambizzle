@@ -354,21 +354,21 @@ const Users = () => {
             onClick={() => {
               const exportData = filteredUsers.map(user => ({
                 ...user,
-                roleLabel: user.roleId === "1" ? "Admin" : user.roleId === "2" ? "User" : "Unknown",
-                statusLabel: user.isSuspended === "1" ? "Suspended" : user.deleted ? "Deleted" : "Active",
-                verifiedLabel: (user.isVerified === "1" || user.isVerified === 1) ? "Yes" : "No"
+                roleLabel: user.roleId === "1" ? t('admin.users.admin') : user.roleId === "2" ? t('admin.users.user') : t('admin.users.unknown'),
+                statusLabel: user.isSuspended === "1" ? t('admin.users.suspended') : user.deleted ? t('admin.users.deleted') : t('admin.users.active'),
+                verifiedLabel: (user.isVerified === "1" || user.isVerified === 1) ? t('common.yes') : t('common.no')
               }));
               exportToExcel(exportData, 'users', {
                 columns: [
                   { header: 'ID', key: 'idUser' },
-                  { header: 'First Name', key: 'firstName' },
-                  { header: 'Last Name', key: 'lastName' },
-                  { header: 'Email', key: 'email' },
-                  { header: 'Phone', key: 'phone' },
-                  { header: 'Role', key: 'roleLabel' },
-                  { header: 'Status', key: 'statusLabel' },
-                  { header: 'Verified', key: 'verifiedLabel' },
-                  { header: 'Created At', key: 'createdAt' },
+                  { header: t('admin.users.firstName'), key: 'firstName' },
+                  { header: t('admin.users.lastName'), key: 'lastName' },
+                  { header: t('admin.users.email'), key: 'email' },
+                  { header: t('admin.users.phone'), key: 'phone' },
+                  { header: t('admin.users.role'), key: 'roleLabel' },
+                  { header: t('admin.users.status'), key: 'statusLabel' },
+                  { header: t('admin.users.verified'), key: 'verifiedLabel' },
+                  { header: t('admin.users.createdAt'), key: 'createdAt' },
                 ],
                 sheetName: 'Users'
               });
