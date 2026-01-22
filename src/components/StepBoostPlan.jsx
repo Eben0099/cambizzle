@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Zap, Check } from 'lucide-react';
+import { Zap, Check, Clock, CheckCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { adsService } from '../services/adsService';
 import PhoneInput from 'react-phone-number-input';
@@ -107,46 +107,71 @@ const StepBoostPlan = ({ formData, setFormData, errors, setErrors }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {boostPlans.map((plan) => (
-          <div
-            key={plan.id || 'no-boost'}
-            onClick={() => handlePlanSelect(plan)}
-            className={`relative cursor-pointer rounded-lg border-2 p-4 transition-all ${selectedPlan?.id === plan.id
-                ? 'border-[#D6BA69] bg-[#D6BA69]/5'
-                : 'border-gray-200 hover:border-gray-300'
-              }`}
-          >
-            {selectedPlan?.id === plan.id && (
-              <div className="absolute -top-2 -right-2 bg-[#D6BA69] rounded-full p-1">
-                <Check className="w-4 h-4 text-black" />
-              </div>
-            )}
+        {boostPlans.map((plan) => {
+          // Parse description into list items (split by "-" or newlines)
+          const descriptionItems = plan.description
+            ? plan.description
+                .split(/[-\n]/)
+                .map(item => item.trim())
+                .filter(item => item.length > 0)
+            : [];
 
-            <div className="flex items-start justify-between mb-2">
-              <div className="flex items-center">
-                <Zap className={`w-5 h-5 ${plan.price > 0 ? 'text-[#D6BA69]' : 'text-gray-400'}`} />
-                <span className="ml-2 font-medium text-gray-900">{plan.name}</span>
+          return (
+            <div
+              key={plan.id || 'no-boost'}
+              onClick={() => handlePlanSelect(plan)}
+              className={`relative cursor-pointer rounded-lg border-2 p-5 transition-all ${selectedPlan?.id === plan.id
+                  ? 'border-[#D6BA69] bg-[#D6BA69]/5 shadow-md'
+                  : 'border-gray-200 hover:border-gray-300'
+                }`}
+            >
+              {selectedPlan?.id === plan.id && (
+                <div className="absolute -top-2 -right-2 bg-[#D6BA69] rounded-full p-1">
+                  <Check className="w-4 h-4 text-black" />
+                </div>
+              )}
+
+              {/* Header: Name & Price */}
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center">
+                  <Zap className={`w-5 h-5 ${plan.price > 0 ? 'text-[#D6BA69]' : 'text-gray-400'}`} />
+                  <span className="ml-2 font-bold text-gray-900 text-lg">{plan.name}</span>
+                </div>
+                <div className="text-right">
+                  {plan.price > 0 ? (
+                    <span className="text-xl font-bold text-[#D6BA69]">
+                      {plan.price.toLocaleString('fr-FR')} XAF
+                    </span>
+                  ) : (
+                    <span className="text-sm font-medium text-gray-500">{t('boost.free')}</span>
+                  )}
+                </div>
               </div>
-              <div className="text-right">
-                {plan.price > 0 ? (
-                  <span className="text-lg font-bold text-[#D6BA69]">
-                    {plan.price.toLocaleString('fr-FR')} XAF
-                  </span>
-                ) : (
-                  <span className="text-sm text-gray-500">{t('boost.free')}</span>
-                )}
-              </div>
+
+              {/* Duration badge */}
+              {plan.duration_days > 0 && (
+                <div className="mb-4">
+                  <div className="inline-flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                    <Clock className="w-4 h-4 mr-1" />
+                    {plan.duration_days} {t('boost.daysVisibility')}
+                  </div>
+                </div>
+              )}
+
+              {/* Description as list */}
+              {descriptionItems.length > 0 && (
+                <div className="space-y-2">
+                  {descriptionItems.map((item, idx) => (
+                    <div key={idx} className="flex items-start">
+                      <CheckCircle className={`w-4 h-4 mr-2 flex-shrink-0 mt-0.5 ${plan.price > 0 ? 'text-green-500' : 'text-gray-400'}`} />
+                      <span className="text-sm text-gray-700">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-
-            {plan.duration_days > 0 && (
-              <p className="text-sm text-gray-600 mb-2">
-                {plan.duration_days} {t('boost.daysVisibility')}
-              </p>
-            )}
-
-            <p className="text-sm text-gray-700">{plan.description}</p>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {selectedPlan && selectedPlan.price > 0 && (

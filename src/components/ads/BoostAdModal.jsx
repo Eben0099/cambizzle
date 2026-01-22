@@ -206,54 +206,77 @@ const BoostAdModal = ({ isOpen, onClose, ad, user }) => {
                   )}
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    {promotionPacks.map((pack) => (
-                      <div
-                        key={pack.id}
-                        onClick={() => handleSelectPack(pack)}
-                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                          selectedPack?.id === pack.id
-                            ? 'border-[#D6BA69] bg-[#D6BA69]/5 shadow-md'
-                            : 'border-gray-200 hover:border-[#D6BA69]/50 hover:shadow'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <h4 className="font-semibold text-gray-900 text-lg">{pack.name}</h4>
-                            <span className="text-xs text-gray-500">{t('boost.type')}: {pack.type || 'boost'}</span>
+                    {promotionPacks.map((pack) => {
+                      // Parse description into list items (split by "-" or newlines)
+                      const descriptionItems = pack.description
+                        ? pack.description
+                            .split(/[-\n]/)
+                            .map(item => item.trim())
+                            .filter(item => item.length > 0)
+                        : [];
+
+                      return (
+                        <div
+                          key={pack.id}
+                          onClick={() => handleSelectPack(pack)}
+                          className={`border-2 rounded-lg p-5 cursor-pointer transition-all ${
+                            selectedPack?.id === pack.id
+                              ? 'border-[#D6BA69] bg-[#D6BA69]/5 shadow-md'
+                              : 'border-gray-200 hover:border-[#D6BA69]/50 hover:shadow'
+                          }`}
+                        >
+                          {/* Header: Name & Price */}
+                          <div className="flex items-start justify-between mb-3">
+                            <h4 className="font-bold text-gray-900 text-lg">{pack.name}</h4>
+                            <span className="text-xl font-bold text-[#D6BA69]">
+                              {Number(pack.price).toLocaleString('fr-FR')} XAF
+                            </span>
                           </div>
-                          <span className="text-lg font-bold text-[#D6BA69]">{pack.price} FCFA</span>
-                        </div>
-                        {pack.description && (
-                          <p className="text-sm text-gray-600 mb-3">{pack.description}</p>
-                        )}
-                        <div className="space-y-1 text-xs text-gray-500">
-                          <div className="flex items-center">
-                            <Clock className="w-3 h-3 mr-1" />
-                            <span className="font-medium">{t('boost.duration')}: {pack.duration_days} {t('boost.days')}</span>
+
+                          {/* Duration badge */}
+                          <div className="flex items-center gap-2 mb-4">
+                            <div className="inline-flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                              <Clock className="w-4 h-4 mr-1" />
+                              {pack.duration_days || pack.durationDays} {t('boost.days')}
+                            </div>
                           </div>
-                          <div className="flex items-center">
-                            <CheckCircle className="w-3 h-3 mr-1 text-green-500" />
-                            <span>{t('boost.active')}: {pack.is_active ? t('common.yes') : t('common.no')}</span>
-                          </div>
-                          {pack.features && (
-                            <div className="mt-2 space-y-1 border-t border-gray-200 pt-2">
-                              <p className="font-semibold text-gray-700">{t('boost.features')}:</p>
-                              {pack.features.split(',').map((feature, idx) => (
+
+                          {/* Description as list */}
+                          {descriptionItems.length > 0 && (
+                            <div className="space-y-2 mb-3">
+                              {descriptionItems.map((item, idx) => (
                                 <div key={idx} className="flex items-start">
-                                  <CheckCircle className="w-3 h-3 mr-1 text-green-500 flex-shrink-0 mt-0.5" />
-                                  <span>{feature.trim()}</span>
+                                  <CheckCircle className="w-4 h-4 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
+                                  <span className="text-sm text-gray-700">{item}</span>
                                 </div>
                               ))}
                             </div>
                           )}
+
+                          {/* Features (if separate from description) */}
+                          {pack.features && (
+                            <div className="space-y-2 pt-3 border-t border-gray-100">
+                              {pack.features.split(',').map((feature, idx) => (
+                                <div key={idx} className="flex items-start">
+                                  <Zap className="w-4 h-4 mr-2 text-[#D6BA69] flex-shrink-0 mt-0.5" />
+                                  <span className="text-sm text-gray-700">{feature.trim()}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Selected indicator */}
+                          {selectedPack?.id === pack.id && (
+                            <div className="mt-4 pt-3 border-t border-[#D6BA69]">
+                              <p className="text-sm text-[#D6BA69] font-semibold flex items-center">
+                                <CheckCircle className="w-4 h-4 mr-1" />
+                                {t('boost.selected')}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                        {selectedPack?.id === pack.id && (
-                          <div className="mt-3 pt-3 border-t border-[#D6BA69]">
-                            <p className="text-xs text-[#D6BA69] font-semibold">✓ {t('boost.selected')}</p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {promotionPacks.length === 0 && !loadingPacks && (

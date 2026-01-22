@@ -5,7 +5,7 @@ import storageService from '../services/storageService';
 export const SERVER_ENV = import.meta.env.VITE_SERVER_ENV || 'prod';
 
 // URLs depuis les variables d'environnement
-const API_URL_PROD = import.meta.env.VITE_API_URL_PROD || 'https://www.cambizzle.seed-innov.com/api';
+const API_URL_PROD = import.meta.env.VITE_API_URL_PROD || 'https://cambizzle.com/api';
 const API_URL_LOCAL = import.meta.env.VITE_API_URL_LOCAL || 'http://localhost:8080/api';
 
 // Configuration automatique selon l'environnement

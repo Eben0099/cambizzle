@@ -1,20 +1,52 @@
-import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Expand } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { ChevronLeft, ChevronRight, Expand, Loader2 } from 'lucide-react';
 
 const ImageCarousel = ({ images }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const loadedImagesRef = useRef(new Set());
+  const prevImagesRef = useRef(null);
+
+  // Reset state only when images array content actually changes (new ad)
+  useEffect(() => {
+    const imagesKey = images.join('|');
+    if (prevImagesRef.current !== imagesKey) {
+      prevImagesRef.current = imagesKey;
+      setCurrentIndex(0);
+      setIsLoading(true);
+      loadedImagesRef.current = new Set();
+    }
+  }, [images]);
+
+  const handleImageLoad = () => {
+    loadedImagesRef.current.add(currentIndex);
+    setIsLoading(false);
+  };
+
+  // Change image - skip loading state if already cached
+  const changeImage = (newIndex) => {
+    if (!loadedImagesRef.current.has(newIndex)) {
+      setIsLoading(true);
+    }
+    setCurrentIndex(newIndex);
+  };
+
+  // Track preloaded images
+  const handlePreloadComplete = (index) => {
+    loadedImagesRef.current.add(index);
+  };
 
   const nextImage = () => {
-    setCurrentIndex((prev) => (prev + 1) % images.length);
+    changeImage((currentIndex + 1) % images.length);
   };
 
   const prevImage = () => {
-    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+    changeImage((currentIndex - 1 + images.length) % images.length);
   };
 
   const goToImage = (index) => {
-    setCurrentIndex(index);
+    changeImage(index);
   };
 
   if (images.length === 0) {
@@ -28,11 +60,18 @@ const ImageCarousel = ({ images }) => {
   return (
     <>
       <div className="relative group">
-        <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+        <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden relative">
+          {/* Loading spinner */}
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-[5]">
+              <Loader2 className="w-8 h-8 text-[#d6ba69] animate-spin" />
+            </div>
+          )}
           <img
             src={images[currentIndex]}
             alt={`Image ${currentIndex + 1}`}
-            className="w-full h-full object-cover"
+            className={`w-full h-full object-cover transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+            onLoad={handleImageLoad}
           />
 
           {/* Navigation arrows */}
@@ -40,17 +79,17 @@ const ImageCarousel = ({ images }) => {
             <>
               <button
                 onClick={prevImage}
-                className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 text-white p-2 rounded-full opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 cursor-pointer z-10"
+                className="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 bg-black/60 text-white p-1 sm:p-2 rounded-full opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 cursor-pointer z-10"
                 aria-label="Previous image"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
               <button
                 onClick={nextImage}
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 text-white p-2 rounded-full opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 cursor-pointer z-10"
+                className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 bg-black/60 text-white p-1 sm:p-2 rounded-full opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 cursor-pointer z-10"
                 aria-label="Next image"
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </>
           )}
@@ -94,16 +133,36 @@ const ImageCarousel = ({ images }) => {
             ))}
           </div>
         )}
+
+        {/* Preload images - positioned off-screen to force loading */}
+        <div className="absolute -left-[9999px] w-0 h-0 overflow-hidden" aria-hidden="true">
+          {images.map((image, index) => (
+            <img
+              key={`preload-${index}`}
+              src={image}
+              alt=""
+              loading="eager"
+              onLoad={() => handlePreloadComplete(index)}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Fullscreen modal */}
       {isFullscreen && (
         <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center">
-          <div className="relative max-w-5xl max-h-full">
+          <div className="relative max-w-5xl max-h-full flex items-center justify-center">
+            {/* Loading spinner for fullscreen */}
+            {isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center z-10">
+                <Loader2 className="w-12 h-12 text-[#d6ba69] animate-spin" />
+              </div>
+            )}
             <img
               src={images[currentIndex]}
               alt={`Image ${currentIndex + 1}`}
-              className="max-w-full max-h-full object-contain"
+              className={`max-w-full max-h-full object-contain transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+              onLoad={handleImageLoad}
             />
             <button
               onClick={() => setIsFullscreen(false)}

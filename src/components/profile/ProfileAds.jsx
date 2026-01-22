@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Package, Plus, Eye, Calendar, Edit, Trash2, Zap, AlertCircle } from 'lucide-react';
+import { Package, Plus, Eye, MapPin, Edit, Trash2, Zap, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Button from '../ui/Button';
+import Card from '../ui/Card';
 import { formatPrice, getPhotoUrl, formatRelativeDate } from '../../utils/helpers';
 import { useWeglotTranslate } from '../../hooks/useWeglotRetranslate';
 import BoostAdModal from '../ads/BoostAdModal';
@@ -71,33 +72,34 @@ const ProfileAds = ({ userAds, onCreateAd, onEditAd, onDeleteAd, user }) => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
         {userAds.map((ad) => (
-          <div
-            key={ad.id}
-            className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
-          >
-            <div className="relative cursor-pointer" onClick={() => handleAdClick(ad)}>
+          <Card key={ad.id} hover className="overflow-hidden h-full flex flex-col">
+            {/* Image */}
+            <div className="relative aspect-square bg-gray-200 overflow-hidden cursor-pointer" onClick={() => handleAdClick(ad)}>
               {ad.photos && ad.photos.length > 0 ? (
                 <img
                   src={getPhotoUrl(ad.photos[0].originalUrl)}
                   alt={ad.title}
-                  className="w-full h-40 sm:h-48 object-cover"
+                  className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-40 sm:h-48 bg-gray-200 flex items-center justify-center">
-                  <Package className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400" />
+                <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                  <Package className="w-10 h-10 text-gray-400" />
                 </div>
               )}
-              <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
-                <span className={`px-2 py-1 rounded-full text-[10px] sm:text-xs font-semibold uppercase tracking-wider shadow-sm ${ad.status === 'active' && ad.moderationStatus === 'approved'
-                    ? 'bg-green-100 text-green-800 border border-green-200'
+
+              {/* Status Badge - top left */}
+              <div className="absolute top-2 left-2">
+                <span className={`px-2 py-1 rounded-full text-[10px] font-medium ${
+                  ad.status === 'active' && ad.moderationStatus === 'approved'
+                    ? 'bg-green-500 text-white'
                     : ad.moderationStatus === 'pending'
-                      ? 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                      ? 'bg-yellow-500 text-white'
                       : ad.moderationStatus === 'rejected'
-                        ? 'bg-red-100 text-red-800 border border-red-200'
-                        : 'bg-gray-100 text-gray-800 border border-gray-200'
-                  }`}>
+                        ? 'bg-red-500 text-white'
+                        : 'bg-gray-500 text-white'
+                }`}>
                   {ad.status === 'active' && ad.moderationStatus === 'approved'
                     ? t('profileAds.statusActive')
                     : ad.moderationStatus === 'pending'
@@ -107,82 +109,99 @@ const ProfileAds = ({ userAds, onCreateAd, onEditAd, onDeleteAd, user }) => {
                         : t('profileAds.statusInactive')}
                 </span>
               </div>
+
+              {/* Badges - bottom right */}
+              <div className="absolute bottom-2 right-2 flex items-center gap-1">
+                {/* Boosted Badge */}
+                {(ad.isBoosted === '1' || ad.is_boosted === '1') && (
+                  <div
+                    className="bg-yellow-500 text-white p-1.5 rounded-full"
+                    title={(ad.boostEnd || ad.boost_end) ? `${t('profileAds.boostUntil')} ${new Date(ad.boostEnd || ad.boost_end).toLocaleDateString()}` : ''}
+                  >
+                    <Zap className="w-4 h-4" />
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="p-4">
+            {/* Content */}
+            <div className="flex-1 p-3 flex flex-col">
+              {/* Title */}
               <TranslatedAdTitle
                 title={ad.title}
-                className="font-semibold text-base sm:text-lg text-gray-900 mb-2 line-clamp-2 cursor-pointer hover:text-[#D6BA69] transition-colors"
+                className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm leading-snug cursor-pointer hover:text-[#D6BA69] transition-colors"
                 onClick={() => handleAdClick(ad)}
               />
-              <p className="text-xl sm:text-2xl font-bold text-[#D6BA69] mb-3">
-                {formatPrice(ad.price)} FCFA
-              </p>
 
-              <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                <div className="flex items-center gap-1">
-                  <Eye className="w-4 h-4" />
-                  {(ad.viewCount || 0)} {t('ads.views')}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
-                  {formatRelativeDate(ad.createdAt)}
-                </div>
+              {/* Price */}
+              <div className="mb-2">
+                <span className="text-base font-bold text-[#D6BA69]">
+                  {formatPrice(ad.price)} FCFA
+                </span>
               </div>
 
+              {/* Location and Date */}
+              <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+                <div className="flex items-center space-x-1">
+                  <MapPin className="w-3 h-3" />
+                  <span className="truncate">{ad.locationName || '-'}</span>
+                </div>
+                <span>{formatRelativeDate(ad.createdAt)}</span>
+              </div>
+
+              {/* Stats */}
+              <div className="flex items-center text-xs text-gray-500 mb-3">
+                <Eye className="w-3 h-3 mr-1" />
+                <span>{ad.viewCount || 0} {t('ads.views')}</span>
+              </div>
+
+              {/* Rejection reason */}
               {ad.moderationStatus === 'rejected' && (ad.rejectReason || ad.moderationNotes) && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-lg flex gap-2 items-start">
-                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                  <div className="text-xs text-red-700">
-                    <p className="font-semibold mb-1 uppercase tracking-tight">Raison du rejet :</p>
-                    <p className="italic leading-relaxed">{ad.rejectReason || ad.moderationNotes}</p>
-                  </div>
+                <div className="mb-3 p-2 bg-red-50 border border-red-100 rounded-lg flex gap-2 items-start">
+                  <AlertCircle className="w-3 h-3 text-red-500 shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-red-700 line-clamp-2">{ad.rejectReason || ad.moderationNotes}</p>
                 </div>
               )}
 
-              <div className="flex gap-2">
+              {/* Action buttons */}
+              <div className="flex gap-1.5 mt-auto">
                 {(ad.isBoosted === '1' || ad.is_boosted === '1') ? (
-                  <span
-                    className="flex-1 h-9 inline-flex items-center justify-center text-sm font-medium text-white bg-[#D6BA69] rounded-md border border-[#D6BA69] cursor-default select-none px-3"
-                    title={(ad.boostEnd || ad.boost_end) ? `${t('profileAds.boostUntil')} ${new Date(ad.boostEnd || ad.boost_end).toLocaleDateString()}` : ''}
-                  >
-                    <Zap className="w-4 h-4 mr-1" />
+                  <span className="flex-1 h-8 inline-flex items-center justify-center text-xs font-medium text-white bg-[#D6BA69] rounded-md cursor-default">
+                    <Zap className="w-3 h-3 mr-1" />
                     {t('profileAds.boosted')}
                   </span>
                 ) : (
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 text-[#D6BA69] hover:bg-[#D6BA69]/10 border-[#D6BA69]"
+                    className="flex-1 text-[#D6BA69] hover:bg-[#D6BA69]/10 border-[#D6BA69] text-xs h-8"
                     onClick={() => handleBoostAd(ad)}
-                    aria-label={t('profileAds.boost')}
                   >
-                    <Zap className="w-4 h-4 mr-1" />
+                    <Zap className="w-3 h-3 mr-1" />
                     {t('profileAds.boost')}
                   </Button>
                 )}
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex-1"
+                  className="h-8 px-2"
                   onClick={() => navigate(`/edit-ad/${ad.slug}`)}
                   aria-label={t('common.edit')}
                 >
-                  <Edit className="w-4 h-4 mr-1" />
-                  {t('common.edit')}
+                  <Edit className="w-3 h-3" />
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-red-600 hover:bg-red-50"
+                  className="text-red-600 hover:bg-red-50 h-8 px-2"
                   onClick={() => onDeleteAd(ad)}
                   aria-label="Delete ad"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3 h-3" />
                 </Button>
               </div>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
