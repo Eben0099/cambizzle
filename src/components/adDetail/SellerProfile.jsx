@@ -92,7 +92,7 @@ const SellerProfile = ({ seller, onContact, onCall, adTitle }) => {
         <div className="space-y-3">
           <button
             onClick={() => setShowContactModal(true)}
-            className="w-full bg-[#d6ba69] hover:bg-[#c4a855] text-white py-3 px-4 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 cursor-pointer"
+            className="w-full bg-[#d6ba69] hover:bg-[#c4a855] text-black py-3 px-4 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 cursor-pointer"
             aria-label={t('adDetail.contactSeller')}
           >
             <MessageCircle className="w-5 h-5" />

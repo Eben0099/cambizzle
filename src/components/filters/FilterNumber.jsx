@@ -43,7 +43,6 @@ const FilterNumber = ({ filter, value, onChange }) => {
         type="number"
         value={localValue}
         onChange={handleChange}
-        placeholder={`${t('filters.enter')} ${translatedName || filter.name}`}
         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
         required={filter.is_required}
         min="0"

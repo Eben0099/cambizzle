@@ -203,6 +203,7 @@
     "phoneFormatHelper": "Format: +237 6XX XXX XXX"
   },
   "ads": {
+    "adType": "Type d'annonce",
     "price": "Prix",
     "location": "Localisation",
     "category": "Catégorie",
@@ -308,6 +309,10 @@
       "invalidPhoneNumber": "Veuillez entrer un numéro de téléphone valide",
       "paymentMethodRequired": "Le mode de paiement est requis pour les boosts payants"
     }
+  },
+  "updateAd": {
+    "title": "Modifier l'annonce",
+    "subtitle": "Modifiez les détails de votre annonce"
   },
   "profile": {
     "title": "Mon profil",
@@ -663,7 +668,7 @@
   "faq": {
     "seoTitle": "Foire Aux Questions | Cambizzle",
     "seoDescription": "Trouvez des réponses aux questions les plus fréquemment posées sur Cambizzle. Apprenez à acheter, vendre et gérer votre compte.",
-    "title": "FAQ",
+    "title": "Foire Aux Questions",
     "subtitle": "Comment pouvons-nous vous aider ?",
     "noFaqs": "Aucune FAQ disponible pour le moment.",
     "stillHaveQuestions": "Vous avez encore des questions ?",
@@ -717,7 +722,7 @@
       "description": "Découvrez ce que les autres acheteurs pensent de cette annonce",
       "reviews": "avis",
       "review": "avis",
-      "viewFeedbacks": "Voir les avis",
+      "viewFeedbacks": "Partager ou Voir les avis",
       "noReviewsYet": "Aucun avis pour le moment",
       "beFirstToReview": "Soyez le premier à partager votre expérience avec cette annonce.",
       "listingNotFound": "Annonce introuvable",

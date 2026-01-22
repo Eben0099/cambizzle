@@ -298,10 +298,10 @@ const AdDetail = () => {
           <div className="flex items-center justify-between h-14 sm:h-16">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center space-x-1 sm:space-x-2 text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+              className="flex items-center text-gray-600 hover:text-[#D6BA69] transition-colors group cursor-pointer"
             >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="font-medium text-sm sm:text-base">{t('ads.backToResults')}</span>
+              <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+              <span className="font-medium text-sm sm:text-base">{t('common.back')}</span>
             </button>
             <div className="flex items-center space-x-1 sm:space-x-3">
               <button
@@ -334,7 +334,7 @@ const AdDetail = () => {
             <ChevronRight className="w-3 h-3 text-gray-400 flex-shrink-0" />
             <button
               onClick={() => navigate('/search')}
-              className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer flex-shrink-0 uppercase"
+              className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer flex-shrink-0"
             >
               {t('ads.allAds')}
             </button>
@@ -428,7 +428,16 @@ const AdDetail = () => {
                 </div>
 
                 {/* Quick Info Grid - Modified for iPhone mini (2 cols always, small gap) */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8 text-left">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-8 text-left">
+                  <div className="p-3 bg-white border border-gray-100 rounded-xl shadow-sm">
+                    <div className="flex items-center gap-2 mb-1.5 grayscale opacity-60">
+                      <Tag className="w-4 h-4 text-[#D6BA69]" />
+                      <span className="text-[10px] sm:text-xs font-bold uppercase text-gray-400 tracking-tighter">{t('ads.adType')}</span>
+                    </div>
+                    <div className="font-bold text-xs sm:text-sm truncate">
+                      {ad.type === 'rent' ? t('createAd.rent') : t('createAd.sell')}
+                    </div>
+                  </div>
                   <div className="p-3 bg-white border border-gray-100 rounded-xl shadow-sm">
                     <div className="flex items-center gap-2 mb-1.5 grayscale opacity-60">
                       <Package className="w-4 h-4 text-[#D6BA69]" />
@@ -649,7 +658,7 @@ const AdDetail = () => {
             </button>
             <button
               onClick={handleSendMessage}
-              className="flex-1 px-4 py-2 bg-[#d6ba69] text-white rounded-lg hover:bg-[#c5a952] transition-colors cursor-pointer"
+              className="flex-1 px-4 py-2 bg-[#d6ba69] text-black rounded-lg hover:bg-[#c5a952] transition-colors cursor-pointer"
             >
               {t('contact.send')}
             </button>

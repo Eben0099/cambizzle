@@ -20,11 +20,7 @@ const FilterSelect = ({ filter, value, onChange }) => {
     'displayValue'
   );
 
-  // Traduire le nom du filtre pour le placeholder
-  const { translatedText: translatedFilterName } = useWeglotTranslate(filter.name || '');
-
   const optionsToDisplay = translatedOptions.length > 0 ? translatedOptions : filter.options || [];
-  const placeholderText = t('filters.selectPlaceholder', { field: translatedFilterName || filter.name });
 
   return (
     <div className="mb-4">
@@ -38,7 +34,7 @@ const FilterSelect = ({ filter, value, onChange }) => {
         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] bg-white cursor-pointer"
         required={filter.is_required}
       >
-        <option value="">{placeholderText}</option>
+        <option value=""></option>
         {optionsToDisplay.map((option, index) => (
           <option key={option.id || `option-${index}`} value={option.original_displayValue || option.value}>
             {option.displayValue || option.value}

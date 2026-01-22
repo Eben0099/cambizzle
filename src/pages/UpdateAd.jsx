@@ -164,7 +164,7 @@ const UpdateAd = () => {
   // Vérifier l'authentification
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/login');
+      navigate('/');
     }
   }, [isAuthenticated, navigate]);
 
@@ -635,23 +635,20 @@ const UpdateAd = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Header */}
-        <div className="flex items-center mb-8">
-          <Button
-            type="button"
-            variant="ghost"
+        <div className="mb-8">
+          <button
             onClick={() => navigate(-1)}
-            className="mr-4 bg-black hover:bg-gray-800 text-white border-black"
+            className="flex items-center text-gray-600 hover:text-[#D6BA69] transition-colors mb-4 group"
           >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-              Update Ad
-            </h1>
-            <p className="text-gray-600 mt-1 text-sm sm:text-base">
-              Modify your ad details
-            </p>
-          </div>
+            <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium">{t('common.back')}</span>
+          </button>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            {t('updateAd.title')}
+          </h1>
+          <p className="text-gray-600 mt-1 text-sm sm:text-base">
+            {t('updateAd.subtitle')}
+          </p>
         </div>
 
         {/* Progress Steps */}

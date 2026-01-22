@@ -58,7 +58,7 @@ const Profile = () => {
             {t('profile.backToHome')}
           </button>
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => navigate('/')}
             className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg transition-colors cursor-pointer"
           >
             {t('auth.login')}

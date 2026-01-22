@@ -196,6 +196,7 @@
     "phoneFormatHelper": "Format: +237 6XX XXX XXX"
   },
   "ads": {
+    "adType": "Ad Type",
     "price": "Price",
     "location": "Location",
     "category": "Category",
@@ -301,6 +302,10 @@
       "invalidPhoneNumber": "Please enter a valid phone number",
       "paymentMethodRequired": "Payment method is required for paid boosts"
     }
+  },
+  "updateAd": {
+    "title": "Update Ad",
+    "subtitle": "Modify your ad details"
   },
   "profile": {
     "title": "My Profile",
@@ -656,7 +661,7 @@
   "faq": {
     "seoTitle": "Frequently Asked Questions | Cambizzle",
     "seoDescription": "Find answers to the most frequently asked questions about Cambizzle. Learn how to buy, sell, and manage your account.",
-    "title": "FAQ",
+    "title": "Frequently Asked Question",
     "subtitle": "How can we help you?",
     "noFaqs": "No FAQs available at the moment.",
     "stillHaveQuestions": "Still have questions?",
@@ -710,7 +715,7 @@
       "description": "See what other buyers think about this ad",
       "reviews": "reviews",
       "review": "review",
-      "viewFeedbacks": "View Feedbacks",
+      "viewFeedbacks": "Share or View Feedbacks",
       "noReviewsYet": "No reviews yet",
       "beFirstToReview": "Be the first to share your experience with this listing.",
       "listingNotFound": "Listing not found",
@@ -1527,7 +1532,13 @@
       "noFaqs": "No FAQs added yet",
       "saveSuccess": "Settings saved successfully",
       "saveError": "Error saving settings",
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "granularSaveHint": "Note: Items in this section are saved individually via the save icon on each card.",
+      "sectionTitle": "Section Title",
+      "sectionContent": "Content",
+      "sectionTitlePlaceholder": "e.g: Introduction, Prohibited Activities...",
+      "sectionContentPlaceholder": "Enter the content here...",
+      "noSections": "Click Add to create the first section."
     },
     "feedbacks": {
       "title": "Ad Feedback Management",

@@ -265,13 +265,13 @@ export default function AdFeedbacks() {
       {/* Fixed header */}
       <header className="bg-white shadow-sm sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
-          <Button
-            variant="ghost"
+          <button
             onClick={() => navigate(-1)}
-            className="p-2 -ml-2 rounded-full hover:bg-gray-100"
+            className="flex items-center text-gray-600 hover:text-[#D6BA69] transition-colors group"
           >
-            <ArrowLeft className="w-6 h-6" />
-          </Button>
+            <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium">{t('common.back')}</span>
+          </button>
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-bold text-gray-900 truncate">
               {ad.title}
@@ -513,7 +513,7 @@ export default function AdFeedbacks() {
                 {t('adDetail.feedback.signInToReview')}
               </p>
               <Button
-                onClick={() => navigate('/login')}
+                onClick={() => navigate('/')}
                 className="bg-[#D6BA69] hover:bg-[#C5A952] text-black font-bold text-sm px-8 rounded-xl"
               >
                 {t('adDetail.feedback.signIn')}

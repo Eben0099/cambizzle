@@ -258,7 +258,7 @@ const CreateAd = () => {
   // Vérifier l'authentification
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/login');
+      navigate('/');
     }
   }, [isAuthenticated, navigate]);
 
@@ -621,6 +621,17 @@ const CreateAd = () => {
         }
       }
 
+      // Console log des données envoyées au backend
+      console.log('=== DONNÉES ENVOYÉES AU BACKEND ===');
+      for (let [key, value] of formDataToSend.entries()) {
+        if (value instanceof File) {
+          console.log(`${key}: [File] ${value.name} (${value.size} bytes)`);
+        } else {
+          console.log(`${key}: ${value}`);
+        }
+      }
+      console.log('===================================');
+
       logger.log('Envoi des données...');
       const result = await adsService.createAd(formDataToSend);
       logger.log('Réponse API reçue:', result);
@@ -676,19 +687,17 @@ const CreateAd = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Header */}
-        <div className="flex items-center mb-8">
-          <Button
-            variant="ghost"
+        <div className="mb-8">
+          <button
             onClick={() => navigate(-1)}
-            className="mr-4 bg-black hover:bg-gray-800 text-white border-black"
+            className="flex items-center text-gray-600 hover:text-[#D6BA69] transition-colors mb-4 group"
           >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-              {t('createAd.title')}
-            </h1>
-          </div>
+            <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium">{t('common.back')}</span>
+          </button>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            {t('createAd.title')}
+          </h1>
         </div>
 
         {/* Progress Steps */}

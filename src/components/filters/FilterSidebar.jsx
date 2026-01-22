@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, RotateCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import FilterSelect from './FilterSelect';
@@ -10,6 +10,7 @@ import FilterRange from './FilterRange';
 import Button from '../ui/Button';
 import { countActiveFilters } from '../../utils/filterHelpers';
 import logger from '../../utils/logger';
+import { API_BASE_URL } from '../../config/api';
 
 /**
  * Composant sidebar pour afficher et gérer les filtres
@@ -24,6 +25,35 @@ const FilterSidebar = ({
   loading = false
 }) => {
   const { t } = useTranslation();
+  const [locations, setLocations] = useState([]);
+  const [locationsLoading, setLocationsLoading] = useState(true);
+
+  // Fetch locations from API
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        setLocationsLoading(true);
+        const response = await fetch(`${API_BASE_URL}/locations`);
+        const data = await response.json();
+        
+        if (data.status === 'success' && Array.isArray(data.data)) {
+          // Filtrer les locations actives
+          const activeLocations = data.data.filter(loc => loc.is_active === '1' || loc.is_active === 1);
+          setLocations(activeLocations);
+          logger.log('✅ Locations chargées:', activeLocations.length);
+        } else {
+          setLocations([]);
+        }
+      } catch (error) {
+        logger.error('❌ Erreur chargement locations:', error);
+        setLocations([]);
+      } finally {
+        setLocationsLoading(false);
+      }
+    };
+
+    fetchLocations();
+  }, []);
 
   // Rendu d'un filtre selon son type
   const renderFilter = (filter) => {
@@ -49,12 +79,6 @@ const FilterSidebar = ({
   };
 
   const activeFiltersCount = countActiveFilters(selectedFilters);
-
-  // Debug locations
-  logger.log('🗺️ FilterSidebar - filterMetadata:', filterMetadata);
-  logger.log('🏙️ Locations disponibles:', filterMetadata?.locations);
-  const cities = filterMetadata?.locations?.filter(loc => loc.type === 'city') || [];
-  logger.log('🏙️ Villes filtrées:', cities);
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -106,17 +130,17 @@ const FilterSidebar = ({
           </div>
         ) : (
           <div className="space-y-1">
-            {/* Filtre de localisation */}
-            {filterMetadata?.locations && filterMetadata.locations.length > 0 && (
+            {/* Filtre de localisation - chargé depuis l'API */}
+            {locations.length > 0 && (
               <div className="pb-4 border-b border-gray-100">
                 <FilterSelect
                   filter={{
                     id: 'location',
                     name: t('filters.location'),
                     type: 'select',
-                    options: filterMetadata.locations
-                      .map((loc, index) => ({
-                        id: loc.id || `loc-${index}`,
+                    options: locations
+                      .map((loc) => ({
+                        id: loc.id,
                         value: loc.city || loc.name
                       }))
                       .sort((a, b) => a.value.localeCompare(b.value))
@@ -126,21 +150,27 @@ const FilterSidebar = ({
                 />
               </div>
             )}
-
-            {/* Filtre de prix */}
-            {filterMetadata?.priceRange && (
+            {locationsLoading && (
               <div className="pb-4 border-b border-gray-100">
-                <FilterRange
-                  filter={{
-                    id: 'price',
-                    name: t('filters.priceRange'),
-                    type: 'range'
-                  }}
-                  value={selectedFilters.price}
-                  onChange={onChange}
-                />
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                  <div className="h-10 bg-gray-200 rounded"></div>
+                </div>
               </div>
             )}
+
+            {/* Filtre de prix - toujours affiché */}
+            <div className="pb-4 border-b border-gray-100">
+              <FilterRange
+                filter={{
+                  id: 'price',
+                  name: t('filters.priceRange'),
+                  type: 'range'
+                }}
+                value={selectedFilters.price}
+                onChange={onChange}
+              />
+            </div>
 
             {/* Filtres dynamiques de la sous-catégorie */}
             {Array.isArray(filters) && filters.length > 0 ? (

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Grid, List, SlidersHorizontal, ArrowLeft } from 'lucide-react';
+import { SlidersHorizontal, ArrowLeft } from 'lucide-react';
 import AdCard from '../components/ads/AdCard';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
@@ -24,8 +24,6 @@ const SubcategoryAds = () => {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedFilters, setSelectedFilters] = useState({});
-  const [viewMode, setViewMode] = useState('grid');
-  const [sortBy, setSortBy] = useState('recent');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const categoryParam = searchParams.get('category');
@@ -182,27 +180,16 @@ const SubcategoryAds = () => {
     });
   };
 
-  // Tri et filtrage des annonces avec useMemo
+  // Tri et filtrage des annonces avec useMemo (tri par défaut: récent)
   const displayedAds = useMemo(() => {
     const rawAds = subcategoryAds?.ads || [];
     const filteredAds = filterAds(rawAds, selectedFilters);
 
     if (!filteredAds || filteredAds.length === 0) return [];
 
-    const sortedAds = [...filteredAds];
-
-    switch (sortBy) {
-      case 'price-asc':
-        return sortedAds.sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
-      case 'price-desc':
-        return sortedAds.sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0));
-      case 'popular':
-        return sortedAds.sort((a, b) => (parseInt(b.viewCount) || 0) - (parseInt(a.viewCount) || 0));
-      case 'recent':
-      default:
-        return sortedAds.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    }
-  }, [subcategoryAds?.ads, selectedFilters, sortBy]);
+    // Tri par défaut: plus récent
+    return [...filteredAds].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }, [subcategoryAds?.ads, selectedFilters]);
 
   const displayInfo = {
     title: subcategoryAds?.subcategory?.name || `Ads in "${subcategoryParam}"`,
@@ -307,41 +294,6 @@ const SubcategoryAds = () => {
               onRemoveFilter={handleRemoveFilter}
             />
 
-            {/* Controls */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-              <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69] cursor-pointer"
-                  >
-                    <option value="recent">{t('filters.newest')}</option>
-                    <option value="price-asc">{t('filters.priceLowHigh')}</option>
-                    <option value="price-desc">{t('filters.priceHighLow')}</option>
-                    <option value="popular">{t('filters.mostPopular')}</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant={viewMode === 'grid' ? 'primary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('grid')}
-                >
-                  <Grid className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant={viewMode === 'list' ? 'primary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                >
-                  <List className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-
             {/* Results */}
             {loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -372,10 +324,7 @@ const SubcategoryAds = () => {
               </Card>
             ) : displayedAds.length > 0 ? (
               <>
-                <div className={`grid gap-6 ${viewMode === 'grid'
-                    ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
-                    : 'grid-cols-1'
-                  }`}>
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                   {displayedAds.map((ad) => (
                     <AdCard key={ad.id} ad={ad} />
                   ))}
