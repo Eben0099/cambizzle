@@ -28,6 +28,7 @@ const SubcategoryAds = () => {
 
   const categoryParam = searchParams.get('category');
   const subcategoryParam = searchParams.get('subcategory');
+  const page = parseInt(searchParams.get('page') || '1', 10);
 
   // Construire les paramètres pour l'API (filtres backend seulement)
   const frontendFilters = ['location', 'price'];
@@ -38,10 +39,10 @@ const SubcategoryAds = () => {
   }, [selectedFilters]);
 
   const queryParams = useMemo(() => ({
-    page: 1,
-    per_page: 20,
+    page,
+    per_page: 50,
     ...buildFilterQueryParams(backendFilters)
-  }), [backendFilters]);
+  }), [backendFilters, page]);
 
   // React Query hooks
   const { data: creationData } = useAdCreationData();
@@ -141,6 +142,22 @@ const SubcategoryAds = () => {
     });
 
     setSearchParams(newParams);
+  };
+
+  // Pagination
+  const pagination = subcategoryAds?.pagination || {
+    currentPage: 1,
+    totalPages: 1,
+    total: 0,
+    hasNext: false,
+    hasPrevious: false
+  };
+
+  const goToPage = (pageNumber) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('page', pageNumber.toString());
+    setSearchParams(newParams);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Fonction de filtrage côté frontend pour location et price
@@ -296,8 +313,8 @@ const SubcategoryAds = () => {
 
             {/* Results */}
             {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[...Array(6)].map((_, i) => (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                {[...Array(8)].map((_, i) => (
                   <div key={i} className="animate-pulse">
                     <div className="bg-gray-200 h-48 rounded-lg mb-4"></div>
                     <div className="h-4 bg-gray-200 rounded mb-2"></div>
@@ -324,11 +341,70 @@ const SubcategoryAds = () => {
               </Card>
             ) : displayedAds.length > 0 ? (
               <>
-                <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
                   {displayedAds.map((ad) => (
-                    <AdCard key={ad.id} ad={ad} />
+                    <AdCard key={ad.id} ad={ad} className="hover:shadow-lg hover:-translate-y-1 transition-all duration-300" />
                   ))}
                 </div>
+
+                {/* Pagination */}
+                {pagination.totalPages > 1 && (
+                  <div className="flex justify-center items-center mt-12 space-x-4">
+                    {/* Previous Button */}
+                    {pagination.hasPrevious && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => goToPage(pagination.previousPage || pagination.currentPage - 1)}
+                      >
+                        ← {t('common.previous')}
+                      </Button>
+                    )}
+
+                    {/* Page Numbers */}
+                    <div className="flex space-x-2">
+                      {[...Array(Math.min(pagination.totalPages, 5))].map((_, i) => {
+                        let pageNumber;
+                        if (pagination.totalPages <= 5) {
+                          pageNumber = i + 1;
+                        } else {
+                          const current = pagination.currentPage;
+                          const total = pagination.totalPages;
+
+                          if (current <= 3) {
+                            pageNumber = i + 1;
+                          } else if (current >= total - 2) {
+                            pageNumber = total - 4 + i;
+                          } else {
+                            pageNumber = current - 2 + i;
+                          }
+                        }
+
+                        return (
+                          <Button
+                            key={pageNumber}
+                            variant={pagination.currentPage === pageNumber ? 'primary' : 'ghost'}
+                            size="sm"
+                            onClick={() => goToPage(pageNumber)}
+                          >
+                            {pageNumber}
+                          </Button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Next Button */}
+                    {pagination.hasNext && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => goToPage(pagination.nextPage || pagination.currentPage + 1)}
+                      >
+                        {t('common.next')} →
+                      </Button>
+                    )}
+                  </div>
+                )}
               </>
             ) : (
               <Card className="text-center py-12">

@@ -114,14 +114,33 @@ const AdDetail = () => {
   useEffect(() => {
     const fetchRelatedAdsAndSummary = async () => {
       if (!ad) return;
+
       try {
-        // Fetch related ads
-        const relatedResponse = await fetch(`${API_BASE_URL}/ads?category=${encodeURIComponent(ad.categoryName)}&limit=4&exclude=${ad.id}`);
-        if (relatedResponse.ok) {
-          const relatedData = await relatedResponse.json();
-          if (relatedData && Array.isArray(relatedData)) {
-            setRelatedAds(relatedData.slice(0, 4));
+        // Fetch related ads using existing subcategory or category route
+        const subcategorySlug = ad.subcategorySlug || ad.subcategory?.slug;
+        const categorySlug = ad.categorySlug || ad.category?.slug;
+
+        let relatedData = null;
+
+        // Try subcategory first, then category
+        if (subcategorySlug) {
+          const response = await fetch(`${API_BASE_URL}/ads/subcategory/${subcategorySlug}?per_page=5`);
+          if (response.ok) {
+            relatedData = await response.json();
           }
+        } else if (categorySlug) {
+          const response = await fetch(`${API_BASE_URL}/ads/category/${categorySlug}?per_page=5`);
+          if (response.ok) {
+            relatedData = await response.json();
+          }
+        }
+
+        if (relatedData?.ads && Array.isArray(relatedData.ads)) {
+          // Filter out current ad and limit to 4
+          const filteredAds = relatedData.ads
+            .filter(relatedAd => relatedAd.id !== ad.id && relatedAd.slug !== ad.slug)
+            .slice(0, 4);
+          setRelatedAds(filteredAds);
         }
       } catch (error) {
         // Silently fail for related ads
@@ -619,11 +638,11 @@ const AdDetail = () => {
 
         {/* Related Ads Section - Bottom */}
         {relatedAds.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('ads.relatedAds')}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="mt-8 sm:mt-12 px-4 sm:px-0">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">{t('ads.relatedAds')}</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {relatedAds.map((relatedAd) => (
-                <AdCard key={relatedAd.id} ad={relatedAd} />
+                <AdCard key={relatedAd.id} ad={relatedAd} className="hover:shadow-lg hover:-translate-y-1 transition-all duration-300" />
               ))}
             </div>
           </div>

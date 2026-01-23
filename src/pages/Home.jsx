@@ -106,8 +106,8 @@ const Home = () => {
         <section className="bg-gradient-to-br from-black via-gray-900 to-black text-white py-8 sm:py-10 lg:py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center space-y-4">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                <span className="text-[#D6BA69] drop-shadow-md">Cambizzle</span>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
+                <span className="text-[#D6BA69] drop-shadow-md">Sell Faster. Buy Better in Cameroon.</span>
               </h1>
 
               <div className="max-w-2xl mx-auto">

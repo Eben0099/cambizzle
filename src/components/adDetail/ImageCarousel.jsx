@@ -175,17 +175,17 @@ const ImageCarousel = ({ images }) => {
               <>
                 <button
                   onClick={prevImage}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/60 text-[#D6BA69] hover:text-[#C5A952] p-3 rounded-full transition-colors cursor-pointer z-20"
+                  className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-black/60 text-[#D6BA69] hover:text-[#C5A952] p-1.5 sm:p-3 rounded-full transition-colors cursor-pointer z-20"
                   aria-label="Previous image"
                 >
-                  <ChevronLeft className="w-8 h-8" />
+                  <ChevronLeft className="w-5 h-5 sm:w-8 sm:h-8" />
                 </button>
                 <button
                   onClick={nextImage}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/60 text-[#D6BA69] hover:text-[#C5A952] p-3 rounded-full transition-colors cursor-pointer z-20"
+                  className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-black/60 text-[#D6BA69] hover:text-[#C5A952] p-1.5 sm:p-3 rounded-full transition-colors cursor-pointer z-20"
                   aria-label="Next image"
                 >
-                  <ChevronRight className="w-8 h-8" />
+                  <ChevronRight className="w-5 h-5 sm:w-8 sm:h-8" />
                 </button>
               </>
             )}

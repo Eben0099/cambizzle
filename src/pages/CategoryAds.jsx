@@ -27,7 +27,7 @@ const CategoryAds = () => {
   const page = parseInt(searchParams.get('page') || '1', 10);
 
   // Utilisation du hook React Query
-  const { data, isLoading, error, refetch } = useAdsByCategory(categoryId, { page });
+  const { data, isLoading, error, refetch } = useAdsByCategory(categoryId, { page, per_page: 50 });
 
   const ads = data?.ads || [];
   const categoryInfo = data?.category || null;
@@ -168,7 +168,7 @@ const CategoryAds = () => {
 
         {/* Results */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="animate-pulse">
                 <div className="bg-gray-200 h-48 rounded-lg mb-4"></div>
@@ -199,12 +199,12 @@ const CategoryAds = () => {
           </div>
         ) : displayedAds.length > 0 ? (
           <>
-            <div className={`grid gap-6 ${viewMode === 'grid'
-                ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'
+            <div className={`grid gap-4 sm:gap-6 ${viewMode === 'grid'
+                ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
                 : 'grid-cols-1'
               }`}>
               {displayedAds.map((ad) => (
-                <AdCard key={ad.id} ad={ad} />
+                <AdCard key={ad.id} ad={ad} className="hover:shadow-lg hover:-translate-y-1 transition-all duration-300" />
               ))}
             </div>
 
