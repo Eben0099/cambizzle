@@ -21,7 +21,8 @@
       "Bash(git clone:*)",
       "Bash(dir \"C:\\tmp\\claude\\tasks\\cambizzle-api\")",
       "Bash(git push:*)",
-      "Bash(ssh:*)"
+      "Bash(ssh:*)",
+      "Bash(grep:*)"
     ]
   }
 }
