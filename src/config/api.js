@@ -65,6 +65,19 @@ const handleResponseError = (error) => {
     }
   }
 
+  // Si erreur 403 (Forbidden), forcer le rafraîchissement de la page
+  if (error.response?.status === 403) {
+    // Eviter les boucles infinies de rafraîchissement
+    const lastRefresh = sessionStorage.getItem('last403Refresh');
+    const now = Date.now();
+    const refreshCooldown = 5000; // 5 secondes de cooldown entre les rafraîchissements
+
+    if (!lastRefresh || (now - parseInt(lastRefresh, 10)) > refreshCooldown) {
+      sessionStorage.setItem('last403Refresh', now.toString());
+      window.location.reload();
+    }
+  }
+
   return Promise.reject(error);
 };
 

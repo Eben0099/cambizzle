@@ -162,7 +162,7 @@ const Home = () => {
                           <div className="w-12 h-12 bg-[#D6BA69]/10 rounded-full flex items-center justify-center text-[#D6BA69] group-hover:bg-[#D6BA69]/20 transition-all">
                             <CategoryIcon category={category} className="w-6 h-6" />
                           </div>
-                          <span className="text-[10px] font-medium text-center line-clamp-2 text-gray-700 group-hover:text-[#D6BA69]">{category.name}</span>
+                          <span className="text-[10px] font-medium text-center line-clamp-2 text-gray-700 group-hover:text-[#D6BA69]">{t(`categoryNames.${category.slug}`, category.name)}</span>
                         </button>
                       ))}
                   </div>
@@ -177,7 +177,7 @@ const Home = () => {
                       <ChevronRight className="w-4 h-4 rotate-180 mr-1" />
                       {t('common.back')}
                     </button>
-                    <h3 className="text-sm font-bold text-gray-900">{selectedCategory.name}</h3>
+                    <h3 className="text-sm font-bold text-gray-900">{t(`categoryNames.${selectedCategory.slug}`, selectedCategory.name)}</h3>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     {selectedCategory.subcategories
@@ -192,7 +192,7 @@ const Home = () => {
                             <CategoryIcon category={sub} className="w-7 h-7" />
                           </div>
                           <span className="text-xs font-bold text-gray-800 group-hover:text-[#D6BA69] line-clamp-2 leading-tight">
-                            {sub.name}
+                            {t(`subcategoryNames.${sub.slug}`, sub.name)}
                           </span>
                         </button>
                       ))}

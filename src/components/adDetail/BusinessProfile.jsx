@@ -1,6 +1,9 @@
 import { Building2, MapPin, Clock, Globe, Users, Award } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const BusinessProfile = ({ business }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <div className="flex items-center space-x-3 mb-6">
@@ -150,7 +153,7 @@ const BusinessProfile = ({ business }) => {
             <div className="flex items-center space-x-2">
               <div className={`w-2 h-2 rounded-full ${business.is_verified ? 'bg-green-400' : 'bg-yellow-400'}`}></div>
               <span className={`text-xs font-medium ${business.is_verified ? 'text-green-700' : 'text-yellow-700'}`}>
-                {business.is_verified ? 'Verified Business' : 'Verification Pending'}
+                {business.is_verified ? t('businessProfile.verifiedBusiness') : t('businessProfile.verificationPending')}
               </span>
             </div>
           </div>

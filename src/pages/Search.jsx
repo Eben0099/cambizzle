@@ -336,7 +336,7 @@ const Search = () => {
     rawAds = subcategoryAds.ads || [];
     currentLoading = subcategoryLoading;
     displayInfo = {
-      title: subcategoryAds.subcategory?.name || `Ads in "${subcategoryParam}"`,
+      title: subcategoryAds.subcategory?.name || `Ads in ${subcategoryParam}`,
       count: subcategoryAds.pagination?.total || rawAds.length,
       type: 'subcategory',
       subcategoryInfo: subcategoryAds.subcategory,
@@ -355,7 +355,7 @@ const Search = () => {
     rawAds = categoryAds.ads || [];
     currentLoading = categoryLoading;
     displayInfo = {
-      title: categoryAds.category?.name || `Ads in "${categoryParam}"`,
+      title: categoryAds.category?.name || `Ads in ${categoryParam}`,
       count: categoryAds.pagination?.total || rawAds.length,
       type: 'category',
       categoryInfo: categoryAds.category
@@ -374,7 +374,7 @@ const Search = () => {
     currentLoading = isLoading;
     displayInfo = {
       title: subcategoryParam
-        ? `Ads in "${subcategoryParam}"`
+        ? `Ads in ${subcategoryParam}`
         : query
           ? `Results for "${query}"`
           : 'All Ads',
@@ -449,7 +449,7 @@ const Search = () => {
         <div className="mb-8">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center text-gray-600 hover:text-[#D6BA69] transition-colors mb-4 group"
+            className="flex items-center text-[#D6BA69] hover:text-[#C5A952] transition-colors mb-4 group"
           >
             <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
             <span className="font-medium">{t('common.back')}</span>

@@ -134,7 +134,7 @@ export const useFavorites = () => {
     totalFavorites: data?.total || 0,
     loading: isLoading,
     toggleFavorite,
-    isFavorite: (adId) => data?.items?.some(fav => fav.adId === adId.toString()) || false,
+    isFavorite: (adId) => data?.items?.some(fav => String(fav.adId) === String(adId) || String(fav.id) === String(adId)) || false,
     checkIsFavorite,
   };
 };

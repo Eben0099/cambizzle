@@ -113,12 +113,12 @@ const AdDetail = () => {
   // Charger les annonces similaires et le summary des feedbacks quand l'annonce est chargée
   useEffect(() => {
     const fetchRelatedAdsAndSummary = async () => {
-      if (!ad) return;
+      if (!adData) return;
 
       try {
         // Fetch related ads using existing subcategory or category route
-        const subcategorySlug = ad.subcategorySlug || ad.subcategory?.slug;
-        const categorySlug = ad.categorySlug || ad.category?.slug;
+        const subcategorySlug = adData.subcategorySlug || adData.subcategory?.slug;
+        const categorySlug = adData.categorySlug || adData.category?.slug;
 
         let relatedData = null;
 
@@ -138,7 +138,7 @@ const AdDetail = () => {
         if (relatedData?.ads && Array.isArray(relatedData.ads)) {
           // Filter out current ad and limit to 4
           const filteredAds = relatedData.ads
-            .filter(relatedAd => relatedAd.id !== ad.id && relatedAd.slug !== ad.slug)
+            .filter(relatedAd => relatedAd.id !== adData.id && relatedAd.slug !== adData.slug)
             .slice(0, 4);
           setRelatedAds(filteredAds);
         }
@@ -148,7 +148,7 @@ const AdDetail = () => {
 
       try {
         // Fetch feedback summary
-        const summaryResponse = await fetch(`${API_BASE_URL}/ads/${ad.id}/feedbacks/summary`);
+        const summaryResponse = await fetch(`${API_BASE_URL}/ads/${adData.id}/feedbacks/summary`);
         if (summaryResponse.ok) {
           const summaryData = await summaryResponse.json();
           if (summaryData?.status === 'success') {
@@ -161,10 +161,10 @@ const AdDetail = () => {
       }
     };
 
-    if (ad) {
+    if (adData?.id) {
       fetchRelatedAdsAndSummary();
     }
-  }, [ad]);
+  }, [adData?.id]); // Only re-run when ad ID changes, not on every render
 
   const handleShare = async () => {
     try {
@@ -221,21 +221,33 @@ const AdDetail = () => {
     setIsReporting(true);
 
     try {
+      const reportData = {
+        reported_ad_id: parseInt(ad.id),
+        report_type: reportReason, // fraud, inappropriate, spam, counterfeit, prohibited, other
+        report_reason: t(`adDetail.report.${reportReason}`) // Human-readable reason
+      };
+
+      // Only add description if provided
+      if (reportDescription.trim()) {
+        reportData.description = reportDescription.trim();
+      }
+
       const response = await fetch(`${API_BASE_URL}/reports`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          report_type: 'ad',
-          report_reason: reportReason,
-          description: reportDescription.trim() || null,
-          reported_ad_id: ad.id
-        })
+        body: JSON.stringify(reportData)
       });
 
       const data = await response.json();
+
+      if (!response.ok) {
+        // API returned an error status (4xx, 5xx)
+        console.error('Report API error:', data);
+        throw new Error(data.message || data.error || `Error ${response.status}`);
+      }
 
       if (data.status === 'success') {
         showToast({
@@ -317,7 +329,7 @@ const AdDetail = () => {
           <div className="flex items-center justify-between h-14 sm:h-16">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center text-gray-600 hover:text-[#D6BA69] transition-colors group cursor-pointer"
+              className="flex items-center text-[#D6BA69] hover:text-[#C5A952] transition-colors group cursor-pointer"
             >
               <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
               <span className="font-medium text-sm sm:text-base">{t('common.back')}</span>
@@ -702,10 +714,11 @@ const AdDetail = () => {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d6ba69] focus:border-transparent transition-colors cursor-pointer"
             >
               <option value="">{t('adDetail.report.selectReason')}</option>
-              <option value="spam">{t('adDetail.report.spam')}</option>
               <option value="fraud">{t('adDetail.report.fraud')}</option>
               <option value="inappropriate">{t('adDetail.report.inappropriate')}</option>
-              <option value="duplicate">{t('adDetail.report.duplicate')}</option>
+              <option value="spam">{t('adDetail.report.spam')}</option>
+              <option value="counterfeit">{t('adDetail.report.counterfeit')}</option>
+              <option value="prohibited">{t('adDetail.report.prohibited')}</option>
               <option value="other">{t('adDetail.report.other')}</option>
             </select>
           </div>

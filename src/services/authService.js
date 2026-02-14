@@ -218,6 +218,107 @@ class AuthService {
     this.token = null;
     storageService.removeToken();
   }
+
+  // ==================== OTP Methods ====================
+
+  /**
+   * Send OTP for registration or password reset
+   * @param {string} phone - Phone number in international format (e.g., +237612345678)
+   * @param {'registration' | 'password_reset'} purpose - Purpose of OTP
+   * @returns {Promise<{success: boolean, message: string, data: {channel: string, expires_in_minutes: number}}>}
+   */
+  async sendOTP(phone, purpose = 'registration') {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/auth/otp/send`, {
+        phone,
+        purpose
+      }, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+      return response.data;
+    } catch (error) {
+      const errorData = error.response?.data;
+      const err = new Error(errorData?.message || 'Failed to send OTP');
+      err.code = errorData?.code;
+      err.retryAfter = errorData?.data?.retry_after;
+      throw err;
+    }
+  }
+
+  /**
+   * Verify OTP code
+   * @param {string} phone - Phone number in international format
+   * @param {string} code - 6-digit OTP code
+   * @param {'registration' | 'password_reset'} purpose - Purpose of OTP
+   * @returns {Promise<{success: boolean, message: string}>}
+   */
+  async verifyOTP(phone, code, purpose = 'registration') {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/auth/otp/verify`, {
+        phone,
+        code,
+        purpose
+      }, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+      return response.data;
+    } catch (error) {
+      const errorData = error.response?.data;
+      const err = new Error(errorData?.message || 'Invalid verification code');
+      err.code = errorData?.code;
+      err.attemptsRemaining = errorData?.data?.attempts_remaining;
+      throw err;
+    }
+  }
+
+  /**
+   * Request OTP for password reset
+   * @param {string} phone - Phone number in international format
+   * @param {string} channel - Channel to send OTP (whatsapp or sms)
+   * @returns {Promise<{success: boolean, message: string, data: {channel: string, expires_in_minutes: number}}>}
+   */
+  async requestPasswordResetOTP(phone, channel = 'whatsapp') {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/auth/password/request-otp`, {
+        phone,
+        channel
+      }, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+      return response.data;
+    } catch (error) {
+      const errorData = error.response?.data;
+      const err = new Error(errorData?.message || 'Failed to request password reset');
+      err.code = errorData?.code;
+      throw err;
+    }
+  }
+
+  /**
+   * Reset password using OTP
+   * @param {string} phone - Phone number in international format
+   * @param {string} code - 6-digit OTP code
+   * @param {string} newPassword - New password
+   * @returns {Promise<{success: boolean, message: string}>}
+   */
+  async resetPasswordWithOTP(phone, code, newPassword) {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/auth/password/reset-with-otp`, {
+        phone,
+        code,
+        new_password: newPassword
+      }, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+      return response.data;
+    } catch (error) {
+      const errorData = error.response?.data;
+      const err = new Error(errorData?.message || 'Failed to reset password');
+      err.code = errorData?.code;
+      err.attemptsRemaining = errorData?.data?.attempts_remaining;
+      throw err;
+    }
+  }
 }
 
 export const authService = new AuthService();

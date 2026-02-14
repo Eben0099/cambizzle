@@ -211,7 +211,7 @@ const Subcategory = () => {
               variant="ghost"
               size="sm"
               onClick={() => navigate('/search')}
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-2 text-[#D6BA69] hover:text-[#C5A952]"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Retour aux annonces</span>

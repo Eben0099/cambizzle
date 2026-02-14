@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { isValidPhoneNumber } from 'react-phone-number-input';
 import { useGoogleLogin } from '@react-oauth/google';
-import { Mail, Eye, EyeOff, ArrowLeft, Store, Clock, Globe, Facebook, Instagram } from 'lucide-react';
+import { Mail, Eye, EyeOff, ArrowLeft, Store, Clock, Globe, Facebook, Instagram, Loader2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/authService';
 import { API_BASE_URL } from '../../config/api';
@@ -14,6 +14,7 @@ import 'react-phone-number-input/style.css';
 import PhoneInput from 'react-phone-number-input';
 import Modal from '../ui/Modal';
 import Loader from '../ui/Loader';
+import OTPVerification from './OTPVerification';
 
 const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
   const { t } = useTranslation();
@@ -44,14 +45,22 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
       setErrors(prev => ({ ...prev, email: '' }));
     }
   };
-  const [step, setStep] = useState('choice'); // 'choice', 'form', 'seller'
+  const [step, setStep] = useState('choice'); // 'choice', 'form', 'otp', 'seller'
   const [mode, setMode] = useState(initialMode);
+  const [phoneVerified, setPhoneVerified] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [isResetMode, setIsResetMode] = useState(false);
+
+  // OTP-based password reset state
+  const [resetStep, setResetStep] = useState('phone'); // 'phone', 'otp', or 'password'
+  const [resetOtpCode, setResetOtpCode] = useState(['', '', '', '', '', '']);
+  const [resetResendCooldown, setResetResendCooldown] = useState(0);
+  const [resetAttemptsRemaining, setResetAttemptsRemaining] = useState(3);
+  const resetOtpInputRefs = useRef([]);
 
   const { user, login, register, updateUser } = useAuth();
   const { showToast } = useToast();
@@ -178,8 +187,13 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
     setShowPassword(false);
     setShowConfirmPassword(false);
     setIsResetMode(false);
+    setResetStep('phone');
+    setResetOtpCode(['', '', '', '', '', '']);
+    setResetResendCooldown(0);
+    setResetAttemptsRemaining(3);
     setIsLoading(false);
     setErrors({});
+    setPhoneVerified(false);
     setFormData({
       firstName: '',
       lastName: '',
@@ -273,61 +287,50 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
     setErrors({});
     setMessage("");
 
+    // Validate password
+    if (!formData.password) {
+      setErrors({ password: t('auth.passwordRequired') });
+      setIsLoading(false);
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      setErrors({ password: t('auth.passwordMinLength') });
+      setIsLoading(false);
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setErrors({ confirmPassword: t('auth.passwordsDontMatch') });
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      if (!formData.phone) {
-        setErrors({ phone: t('auth.phoneRequired') });
-        setIsLoading(false);
-        return;
-      }
+      // Use the OTP code that was already verified
+      const otpCode = resetOtpCode.join('');
+      await authService.resetPasswordWithOTP(formData.phone, otpCode, formData.password);
 
-      if (!formData.password) {
-        setErrors({ password: t('auth.passwordRequired') });
-        setIsLoading(false);
-        return;
-      }
-
-      if (formData.password.length < 8) {
-        setErrors({ password: t('auth.passwordMinLength') });
-        setIsLoading(false);
-        return;
-      }
-
-      if (formData.password !== formData.confirmPassword) {
-        setErrors({ confirmPassword: t('auth.passwordsDontMatch') });
-        setIsLoading(false);
-        return;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          phone: formData.phone,
-          password: formData.password
-        })
+      setMessage(t('auth.passwordResetSuccess'));
+      showToast({
+        type: 'success',
+        message: t('auth.passwordResetSuccess')
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        setMessage(t('auth.passwordResetSuccess'));
-        setTimeout(() => {
-          setIsResetMode(false);
-          setFormData({
-            ...formData,
-            phone: '',
-            password: '',
-            confirmPassword: ''
-          });
-          setStep('choice');
-        }, 1500);
-      } else {
-        setErrors({ submit: data.message || t('auth.errorDuringPasswordReset') });
-      }
+      setTimeout(() => {
+        setIsResetMode(false);
+        setResetStep('phone');
+        setResetOtpCode(['', '', '', '', '', '']);
+        setFormData({
+          ...formData,
+          phone: '',
+          password: '',
+          confirmPassword: ''
+        });
+        setStep('choice');
+      }, 1500);
     } catch (error) {
-      setErrors({ submit: t('auth.errorDuringPasswordReset') });
+      setErrors({ submit: error.message || t('auth.errorDuringPasswordReset') });
     } finally {
       setIsLoading(false);
     }
@@ -359,7 +362,35 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
       return;
     }
 
-    // --- Appel API ---
+    // If phone not yet verified, go to OTP step
+    if (!phoneVerified) {
+      try {
+        await authService.sendOTP(formData.phone, 'registration');
+        setStep('otp');
+      } catch (err) {
+        if (err.code === 'PHONE_EXISTS') {
+          setErrors({ phone: t('auth.phoneAlreadyExists') || 'An account with this phone number already exists' });
+        } else {
+          showToast({
+            type: 'error',
+            title: t('toast.error'),
+            message: err.message
+          });
+        }
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    // Phone is verified, proceed with registration
+    await completeRegistration();
+  };
+
+  const completeRegistration = async () => {
+    setIsLoading(true);
+    setErrors({});
+
     try {
       const result = await register(formData);
 
@@ -386,6 +417,16 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleOTPVerified = () => {
+    setPhoneVerified(true);
+    completeRegistration();
+  };
+
+  const handleBackFromOTP = () => {
+    setStep('form');
+    setPhoneVerified(false);
   };
 
 
@@ -516,100 +557,353 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
   // Ordre des jours de la semaine pour l'affichage
   const weekOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
+  // OTP input handlers for password reset
+  const handleResetOtpChange = (index, value) => {
+    if (!/^\d*$/.test(value)) return;
+    const newCode = [...resetOtpCode];
+    newCode[index] = value.slice(-1);
+    setResetOtpCode(newCode);
+    if (value && index < 5) {
+      resetOtpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleResetOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !resetOtpCode[index] && index > 0) {
+      resetOtpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleResetOtpPaste = (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (pastedData.length === 6) {
+      setResetOtpCode(pastedData.split(''));
+      resetOtpInputRefs.current[5]?.focus();
+    }
+  };
+
+  // Request OTP for password reset
+  const handleRequestResetOTP = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setErrors({});
+
+    if (!formData.phone || !isValidPhoneNumber(formData.phone)) {
+      setErrors({ phone: t('auth.invalidPhone') });
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      await authService.requestPasswordResetOTP(formData.phone, 'whatsapp');
+      setResetStep('otp');
+      setResetResendCooldown(60);
+      showToast({
+        type: 'success',
+        message: t('otp.codeSent')
+      });
+    } catch (err) {
+      if (err.code === 'PHONE_NOT_FOUND') {
+        setErrors({ phone: t('auth.phoneNotFound') || 'No account found with this phone number' });
+      } else {
+        setErrors({ submit: err.message || t('auth.errorSendingOTP') });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Verify OTP code and move to password step
+  const handleVerifyResetOTP = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setErrors({});
+
+    const otpCode = resetOtpCode.join('');
+    if (otpCode.length !== 6) {
+      setErrors({ otp: t('otp.enterFullCode') || 'Please enter the full 6-digit code' });
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      await authService.verifyOTP(formData.phone, otpCode, 'password_reset');
+      setResetStep('password');
+      showToast({
+        type: 'success',
+        message: t('otp.verified') || 'Code verified!'
+      });
+    } catch (err) {
+      if (err.code === 'INVALID_OTP' || err.message?.includes('invalid') || err.message?.includes('Invalid')) {
+        setErrors({ otp: t('otp.invalidCode') || 'Invalid verification code' });
+      } else if (err.code === 'OTP_EXPIRED' || err.message?.includes('expired')) {
+        setErrors({ otp: t('otp.codeExpired') || 'Code has expired. Please request a new one.' });
+      } else {
+        setErrors({ otp: err.message || t('otp.verificationFailed') });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Resend OTP for password reset
+  const handleResendResetOTP = async () => {
+    if (resetResendCooldown > 0 || resetAttemptsRemaining <= 0) return;
+
+    setIsLoading(true);
+    setErrors({});
+
+    try {
+      const response = await authService.requestPasswordResetOTP(formData.phone, 'whatsapp');
+      setResetAttemptsRemaining(response.attemptsRemaining || resetAttemptsRemaining - 1);
+      setResetResendCooldown(60);
+      setResetOtpCode(['', '', '', '', '', '']);
+      showToast({
+        type: 'success',
+        message: t('otp.newCodeSent') || 'New code sent'
+      });
+    } catch (err) {
+      setErrors({ submit: err.message || t('auth.errorSendingOTP') });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Resend cooldown timer effect
+  useEffect(() => {
+    if (resetResendCooldown > 0) {
+      const timer = setTimeout(() => setResetResendCooldown(prev => prev - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resetResendCooldown]);
+
   const renderResetPasswordForm = () => (
     <div className="px-4 py-6 sm:px-6 lg:px-8" data-wg-notranslate="true">
       <div className="space-y-6 sm:space-y-8">
         {/* Header with Back Button */}
         <div className="flex items-start space-x-3">
           <button
-            onClick={() => setIsResetMode(false)}
-            className="mt-1 p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+            onClick={() => {
+              if (resetStep === 'password') {
+                setResetStep('otp');
+              } else if (resetStep === 'otp') {
+                setResetStep('phone');
+                setResetOtpCode(['', '', '', '', '', '']);
+              } else {
+                setIsResetMode(false);
+                setResetStep('phone');
+              }
+            }}
+            className="mt-1 p-2 hover:bg-[#D6BA69]/10 rounded-full transition-colors cursor-pointer text-[#D6BA69]"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1">
             <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{t('auth.resetPassword')}</h2>
+            {(resetStep === 'otp' || resetStep === 'password') && (
+              <p className="text-sm text-gray-600 mt-1">
+                {resetStep === 'otp'
+                  ? (t('otp.codeSentTo') || 'Code sent to') + ' ' + formData.phone
+                  : t('auth.enterNewPassword') || 'Enter your new password'
+                }
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleResetPasswordSubmit} className="space-y-4 sm:space-y-6">
-          <div className="space-y-4">
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">{t('auth.phone')} <span className="text-red-600">*</span></label>
-              <PhoneInput
-                defaultCountry="CM"
-                value={formData.phone}
-                onChange={handlePhoneChange}
-                international
-                required
-                className="[&_.PhoneInputInput]:outline-none [&_.PhoneInputInput]:ring-0 [&_.PhoneInputInput]:border-none [&_.PhoneInputInput]:focus:outline-none [&_.PhoneInputInput]:focus:ring-0 [&_.PhoneInputInput]:focus:border-none w-full px-3 py-2 border rounded-lg transition-colors duration-200 border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69] text-gray-900 bg-white"
-              />
-              {errors.phone && <p className="text-sm text-red-600">{errors.phone}</p>}
+        {/* Step 1: Phone Input */}
+        {resetStep === 'phone' && (
+          <form onSubmit={handleRequestResetOTP} className="space-y-4 sm:space-y-6">
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">{t('auth.phone')} <span className="text-red-600">*</span></label>
+                <PhoneInput
+                  defaultCountry="CM"
+                  value={formData.phone}
+                  onChange={handlePhoneChange}
+                  international
+                  required
+                  className="[&_.PhoneInputInput]:outline-none [&_.PhoneInputInput]:ring-0 [&_.PhoneInputInput]:border-none [&_.PhoneInputInput]:focus:outline-none [&_.PhoneInputInput]:focus:ring-0 [&_.PhoneInputInput]:focus:border-none w-full px-3 py-2 border rounded-lg transition-colors duration-200 border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69] text-gray-900 bg-white"
+                />
+                {errors.phone && <p className="text-sm text-red-600">{errors.phone}</p>}
+              </div>
             </div>
 
-            <div className="relative">
-              <Input
-                label={t('auth.newPassword')}
-                type={showPassword ? 'text' : 'password'}
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                error={errors.password}
-                required
-              />
-              <div className="text-xs text-gray-500 mt-1">{t('auth.passwordMinLength')}</div>
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
+            {errors.submit && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-600">{errors.submit}</p>
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              variant="primary"
+              className="w-full py-3 sm:py-4 bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] font-semibold rounded-lg transition-colors shadow-sm disabled:opacity-50"
+              loading={isLoading}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  {t('otp.sending') || 'Sending...'}
+                </span>
+              ) : (
+                t('otp.sendCode') || 'Send verification code'
+              )}
+            </Button>
+          </form>
+        )}
+
+        {/* Step 2: OTP Verification */}
+        {resetStep === 'otp' && (
+          <form onSubmit={handleVerifyResetOTP} className="space-y-4 sm:space-y-6">
+            <div className="space-y-4">
+              {/* OTP Input */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 text-center">
+                  {t('otp.enterCode') || 'Enter verification code'}
+                </label>
+                <div className="flex justify-center gap-2 sm:gap-3">
+                  {resetOtpCode.map((digit, index) => (
+                    <input
+                      key={index}
+                      ref={el => resetOtpInputRefs.current[index] = el}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleResetOtpChange(index, e.target.value)}
+                      onKeyDown={(e) => handleResetOtpKeyDown(index, e)}
+                      onPaste={handleResetOtpPaste}
+                      className="w-10 h-12 sm:w-12 sm:h-14 text-center text-xl font-bold border-2 rounded-lg focus:border-[#D6BA69] focus:ring-2 focus:ring-[#D6BA69]/20 outline-none transition-all"
+                    />
+                  ))}
+                </div>
+                {errors.otp && <p className="text-sm text-red-600 text-center">{errors.otp}</p>}
+              </div>
+
+              {/* Resend OTP */}
+              <div className="text-center">
+                {resetResendCooldown > 0 ? (
+                  <p className="text-sm text-gray-500">
+                    {t('otp.resendIn') || 'Resend in'} {resetResendCooldown}s
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleResendResetOTP}
+                    disabled={isLoading || resetAttemptsRemaining <= 0}
+                    className="text-sm text-[#D6BA69] hover:text-[#C5A952] font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {t('otp.resendCode') || 'Resend code'}
+                    {resetAttemptsRemaining < 3 && ` (${resetAttemptsRemaining} ${t('otp.attemptsLeft') || 'attempts left'})`}
+                  </button>
+                )}
+              </div>
             </div>
 
-            <div className="relative">
-              <Input
-                label={t('auth.confirmPassword')}
-                type={showConfirmPassword ? 'text' : 'password'}
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
-                error={errors.confirmPassword}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-              >
-                {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
-            </div>
-          </div>
+            {errors.submit && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-600">{errors.submit}</p>
+              </div>
+            )}
 
-          {message && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-              <p className="text-sm text-green-600">{message}</p>
-            </div>
-          )}
+            <Button
+              type="submit"
+              variant="primary"
+              className="w-full py-3 sm:py-4 bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] font-semibold rounded-lg transition-colors shadow-sm disabled:opacity-50"
+              loading={isLoading}
+              disabled={isLoading || resetOtpCode.some(d => !d)}
+            >
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  {t('otp.verifying') || 'Verifying...'}
+                </span>
+              ) : (
+                t('otp.verify') || 'Verify code'
+              )}
+            </Button>
+          </form>
+        )}
 
-          {errors.submit && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-sm text-red-600">{errors.submit}</p>
-            </div>
-          )}
+        {/* Step 3: New Password */}
+        {resetStep === 'password' && (
+          <form onSubmit={handleResetPasswordSubmit} className="space-y-4 sm:space-y-6">
+            <div className="space-y-4">
+              {/* New Password */}
+              <div className="relative">
+                <Input
+                  label={t('auth.newPassword')}
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  error={errors.password}
+                  required
+                />
+                <div className="text-xs text-gray-500 mt-1">{t('auth.passwordMinLength')}</div>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
 
-          <Button
-            type="submit"
-            variant="primary"
-            className="w-full py-3 sm:py-4 bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] font-semibold rounded-lg transition-colors shadow-sm disabled:opacity-50"
-            loading={isLoading}
-            disabled={isLoading}
-          >
-            {t('auth.resetPassword')}
-          </Button>
-        </form>
+              {/* Confirm Password */}
+              <div className="relative">
+                <Input
+                  label={t('auth.confirmPassword')}
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  error={errors.confirmPassword}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            {message && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <p className="text-sm text-green-600">{message}</p>
+              </div>
+            )}
+
+            {errors.submit && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-600">{errors.submit}</p>
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              variant="primary"
+              className="w-full py-3 sm:py-4 bg-[#D6BA69] hover:bg-[#D6BA69]/90 text-black border-[#D6BA69] font-semibold rounded-lg transition-colors shadow-sm disabled:opacity-50"
+              loading={isLoading}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  {t('auth.resetting') || 'Resetting...'}
+                </span>
+              ) : (
+                t('auth.resetPassword')
+              )}
+            </Button>
+          </form>
+        )}
       </div>
     </div>
   );
@@ -685,7 +979,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         <div className="flex items-start space-x-3">
           <button
             onClick={() => setStep('choice')}
-            className="mt-1 p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+            className="mt-1 p-2 hover:bg-[#D6BA69]/10 rounded-full transition-colors cursor-pointer text-[#D6BA69]"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -795,7 +1089,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         <div className="flex items-start space-x-3">
           <button
             onClick={() => setStep('choice')}
-            className="mt-1 p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+            className="mt-1 p-2 hover:bg-[#D6BA69]/10 rounded-full transition-colors cursor-pointer text-[#D6BA69]"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -990,6 +1284,38 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
     </div>
   );
 
+  const renderOTPStep = () => (
+    <div className="px-4 py-6 sm:px-6 lg:px-8" data-wg-notranslate="true">
+      <div className="space-y-6 sm:space-y-8">
+        {/* Header */}
+        <div className="text-center space-y-2">
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+            {t('otp.phoneVerification')}
+          </h2>
+          <p className="text-sm sm:text-base text-gray-600">
+            {t('otp.verifyPhoneSubtitle')}
+          </p>
+        </div>
+
+        {/* OTP Verification Component */}
+        <OTPVerification
+          phone={formData.phone}
+          purpose="registration"
+          onVerified={handleOTPVerified}
+          onBack={handleBackFromOTP}
+          onError={(err) => {
+            showToast({
+              type: 'error',
+              title: t('toast.error'),
+              message: err.message
+            });
+          }}
+          autoSend={false}
+        />
+      </div>
+    </div>
+  );
+
   const renderSellerForm = () => (
     <div className="px-4 py-6 sm:px-6 lg:px-8" data-wg-notranslate="true">
       <div className="space-y-6 sm:space-y-8">
@@ -997,7 +1323,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         <div className="flex items-start space-x-3">
           <button
             onClick={() => setStep('form')}
-            className="mt-1 p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+            className="mt-1 p-2 hover:bg-[#D6BA69]/10 rounded-full transition-colors cursor-pointer text-[#D6BA69]"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -1223,6 +1549,8 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
       return renderResetPasswordForm();
     } else if (step === 'choice') {
       return renderChoice();
+    } else if (step === 'otp') {
+      return renderOTPStep();
     } else if (step === 'seller') {
       return renderSellerForm();
     } else if (mode === 'login') {

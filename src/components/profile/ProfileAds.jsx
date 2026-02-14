@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
-import { formatPrice, getPhotoUrl, formatRelativeDate } from '../../utils/helpers';
+import { formatPrice, getPhotoUrl, formatDate } from '../../utils/helpers';
 import { useWeglotTranslate } from '../../hooks/useWeglotRetranslate';
 import BoostAdModal from '../ads/BoostAdModal';
 
@@ -116,7 +116,7 @@ const ProfileAds = ({ userAds, onCreateAd, onEditAd, onDeleteAd, user }) => {
                 {(ad.isBoosted === '1' || ad.is_boosted === '1') && (
                   <div
                     className="bg-yellow-500 text-white p-1.5 rounded-full"
-                    title={(ad.boostEnd || ad.boost_end) ? `${t('profileAds.boostUntil')} ${new Date(ad.boostEnd || ad.boost_end).toLocaleDateString()}` : ''}
+                    title={(ad.boostEnd || ad.boost_end) ? `${t('profileAds.boostUntil')} ${formatDate(ad.boostEnd || ad.boost_end)}` : ''}
                   >
                     <Zap className="w-4 h-4" />
                   </div>
@@ -146,7 +146,7 @@ const ProfileAds = ({ userAds, onCreateAd, onEditAd, onDeleteAd, user }) => {
                   <MapPin className="w-3 h-3" />
                   <span className="truncate">{ad.locationName || '-'}</span>
                 </div>
-                <span>{formatRelativeDate(ad.createdAt)}</span>
+                <span>{formatDate(ad.createdAt)}</span>
               </div>
 
               {/* Stats */}

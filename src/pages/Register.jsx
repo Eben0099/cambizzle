@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, User, Mail, Phone, Lock } from 'lucide-react';
+import { Eye, EyeOff, User, Mail, Phone, Lock, ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/toast/useToast';
 import { isValidEmail, isValidPhone } from '../utils/helpers';
+import { authService } from '../services/authService';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
 import Loader from '../components/ui/Loader';
+import OTPVerification from '../components/auth/OTPVerification';
 
 const Register = () => {
   const { t } = useTranslation();
@@ -26,11 +28,15 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
+  // OTP flow state
+  const [step, setStep] = useState('form'); // 'form' | 'otp' | 'registering'
+  const [phoneVerified, setPhoneVerified] = useState(false);
+
   const { register, error, clearError } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
-  if (isLoading) {
+  if (step === 'registering') {
     return <Loader text={t('auth.registering')} />;
   }
 
@@ -40,7 +46,7 @@ const Register = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
@@ -95,14 +101,42 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const formErrors = validateForm();
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
       return;
     }
 
-    setIsLoading(true);
+    // If phone not yet verified, go to OTP step
+    if (!phoneVerified) {
+      setIsLoading(true);
+      try {
+        // Check if phone is already registered before sending OTP
+        await authService.sendOTP(formData.phone, 'registration');
+        setStep('otp');
+      } catch (err) {
+        if (err.code === 'PHONE_EXISTS') {
+          setErrors({ phone: t('auth.phoneAlreadyExists') || 'An account with this phone number already exists' });
+        } else {
+          showToast({
+            type: 'error',
+            title: t('toast.error'),
+            message: err.message
+          });
+        }
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    // Phone is verified, proceed with registration
+    await completeRegistration();
+  };
+
+  const completeRegistration = async () => {
+    setStep('registering');
     setErrors({});
 
     try {
@@ -117,16 +151,68 @@ const Register = () => {
         navigate('/', { replace: true });
       }
     } catch (err) {
+      setStep('form');
       showToast({
         type: 'error',
         title: t('toast.error'),
         message: t('toast.registerFailed')
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
+  const handleOTPVerified = () => {
+    setPhoneVerified(true);
+    completeRegistration();
+  };
+
+  const handleBackToForm = () => {
+    setStep('form');
+    setPhoneVerified(false);
+  };
+
+  // OTP Verification step
+  if (step === 'otp') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8" data-wg-notranslate="true">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <Link to="/" className="flex justify-center items-center space-x-2 mb-6">
+            <div className="w-10 h-10 bg-[#D6BA69] rounded-lg flex items-center justify-center">
+              <span className="text-black font-bold text-xl">C</span>
+            </div>
+            <span className="text-2xl font-bold text-black">Cambizzle</span>
+          </Link>
+
+          <h2 className="text-center text-2xl font-bold text-gray-900">
+            {t('otp.phoneVerification')}
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            {t('otp.verifyPhoneSubtitle')}
+          </p>
+        </div>
+
+        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+          <Card>
+            <OTPVerification
+              phone={formData.phone}
+              purpose="registration"
+              onVerified={handleOTPVerified}
+              onBack={handleBackToForm}
+              onError={(err) => {
+                showToast({
+                  type: 'error',
+                  title: t('toast.error'),
+                  message: err.message
+                });
+              }}
+              autoSend={false} // Already sent in handleSubmit
+            />
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Registration form
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8" data-wg-notranslate="true">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">

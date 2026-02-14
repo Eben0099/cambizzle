@@ -209,17 +209,18 @@ const UpdateAd = () => {
     const { name, value, type, checked } = e.target;
 
     if (name === 'price' || name === 'originalPrice') {
-      let raw = value.replace(/\s/g, '');
-      if (/^\d+$/.test(raw)) {
+      // Only allow digits - filter out any non-numeric characters
+      let raw = value.replace(/[^\d]/g, '');
+      if (raw === '') {
+        setFormData(prev => ({
+          ...prev,
+          [name]: ''
+        }));
+      } else {
         const formatted = Number(raw).toLocaleString('fr-FR');
         setFormData(prev => ({
           ...prev,
           [name]: formatted
-        }));
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          [name]: value
         }));
       }
       if (errors[name]) {
@@ -638,7 +639,7 @@ const UpdateAd = () => {
         <div className="mb-8">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center text-gray-600 hover:text-[#D6BA69] transition-colors mb-4 group"
+            className="flex items-center text-[#D6BA69] hover:text-[#C5A952] transition-colors mb-4 group"
           >
             <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
             <span className="font-medium">{t('common.back')}</span>

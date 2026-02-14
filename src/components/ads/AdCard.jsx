@@ -2,11 +2,10 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, MapPin, Eye, Star, Zap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { formatPrice, formatRelativeDate, getPhotoUrl } from '../../utils/helpers';
+import { formatPrice, formatDate, getPhotoUrl } from '../../utils/helpers';
 import Card from '../ui/Card';
 import useFavorites from '../../hooks/useFavorites';
 import { useAuth } from '../../contexts/AuthContext';
-import { useFavoriteStatus } from '../../hooks/useFavoriteStatus';
 import { useWeglotTranslate } from '../../hooks/useWeglotRetranslate';
 import logger from '../../utils/logger';
 
@@ -15,8 +14,10 @@ const AdCard = ({ ad }) => {
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const { isAuthenticated } = useAuth();
-  const { toggleFavorite } = useFavorites();
-  const { isFavorite, loading, refreshStatus } = useFavoriteStatus(ad.id);
+  const { toggleFavorite, isFavorite: checkIsFavorite } = useFavorites();
+
+  // Use cached favorites check instead of individual API calls
+  const isFavorite = checkIsFavorite(ad.id);
 
   // Traduction du contenu dynamique
   const { translatedText: translatedTitle } = useWeglotTranslate(ad?.title || '');
@@ -30,8 +31,6 @@ const AdCard = ({ ad }) => {
       return;
     }
     await toggleFavorite(ad.id);
-    // Rafraîchir le statut après le toggle
-    await refreshStatus();
   };
 
   // Calcul de la remise basé sur les prix (nouveau format API)
@@ -126,8 +125,8 @@ const AdCard = ({ ad }) => {
           <div className="absolute bottom-2 right-2 flex items-center gap-1">
             {/* Verified Badge - uses identity verification, not email verification */}
             {(ad.userIdentityVerified === 1 || ad.userIdentityVerified === "1" || ad.userIdentityVerified === true) && (
-              <div className="bg-green-500 text-white px-2 py-1 rounded-full text-[10px] font-medium" title="Verified Seller">
-                verified id
+              <div className="bg-green-500 text-white px-2 py-1 rounded-full text-[10px] font-medium" title={t('ads.verifiedSeller')}>
+                {t('ads.verifiedSeller')}
               </div>
             )}
 
@@ -178,7 +177,7 @@ const AdCard = ({ ad }) => {
                 {translatedLocation || ad.locationName}
               </span>
             </div>
-            <span className="text-xs">{formatRelativeDate(ad.createdAt)}</span>
+            <span className="text-xs">{formatDate(ad.createdAt)}</span>
           </div>
 
           {/* Seller Info (commented out)

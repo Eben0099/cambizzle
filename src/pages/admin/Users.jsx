@@ -53,6 +53,7 @@ const Users = () => {
   const [suspendModalOpen, setSuspendModalOpen] = useState(false);
   const [unsuspendModalOpen, setUnsuspendModalOpen] = useState(false);
   const [verifyModalOpen, setVerifyModalOpen] = useState(false);
+  const [rejectIdentityModalOpen, setRejectIdentityModalOpen] = useState(false);
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [userDetailsModalOpen, setUserDetailsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -62,6 +63,7 @@ const Users = () => {
   const [suspendNotes, setSuspendNotes] = useState("");
   const [unsuspendNotes, setUnsuspendNotes] = useState("");
   const [verifyNotes, setVerifyNotes] = useState("");
+  const [rejectIdentityReason, setRejectIdentityReason] = useState("");
   const [newRoleId, setNewRoleId] = useState("");
   const [identityDocumentBlobUrl, setIdentityDocumentBlobUrl] = useState(null);
 
@@ -77,7 +79,7 @@ const Users = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await adminService.getUsers(); // No server pagination
+      const response = await adminService.getUsers(1, 10000); // Load all users for frontend filtering
       if (response.status === 'success') {
         setUsers(response.data.users || []);
       } else {
@@ -247,6 +249,35 @@ const Users = () => {
   const resetVerifyForm = () => {
     setVerifyNotes("");
     setSelectedUser(null);
+  };
+
+  const resetRejectIdentityForm = () => {
+    setRejectIdentityReason("");
+    setSelectedUser(null);
+  };
+
+  const handleRejectIdentity = async () => {
+    if (!selectedUser || !rejectIdentityReason.trim()) {
+      showToast({ type: 'error', message: t('admin.users.fillRejectionReason') });
+      return;
+    }
+    try {
+      setActionLoading(true);
+      const response = await adminService.rejectUserIdentity(selectedUser.idUser, rejectIdentityReason);
+      if (response.status === 'success') {
+        setRejectIdentityModalOpen(false);
+        resetRejectIdentityForm();
+        fetchUsers();
+        showToast({ type: 'success', message: t('admin.users.identityRejected') });
+      } else {
+        throw new Error(response.message || t('admin.users.errorRejection'));
+      }
+    } catch (err) {
+      logger.error('Identity rejection error:', err);
+      showToast({ type: 'error', message: err.message || t('admin.users.errorRejection') });
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   // Formatting and badges
@@ -498,18 +529,31 @@ const Users = () => {
                       <Eye className="h-3 w-3 mr-1" />
                       {t('admin.users.details')}
                     </Button>
-                    {!(user.isVerified === "1" || user.isVerified === 1 || user.isIdentityVerified === "1" || user.isIdentityVerified === 1) && (
-                      <Button
-                        size="sm"
-                        className="bg-white border border-[#D6BA69] text-[#D6BA69] hover:bg-[#D6BA69]/10 h-8 text-xs px-3 rounded-lg"
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setVerifyModalOpen(true);
-                        }}
-                      >
-                        <Shield className="h-3 w-3 mr-1" />
-                        {t('admin.users.verify')}
-                      </Button>
+                    {!(user.isVerified === "1" || user.isVerified === 1 || user.isIdentityVerified === "1" || user.isIdentityVerified === 1) && (user.identityDocumentUrl || user.identity_document_url) && (
+                      <>
+                        <Button
+                          size="sm"
+                          className="bg-white border border-[#D6BA69] text-[#D6BA69] hover:bg-[#D6BA69]/10 h-8 text-xs px-3 rounded-lg"
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setVerifyModalOpen(true);
+                          }}
+                        >
+                          <UserCheck className="h-3 w-3 mr-1" />
+                          {t('admin.users.verify')}
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="bg-white border border-red-300 text-red-600 hover:bg-red-50 h-8 text-xs px-3 rounded-lg"
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setRejectIdentityModalOpen(true);
+                          }}
+                        >
+                          <UserX className="h-3 w-3 mr-1" />
+                          {t('admin.users.reject')}
+                        </Button>
+                      </>
                     )}
                     <Button
                       size="sm"
@@ -907,6 +951,53 @@ const Users = () => {
                 </>
               ) : (
                 newRoleId === "1" ? t('admin.users.promote') : t('admin.users.demote')
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Reject Identity */}
+      <Dialog open={rejectIdentityModalOpen} onOpenChange={setRejectIdentityModalOpen}>
+        <DialogContent className="max-w-md bg-white rounded-xl shadow-xl border border-gray-200">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-gray-900">{t('admin.users.rejectIdentity')}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Label htmlFor="rejectIdentityReason" className="text-sm font-medium text-gray-700">
+              {t('admin.users.rejectionReason')} <span className="text-red-500">*</span>
+            </Label>
+            <Textarea
+              id="rejectIdentityReason"
+              value={rejectIdentityReason}
+              onChange={(e) => setRejectIdentityReason(e.target.value)}
+              placeholder={t('admin.users.rejectionReasonPlaceholder')}
+              className="h-24 text-sm rounded-lg"
+              required
+            />
+            <p className="text-xs text-gray-500">
+              {t('admin.users.rejectionReasonHelp')}
+            </p>
+          </div>
+          <div className="mt-4 flex justify-end gap-2">
+            <Button
+              onClick={() => setRejectIdentityModalOpen(false)}
+              className="h-9 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300"
+            >
+              {t('admin.users.cancel')}
+            </Button>
+            <Button
+              onClick={handleRejectIdentity}
+              disabled={actionLoading || !rejectIdentityReason.trim()}
+              className="h-9 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg"
+            >
+              {actionLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {t('admin.users.rejecting')}
+                </>
+              ) : (
+                t('admin.users.confirmReject')
               )}
             </Button>
           </div>

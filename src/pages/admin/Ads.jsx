@@ -76,7 +76,8 @@ const Ads = () => {
 
   // Data
   const [ads, setAds] = useState([]);
-  const [pendingAds, setPendingAds] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 1, currentPage: 1 });
 
   // UI state
   const [loading, setLoading] = useState(true);
@@ -86,7 +87,8 @@ const Ads = () => {
   const [itemsPerPage] = useState(12);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all'); // 'all' | 'pending' | 'approved' | 'rejected'
-  const [viewMode, setViewMode] = useState('all'); // 'all' | 'pending'
+  const [filterCategoryId, setFilterCategoryId] = useState('');
+  const [filterSubcategoryId, setFilterSubcategoryId] = useState('');
 
   // Selected ad + modals
   const [selectedAd, setSelectedAd] = useState(null);
@@ -106,34 +108,60 @@ const Ads = () => {
     return ad.user?.firstName || ad.sellerName || ad.sellerUsername || ad.firstName || '';
   };
 
-  // Fetch all ads and pending ads on mount
+  // Fetch categories on mount
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  // Fetch ads when filters change
   useEffect(() => {
     fetchAllAds();
-    fetchPendingAds();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [filterStatus, filterCategoryId, filterSubcategoryId, searchTerm, currentPage]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await adminService.getCategories(1, 100);
+      const cats = response?.data?.categories || response?.categories || response?.data || [];
+      setCategories(Array.isArray(cats) ? cats : []);
+    } catch (err) {
+      logger.error('Error fetching categories:', err);
+    }
+  };
 
   const fetchAllAds = async () => {
     try {
       setLoading(true);
-      const data = await adminService.getAds(); // expects { ads: [...] } or similar
-      setAds(data?.ads || []);
+      const params = {
+        page: currentPage,
+        perPage: itemsPerPage,
+        search: searchTerm || undefined,
+        categoryId: filterCategoryId || undefined,
+        subcategoryId: filterSubcategoryId || undefined,
+        moderationStatus: filterStatus !== 'all' ? filterStatus : undefined,
+      };
+
+      const response = await adminService.getAds(params);
+      const adsArray = response?.data?.ads || response?.ads || response?.data || [];
+      setAds(Array.isArray(adsArray) ? adsArray : []);
+
+      // Handle pagination from server
+      if (response?.data?.pagination) {
+        setPagination({
+          total: response.data.pagination.total || 0,
+          totalPages: response.data.pagination.total_pages || 1,
+          currentPage: response.data.pagination.current_page || 1,
+        });
+      }
+
+      // Store categories from response if available
+      if (response?.data?.filters?.categories && categories.length === 0) {
+        setCategories(response.data.filters.categories);
+      }
     } catch (err) {
       showToast({ type: 'error', message: err?.message || t('admin.ads.errorLoadingAds') });
       logger.error('Error fetching all ads:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchPendingAds = async () => {
-    try {
-      setLoading(true);
-      const response = await adminService.getPendingAds(); // expects { data: [...] } or similar
-      setPendingAds(response?.data || []);
-    } catch (err) {
-      showToast({ type: 'error', message: err?.message || t('admin.ads.errorLoadingPending') });
-      logger.error('Error fetching pending ads:', err);
+      setAds([]);
     } finally {
       setLoading(false);
     }
@@ -144,15 +172,13 @@ const Ads = () => {
     if (!selectedAd) return;
     try {
       setLoading(true);
-      await adminService.approveAd(selectedAd.id, approveNotes);
+      const response = await adminService.approveAd(selectedAd.id, approveNotes);
+      logger.info('Approve response:', response);
       setShowApproveModal(false);
       setApproveNotes('');
       setSelectedAd(null);
-      if (viewMode === 'pending') {
-        await fetchPendingAds();
-      } else {
-        await fetchAllAds();
-      }
+      showToast({ type: 'success', message: t('admin.ads.adApproved') || 'Annonce approuvée avec succès' });
+      await fetchAllAds();
     } catch (err) {
       showToast({ type: 'error', message: err?.message || t('admin.ads.errorApproving') });
       logger.error('Error approving ad:', err);
@@ -172,11 +198,7 @@ const Ads = () => {
       setRejectReason('');
       setRejectNotes('');
       setSelectedAd(null);
-      if (viewMode === 'pending') {
-        await fetchPendingAds();
-      } else {
-        await fetchAllAds();
-      }
+      await fetchAllAds();
       showToast({ type: 'success', message: t('admin.ads.adRejected') });
     } catch (err) {
       showToast({ type: 'error', message: err?.message || t('admin.ads.errorRejecting') });
@@ -206,11 +228,7 @@ const Ads = () => {
         setShowDeleteModal(false);
         setSelectedAd(null);
         showToast({ type: 'success', message: t('admin.ads.adDeleted') });
-        if (viewMode === 'pending') {
-          await fetchPendingAds();
-        } else {
-          await fetchAllAds();
-        }
+        await fetchAllAds();
       } else {
         throw new Error('Failed to delete ad');
       }
@@ -289,33 +307,14 @@ const Ads = () => {
     }
   };
 
-  // Frontend filtering & pagination
-  const filteredAds = viewMode === 'pending'
-    ? pendingAds
-    : filterStatus === 'all'
-      ? ads.filter(ad =>
-        !searchTerm ||
-        (ad.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (ad.description || '').toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      : ads.filter(ad =>
-        ad.moderationStatus === filterStatus && (
-          !searchTerm ||
-          (ad.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (ad.description || '').toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      );
-
-  const totalPages = Math.max(1, Math.ceil(filteredAds.length / itemsPerPage));
-  const paginatedAds = filteredAds.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // Server-side filtering & pagination
+  // Ensure ads is always an array
+  const displayedAds = Array.isArray(ads) ? ads : [];
+  const totalPages = pagination.totalPages || 1;
 
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
-      // scroll to top of list on page change for better UX
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
@@ -323,10 +322,19 @@ const Ads = () => {
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterStatus, viewMode]);
+  }, [searchTerm, filterStatus, filterCategoryId, filterSubcategoryId]);
+
+  // Get subcategories for selected category
+  const selectedCategory = categories.find(c => String(c.id) === String(filterCategoryId));
+  const subcategories = selectedCategory?.subcategories || [];
+
+  // Reset subcategory when category changes
+  useEffect(() => {
+    setFilterSubcategoryId('');
+  }, [filterCategoryId]);
 
   // Initial loading state indicator
-  if (loading && !ads.length && !pendingAds.length) {
+  if (loading && !ads.length) {
     return (
       <div className="min-h-[360px] flex items-center justify-center">
         <Loader text={t('admin.ads.loading')} className="min-h-[200px]" />
@@ -340,12 +348,12 @@ const Ads = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t('admin.ads.title')}</h1>
-          <p className="text-gray-600 text-xs sm:text-sm mt-1">{filteredAds.length} {t('admin.ads.ads')}</p>
+          <p className="text-gray-600 text-xs sm:text-sm mt-1">{displayedAds.length} {t('admin.ads.ads')}</p>
         </div>
 
         <div className="flex items-center gap-2">
           <Button
-            onClick={() => exportToExcel(filteredAds, 'ads', {
+            onClick={() => exportToExcel(displayedAds, 'ads', {
               columns: [
                 { header: 'ID', key: 'id' },
                 { header: t('admin.ads.titleLabel'), key: 'title' },
@@ -362,14 +370,14 @@ const Ads = () => {
               sheetName: 'Ads'
             })}
             className="h-9 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg shadow-sm flex items-center gap-1 cursor-pointer"
-            disabled={filteredAds.length === 0}
+            disabled={displayedAds.length === 0}
           >
             <Download className="h-4 w-4" />
             {t('admin.ads.exportExcel')}
           </Button>
           <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg shadow-sm">
             <Tag className="h-4 w-4 text-[#D6BA69]" />
-            <span className="text-xs text-gray-600">{filteredAds.length} {t('admin.ads.total')}</span>
+            <span className="text-xs text-gray-600">{displayedAds.length} {t('admin.ads.total')}</span>
           </div>
         </div>
       </div>
@@ -378,86 +386,93 @@ const Ads = () => {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <h3 className="text-base font-semibold text-gray-900 mb-3">{t('admin.ads.filtersAndSearch')}</h3>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-          {/* View mode */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+          {/* Status filter */}
           <div>
             <Label className="block text-sm font-medium text-gray-700 mb-2">
               <Filter className="w-4 h-4 inline mr-2 text-[#D6BA69]" />
-              {t('admin.ads.displayMode')}
+              {t('admin.ads.status')}
             </Label>
-
-            <div className="flex gap-2">
-              <Button
-                variant={viewMode === 'all' ? 'default' : 'outline'}
-                onClick={() => setViewMode('all')}
-                className={`flex-1 h-9 text-xs rounded-lg ${viewMode === 'all'
-                  ? 'bg-[#D6BA69] hover:bg-[#C5A952] text-white'
-                  : 'bg-white border-[#D6BA69] text-[#D6BA69] hover:bg-[#D6BA69]/10'}`}
-                aria-pressed={viewMode === 'all'}
-              >
-                {t('admin.ads.all')}
-              </Button>
-
-              <Button
-                variant={viewMode === 'pending' ? 'default' : 'outline'}
-                onClick={() => setViewMode('pending')}
-                className={`flex-1 h-9 text-xs rounded-lg ${viewMode === 'pending'
-                  ? 'bg-[#D6BA69] hover:bg-[#C5A952] text-white'
-                  : 'bg-white border-[#D6BA69] text-[#D6BA69] hover:bg-[#D6BA69]/10'}`}
-                aria-pressed={viewMode === 'pending'}
-              >
-                {t('admin.ads.pending')}
-              </Button>
-            </div>
+            <Select value={filterStatus} onValueChange={(val) => setFilterStatus(val)}>
+              <SelectTrigger className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69]">
+                <SelectValue placeholder={t('admin.ads.status')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('admin.ads.all')}</SelectItem>
+                <SelectItem value="pending">{t('admin.ads.pending')}</SelectItem>
+                <SelectItem value="approved">{t('admin.ads.approved')}</SelectItem>
+                <SelectItem value="rejected">{t('admin.ads.rejected')}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Status filter (only when viewing all) */}
-          {viewMode === 'all' && (
-            <>
-              <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.ads.status')}</Label>
-                <Select value={filterStatus} onValueChange={(val) => setFilterStatus(val)}>
-                  <SelectTrigger className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69]">
-                    <SelectValue placeholder={t('admin.ads.status')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t('admin.ads.all')}</SelectItem>
-                    <SelectItem value="pending">{t('admin.ads.pending')}</SelectItem>
-                    <SelectItem value="approved">{t('admin.ads.approved')}</SelectItem>
-                    <SelectItem value="rejected">{t('admin.ads.rejected')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+          {/* Category filter */}
+          <div>
+            <Label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.ads.categoryLabel')}</Label>
+            <Select value={filterCategoryId || 'all'} onValueChange={(val) => setFilterCategoryId(val === 'all' ? '' : val)}>
+              <SelectTrigger className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69]">
+                <SelectValue placeholder={t('admin.ads.allCategories')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('admin.ads.allCategories')}</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={String(cat.id)}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-              <div className="relative">
-                <Label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Search className="w-4 h-4 inline mr-2 text-[#D6BA69]" />
-                  {t('admin.ads.search')}
-                </Label>
-                <Input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8 h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
-                  aria-label={t('admin.ads.search')}
-                />
+          {/* Subcategory filter */}
+          <div>
+            <Label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.ads.subcategory')}</Label>
+            <Select
+              value={filterSubcategoryId || 'all'}
+              onValueChange={(val) => setFilterSubcategoryId(val === 'all' ? '' : val)}
+              disabled={!filterCategoryId || subcategories.length === 0}
+            >
+              <SelectTrigger className="h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69]">
+                <SelectValue placeholder={t('admin.ads.allSubcategories')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('admin.ads.allSubcategories')}</SelectItem>
+                {subcategories.map((subcat) => (
+                  <SelectItem key={subcat.id} value={String(subcat.id)}>
+                    {subcat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-              </div>
-            </>
-          )}
+          {/* Search */}
+          <div className="relative">
+            <Label className="block text-sm font-medium text-gray-700 mb-2">
+              <Search className="w-4 h-4 inline mr-2 text-[#D6BA69]" />
+              {t('admin.ads.search')}
+            </Label>
+            <Input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8 h-9 text-sm rounded-lg border-gray-300 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
+              aria-label={t('admin.ads.search')}
+            />
+          </div>
         </div>
       </div>
 
       {/* Ads Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {paginatedAds.length === 0 ? (
+        {displayedAds.length === 0 ? (
           <div className="col-span-full bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
             <AlertCircle className="h-10 w-10 text-gray-400 mx-auto mb-3" />
             <h3 className="text-base font-semibold text-gray-900">{t('admin.ads.noAds')}</h3>
             <p className="text-xs text-gray-500">{t('admin.ads.noAdsHint')}</p>
           </div>
         ) : (
-          paginatedAds.map((ad) => (
+          displayedAds.map((ad) => (
             <article
               key={ad.id}
               className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all flex flex-col"

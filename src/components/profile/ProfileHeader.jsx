@@ -45,7 +45,7 @@ const ProfileHeader = ({ user, sellerProfile, onEdit, onBecomeSeller }) => {
                       {(user.isVerified === "1" || user.isVerified === 1 || user.isVerified === true || user.isIdentityVerified === "1" || user.isIdentityVerified === 1 || user.isIdentityVerified === true) && (
                         <span className="bg-green-100 text-green-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium border border-green-200">
                           <Shield className="w-3 h-3 mr-1 inline" />
-                          {t('ads.verified')}
+                          {t('ads.verifiedSeller')}
                         </span>
                       )}
                       {sellerProfile && (

@@ -168,14 +168,22 @@ class AdminService {
 
   // Méthodes pour les autres endpoints admin (à ajouter plus tard)
 
-  // Gestion des annonces
-  async getAds(page = 1, limit = 20, search = '') {
+  // Gestion des annonces admin
+  async getAds(params = {}) {
     try {
       this.setAuthHeader();
-      const params = { page, limit };
-      if (search) params.q = search;
+      const queryParams = {
+        page: params.page || 1,
+        per_page: params.perPage || 20,
+      };
 
-      const response = await axios.get(`${API_BASE_URL}/ads`, { params });
+      // Filtres optionnels
+      if (params.moderationStatus) queryParams.moderation_status = params.moderationStatus;
+      if (params.categoryId) queryParams.category_id = params.categoryId;
+      if (params.subcategoryId) queryParams.subcategory_id = params.subcategoryId;
+      if (params.search) queryParams.search = params.search;
+
+      const response = await axios.get(`${API_BASE_URL}/admin/ads`, { params: queryParams });
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
@@ -187,10 +195,19 @@ class AdminService {
     }
   }
 
-  async getPendingAds() {
+  async getPendingAds(params = {}) {
     try {
       this.setAuthHeader();
-      const response = await axios.get(`${API_BASE_URL}/admin/ads/pending`);
+      const queryParams = {
+        page: params.page || 1,
+        per_page: params.perPage || 20,
+      };
+
+      if (params.categoryId) queryParams.category_id = params.categoryId;
+      if (params.subcategoryId) queryParams.subcategory_id = params.subcategoryId;
+      if (params.search) queryParams.search = params.search;
+
+      const response = await axios.get(`${API_BASE_URL}/admin/ads/pending`, { params: queryParams });
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
@@ -322,25 +339,12 @@ class AdminService {
     }
   }
 
-  async getAds() {
+  async rejectUserIdentity(userId, reason) {
     try {
       this.setAuthHeader();
-      const response = await axios.get(`${API_BASE_URL}/ads`);
-      return response.data;
-    } catch (error) {
-      if (error.response?.status === 401) {
-        storageService.removeToken();
-        delete axios.defaults.headers.common['Authorization'];
-        throw new Error('Session expirée. Veuillez vous reconnecter.');
-      }
-      throw error;
-    }
-  }
-
-  async getCategories() {
-    try {
-      this.setAuthHeader();
-      const response = await axios.get(`${API_BASE_URL}/admin/categories`);
+      const response = await axios.put(`${API_BASE_URL}/admin/users/${userId}/reject-identity`, {
+        reason
+      });
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {

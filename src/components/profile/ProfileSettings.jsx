@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import userService from '../../services/userService';
-import { User, Shield, Upload, X, Camera, Trash2, Building2, Lock, Eye, EyeOff } from 'lucide-react';
+import notificationService from '../../services/notificationService';
+import { User, Shield, Upload, X, Camera, Trash2, Building2, Lock, Eye, EyeOff, Bell, MessageSquare } from 'lucide-react';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Avatar from '../ui/Avatar';
@@ -47,6 +48,26 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Notification preferences state
+  const [whatsappNotificationsEnabled, setWhatsappNotificationsEnabled] = useState(true);
+  const [notificationLoading, setNotificationLoading] = useState(false);
+
+  // Fetch notification preferences on mount
+  useEffect(() => {
+    const fetchNotificationPreferences = async () => {
+      try {
+        const response = await notificationService.getNotificationPreferences();
+        if (response.success && response.data) {
+          setWhatsappNotificationsEnabled(response.data.whatsapp_notifications_enabled);
+        }
+      } catch (error) {
+        // Silently fail - default to enabled
+        console.log('Failed to fetch notification preferences');
+      }
+    };
+    fetchNotificationPreferences();
+  }, []);
 
   const handleFormInputChange = (e) => {
     const { name, value } = e.target;
@@ -308,6 +329,28 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
       showToast({ type: 'error', message: errMsg });
     } finally {
       setPasswordChangeLoading(false);
+    }
+  };
+
+  const handleNotificationToggle = async () => {
+    setNotificationLoading(true);
+    try {
+      const newValue = !whatsappNotificationsEnabled;
+      const response = await notificationService.updateNotificationPreferences(newValue);
+      if (response.success) {
+        setWhatsappNotificationsEnabled(newValue);
+        showToast({
+          type: 'success',
+          message: t('notifications.updateSuccess')
+        });
+      }
+    } catch (error) {
+      showToast({
+        type: 'error',
+        message: t('notifications.updateError')
+      });
+    } finally {
+      setNotificationLoading(false);
     }
   };
 
@@ -593,6 +636,64 @@ const ProfileSettings = ({ user, onUpdateProfile, onDeleteAccount }) => {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Notification Preferences */}
+      <div className="bg-white rounded-xl shadow-sm">
+        <div className="p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <Bell className="w-5 h-5 mr-2 text-[#D6BA69]" />
+            {t('notifications.preferences')}
+          </h3>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-start space-x-3">
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <MessageSquare className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900">
+                    {t('notifications.whatsappNotifications')}
+                  </h4>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {t('notifications.whatsappNotificationsDesc')}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleNotificationToggle}
+                disabled={notificationLoading}
+                className={`
+                  relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent
+                  transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#D6BA69] focus:ring-offset-2
+                  ${whatsappNotificationsEnabled ? 'bg-[#D6BA69]' : 'bg-gray-200'}
+                  ${notificationLoading ? 'opacity-50 cursor-not-allowed' : ''}
+                `}
+                role="switch"
+                aria-checked={whatsappNotificationsEnabled}
+                aria-label={t('notifications.whatsappNotifications')}
+              >
+                <span
+                  className={`
+                    pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0
+                    transition duration-200 ease-in-out
+                    ${whatsappNotificationsEnabled ? 'translate-x-5' : 'translate-x-0'}
+                  `}
+                />
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-500">
+              {whatsappNotificationsEnabled
+                ? t('notifications.enabled')
+                : t('notifications.disabled')
+              }
+            </p>
           </div>
         </div>
       </div>

@@ -33,7 +33,7 @@ const SellerProfile = ({ seller, onContact, onCall, adTitle }) => {
           <h3 className="text-lg font-semibold text-gray-900">{t('adDetail.seller')}</h3>
           {(seller.isVerified === true || seller.isVerified === "1" || seller.isVerified === 1) && (
             <div className="px-3 py-1.5 bg-green-500 text-white rounded-full">
-              <span className="text-xs font-medium">verified id</span>
+              <span className="text-xs font-medium">{t('ads.verifiedSeller')}</span>
             </div>
           )}
         </div>

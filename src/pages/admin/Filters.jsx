@@ -134,43 +134,55 @@ const Filters = () => {
     }
   };
 
-  // Unique subcategory options for select
+  // Unique subcategory options for select - sorted alphabetically
   const subcategoryOptions = useMemo(() => {
-    const subcategories = filtersData.map((item) => item.subcategory);
+    const subcategories = filtersData
+      .map((item) => item.subcategory)
+      .filter((sub) => sub && sub.id); // Filter out null/undefined subcategories
     const uniqueSubcategories = subcategories.filter(
-      (sub, index, self) => index === self.findIndex((s) => s.id === sub.id)
+      (sub, index, self) => index === self.findIndex((s) => s?.id === sub?.id)
     );
-    return uniqueSubcategories.sort((a, b) => a.name.localeCompare(b.name));
+    return uniqueSubcategories.sort((a, b) => (a?.name || '').localeCompare(b?.name || ''));
   }, [filtersData]);
 
   // Filter, search and sort pipeline
   const filteredData = useMemo(() => {
-    let data = filtersData.slice();
+    // Filter out invalid data entries
+    let data = filtersData
+      .filter((g) => g && g.subcategory && g.filters)
+      .map((g) => ({
+        ...g,
+        filters: Array.isArray(g.filters) ? g.filters : []
+      }));
 
     // subcategory filter
     const selectedId = selectedSubcategoryFilter === "all" ? null : Number(selectedSubcategoryFilter);
     if (selectedId) {
-      data = data.filter((g) => g.subcategory.id === selectedId);
+      data = data.filter((g) => g.subcategory?.id === selectedId);
     }
 
-    // search
+    // search - with safe property access
     if (search.trim()) {
       const q = search.trim().toLowerCase();
-      data = data.filter((g) =>
-        g.subcategory.name.toLowerCase().includes(q) ||
-        g.subcategory.category_name.toLowerCase().includes(q) ||
-        g.filters.some((f) =>
-          f.name.toLowerCase().includes(q) ||
-          (f.options || []).some((opt) => opt.value.toLowerCase().includes(q))
-        )
-      );
+      data = data.filter((g) => {
+        const subcategoryName = (g.subcategory?.name || '').toLowerCase();
+        const categoryName = (g.subcategory?.category_name || '').toLowerCase();
+        const filtersMatch = (g.filters || []).some((f) => {
+          const filterName = (f?.name || '').toLowerCase();
+          const optionsMatch = (f?.options || []).some((opt) =>
+            (opt?.value || '').toLowerCase().includes(q)
+          );
+          return filterName.includes(q) || optionsMatch;
+        });
+        return subcategoryName.includes(q) || categoryName.includes(q) || filtersMatch;
+      });
     }
 
-    // sort groups
-    if (sortBy === "subcategory_asc") {
-      data.sort((a, b) => a.subcategory.name.localeCompare(b.subcategory.name));
+    // sort groups by subcategory name - alphabetically by default
+    if (sortBy === "subcategory_asc" || sortBy === "name_asc" || sortBy === "name_desc") {
+      data.sort((a, b) => (a.subcategory?.name || '').localeCompare(b.subcategory?.name || ''));
     } else if (sortBy === "subcategory_desc") {
-      data.sort((a, b) => b.subcategory.name.localeCompare(a.subcategory.name));
+      data.sort((a, b) => (b.subcategory?.name || '').localeCompare(a.subcategory?.name || ''));
     }
 
     // sort filters inside groups
@@ -178,7 +190,9 @@ const Filters = () => {
     if (isNameSort) {
       const dir = sortBy === "name_asc" ? 1 : -1;
       data.forEach((g) => {
-        g.filters.sort((a, b) => dir * a.name.localeCompare(b.name));
+        if (g.filters && Array.isArray(g.filters)) {
+          g.filters.sort((a, b) => dir * (a?.name || '').localeCompare(b?.name || ''));
+        }
       });
     }
 
@@ -186,11 +200,11 @@ const Filters = () => {
   }, [filtersData, search, sortBy, selectedSubcategoryFilter]);
 
   const totalFilters = useMemo(() => {
-    return filtersData.reduce((sum, g) => sum + g.filters.length, 0);
+    return filtersData.reduce((sum, g) => sum + (g?.filters?.length || 0), 0);
   }, [filtersData]);
 
   const displayedCount = useMemo(() => {
-    return filteredData.reduce((sum, g) => sum + g.filters.length, 0);
+    return filteredData.reduce((sum, g) => sum + (g?.filters?.length || 0), 0);
   }, [filteredData]);
 
   // Open create dialog
@@ -316,16 +330,16 @@ const Filters = () => {
     try {
       const optionData = {
         value: v,
-        display_order: (valuesOpenFor.options || []).length + 1,
+        display_order: ((valuesOpenFor?.options) || []).length + 1,
       };
       await adminService.createFilterOption(valuesOpenFor.id, optionData);
       logger.log("Option added");
       await loadFilters();
 
       // Update local valuesOpenFor with new data from server
-      const updatedGroup = filtersData.find((g) => g.filters.some((f) => f.id === valuesOpenFor.id));
+      const updatedGroup = filtersData.find((g) => g?.filters?.some((f) => f?.id === valuesOpenFor.id));
       if (updatedGroup) {
-        const updatedFilter = updatedGroup.filters.find((f) => f.id === valuesOpenFor.id);
+        const updatedFilter = updatedGroup.filters?.find((f) => f?.id === valuesOpenFor.id);
         if (updatedFilter) setValuesOpenFor(updatedFilter);
       }
 
@@ -346,9 +360,9 @@ const Filters = () => {
       await loadFilters();
 
       // Update local valuesOpenFor
-      const updatedGroup = filtersData.find((g) => g.filters.some((f) => f.id === valuesOpenFor.id));
+      const updatedGroup = filtersData.find((g) => g?.filters?.some((f) => f?.id === valuesOpenFor.id));
       if (updatedGroup) {
-        const updatedFilter = updatedGroup.filters.find((f) => f.id === valuesOpenFor.id);
+        const updatedFilter = updatedGroup.filters?.find((f) => f?.id === valuesOpenFor.id);
         if (updatedFilter) setValuesOpenFor(updatedFilter);
       }
 
@@ -456,12 +470,12 @@ const Filters = () => {
         ) : (
           <Accordion type="single" collapsible className="w-full border border-gray-200 rounded-lg">
             {filteredData.map((group, index) => (
-              <AccordionItem value={`item-${index}`} key={group.subcategory.id} className="border-b border-gray-200 last:border-0">
+              <AccordionItem value={`item-${index}`} key={group.subcategory?.id || index} className="border-b border-gray-200 last:border-0">
                 <AccordionTrigger className="px-4 py-3 hover:bg-gray-50">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-gray-900">{group.subcategory.name}</span>
-                    <span className="text-sm text-gray-600">{group.subcategory.category_name}</span>
-                    <span className="text-sm text-gray-600">- {group.filters.length} {t('admin.filters.filters')}</span>
+                    <span className="font-semibold text-gray-900">{group.subcategory?.name || 'N/A'}</span>
+                    <span className="text-sm text-gray-600">{group.subcategory?.category_name || ''}</span>
+                    <span className="text-sm text-gray-600">- {(group.filters || []).length} {t('admin.filters.filters')}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
@@ -475,25 +489,26 @@ const Filters = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {group.filters.length === 0 ? (
+                      {(group.filters || []).length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={4} className="text-center py-4 text-gray-500">
                             {t('admin.filters.noFiltersInSubcategory')}
                           </TableCell>
                         </TableRow>
                       ) : (
-                        group.filters.map((filter) => {
+                        (group.filters || []).map((filter, filterIndex) => {
+                          if (!filter) return null;
                           const augFilter = {
                             ...filter,
-                            subcategory: group.subcategory.name,
-                            subcategory_id: group.subcategory.id,
-                            category_name: group.subcategory.category_name,
+                            subcategory: group.subcategory?.name || '',
+                            subcategory_id: group.subcategory?.id,
+                            category_name: group.subcategory?.category_name || '',
                             options: filter.options || [],
                           };
                           return (
-                            <TableRow key={filter.id} className="border-gray-200 hover:bg-gray-50">
-                              <TableCell className="font-medium">{filter.name}</TableCell>
-                              <TableCell>{getTypeBadge(filter.type)}</TableCell>
+                            <TableRow key={filter.id || `filter-${filterIndex}`} className="border-gray-200 hover:bg-gray-50">
+                              <TableCell className="font-medium">{filter.name || 'N/A'}</TableCell>
+                              <TableCell>{getTypeBadge(filter.type || 'select')}</TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-2">
                                   <span className="text-sm text-gray-600">
@@ -734,12 +749,12 @@ const Filters = () => {
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  {valuesOpenFor.options.length === 0 ? (
+                  {(valuesOpenFor.options || []).length === 0 ? (
                     <div className="text-sm text-gray-500">{t('admin.filters.noOptions')}</div>
                   ) : (
-                    valuesOpenFor.options.map((option) => (
-                      <div key={option.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                        <span className="text-sm">{option.value}</span>
+                    (valuesOpenFor.options || []).map((option, optIndex) => (
+                      <div key={option?.id || `opt-${optIndex}`} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <span className="text-sm">{option?.value || ''}</span>
                         <Button
                           variant="outline"
                           size="sm"

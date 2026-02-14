@@ -136,13 +136,7 @@ const Pagination = ({
           </Button>
         </div>
 
-        <div>
-          <p className="text-sm text-gray-600 font-medium">
-            {t('pagination.page')} <span className="font-semibold text-[#D6BA69]">{currentPage}</span> {t('pagination.of')}{' '}
-            <span className="font-semibold text-[#D6BA69]">{totalPages}</span>
-          </p>
-        </div>
-      </div>
+              </div>
     </nav>
   );
 };

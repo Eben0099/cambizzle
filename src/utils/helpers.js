@@ -59,14 +59,14 @@ export const formatPriceEUR = (price) => {
   }).format(price);
 };
 
-// Formatage des dates
+// Formatage des dates - format fixe dd/mm/yyyy (non traduit)
 export const formatDate = (date) => {
   if (!date) return '';
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  }).format(new Date(date));
+  const d = new Date(date);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
 };
 
 // Formatage relatif des dates

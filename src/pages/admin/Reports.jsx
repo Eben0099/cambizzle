@@ -21,12 +21,11 @@ import {
   DialogTitle,
 } from "../../components/ui/dialog";
 import { Textarea } from "../../components/ui/textarea";
-import { AlertTriangle, Search, Download, RefreshCw, Phone } from "lucide-react";
+import { AlertTriangle, Search, Download, RefreshCw, Phone, Check, X, Eye } from "lucide-react";
 import { exportToExcel } from "../../utils/exportToExcel";
 import Input from "../../components/ui/Input";
 import { useToast } from "../../components/toast/useToast";
-import { API_BASE_URL } from "../../config/api";
-import storageService from "../../services/storageService";
+import { reportService } from "../../services/reportService";
 import { useSettings } from "../../contexts/SettingsContext";
 
 const Reports = () => {
@@ -35,13 +34,19 @@ const Reports = () => {
   const { contact } = useSettings();
 
   const [reports, setReports] = useState([]);
+  const [stats, setStats] = useState({ total: 0, pending: 0, resolved: 0, dismissed: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  // Modals
   const [resolveModalOpen, setResolveModalOpen] = useState(false);
+  const [dismissModalOpen, setDismissModalOpen] = useState(false);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
   const [adminNotes, setAdminNotes] = useState("");
-  const [resolving, setResolving] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [selectedReportForContact, setSelectedReportForContact] = useState(null);
   const [message, setMessage] = useState("");
@@ -52,51 +57,41 @@ const Reports = () => {
     setError(null);
 
     try {
-      const token = storageService.getToken();
-      if (!token) {
-        throw new Error(t('admin.reports.authRequired'));
+      const params = {};
+      if (statusFilter !== "all") {
+        params.status = statusFilter;
       }
 
-      const response = await fetch(`${API_BASE_URL}/admin/reports`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await reportService.getReports(params);
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
+      if (response.status === 'success' && response.data) {
+        const reportsData = Array.isArray(response.data) ? response.data : response.data.reports || [];
 
-      const data = await response.json();
-
-      if (data.status === 'success' && data.data?.reports) {
         // Transform API data to match component structure
-        const transformedReports = data.data.reports.map(report => ({
+        const transformedReports = reportsData.map(report => ({
           id: parseInt(report.id),
-          type: report.reportType === 'ad' ? 'Ad' : 'User',
-          title: report.adTitle || (report.reportedAdId ? `Ad #${report.reportedAdId}` : `User #${report.reportedUserId}`),
-          reporter: report.authorName || `User #${report.reporterId}`,
-          reason: report.reportReason,
+          type: report.report_type || report.reportType || 'other',
+          title: report.ad_title || report.adTitle || `Ad #${report.reported_ad_id || report.reportedAdId}`,
+          reporter: report.reporter_name || report.reporterName || `User #${report.reporter_id || report.reporterId}`,
+          reporterPhone: report.reporter_phone || report.reporterPhone,
+          reason: report.report_reason || report.reportReason,
           status: report.status,
-          date: new Date(report.createdAt).toLocaleString('fr-FR'),
-          priority: report.reportReason === 'fraud' ? 'high' : 'medium', // Simple priority logic
+          date: new Date(report.created_at || report.createdAt).toLocaleString('fr-FR'),
           description: report.description,
-          reporter_id: report.reporterId,
-          reported_ad_id: report.reportedAdId,
-          reported_user_id: report.reportedUserId,
-          admin_notes: report.adminNotes,
-          handled_by: report.handledBy,
-          handled_at: report.handledAt,
-          created_at: report.createdAt,
-          updated_at: report.updatedAt,
-          sellerPhone: report.sellerPhone
+          reporter_id: report.reporter_id || report.reporterId,
+          reported_ad_id: report.reported_ad_id || report.reportedAdId,
+          admin_notes: report.admin_notes || report.adminNotes,
+          resolved_by: report.resolved_by || report.resolvedBy,
+          resolved_at: report.resolved_at || report.resolvedAt,
+          created_at: report.created_at || report.createdAt,
+          sellerName: report.seller_name || report.sellerName,
+          sellerPhone: report.seller_phone || report.sellerPhone,
+          evidence_files: report.evidence_files || report.evidenceFiles || []
         }));
 
         setReports(transformedReports);
       } else {
-        throw new Error(data.message || t('admin.reports.failedToFetch'));
+        throw new Error(response.message || t('admin.reports.failedToFetch'));
       }
     } catch (err) {
       console.error('Error fetching reports:', err);
@@ -111,10 +106,23 @@ const Reports = () => {
     }
   };
 
+  // Fetch stats
+  const fetchStats = async () => {
+    try {
+      const response = await reportService.getStats();
+      if (response.status === 'success' && response.data) {
+        setStats(response.data);
+      }
+    } catch (err) {
+      console.error('Error fetching stats:', err);
+    }
+  };
+
   // Load reports on component mount
   useEffect(() => {
     fetchReports();
-  }, []);
+    fetchStats();
+  }, [statusFilter]);
 
   // Filter logic
   const filteredReports = reports.filter(
@@ -129,43 +137,46 @@ const Reports = () => {
   const getStatusBadge = (status) => {
     const variants = {
       pending: { color: "bg-yellow-100 text-yellow-800", labelKey: "pending" },
-      handled: { color: "bg-green-100 text-green-800", labelKey: "handled" },
-      reviewed: { color: "bg-blue-100 text-blue-800", labelKey: "reviewed" },
-      rejected: { color: "bg-red-100 text-red-800", labelKey: "rejected" },
+      resolved: { color: "bg-green-100 text-green-800", labelKey: "resolved" },
+      dismissed: { color: "bg-gray-100 text-gray-800", labelKey: "dismissed" },
+      handled: { color: "bg-green-100 text-green-800", labelKey: "resolved" },
     };
     const config = variants[status] || variants.pending;
     return <Badge className={`${config.color} font-medium`}>{t(`admin.reports.${config.labelKey}`)}</Badge>;
   };
 
-  const getPriorityBadge = (priority) => {
+  const getTypeBadge = (type) => {
     const colors = {
-      high: "bg-red-100 text-red-800",
-      medium: "bg-yellow-100 text-yellow-800",
-      low: "bg-blue-100 text-blue-800",
+      fraud: "bg-red-100 text-red-800",
+      inappropriate: "bg-orange-100 text-orange-800",
+      spam: "bg-purple-100 text-purple-800",
+      counterfeit: "bg-pink-100 text-pink-800",
+      prohibited: "bg-red-100 text-red-800",
+      other: "bg-gray-100 text-gray-800",
     };
     const labels = {
-      high: t('admin.reports.urgent'),
-      medium: t('admin.reports.medium'),
-      low: t('admin.reports.low'),
+      fraud: t('admin.reports.types.fraud'),
+      inappropriate: t('admin.reports.types.inappropriate'),
+      spam: t('admin.reports.types.spam'),
+      counterfeit: t('admin.reports.types.counterfeit'),
+      prohibited: t('admin.reports.types.prohibited'),
+      other: t('admin.reports.types.other'),
     };
     return (
-      <Badge className={`${colors[priority]} font-medium`}>
-        {labels[priority]}
+      <Badge className={`${colors[type] || colors.other} font-medium`}>
+        {labels[type] || type}
       </Badge>
     );
   };
 
-  // Handle actions
-  const handleApprove = async (id) => {
-    const report = reports.find(r => r.id === id);
-    if (report) {
-      setSelectedReport(report);
-      setAdminNotes("");
-      setResolveModalOpen(true);
-    }
+  // Handle resolve
+  const handleResolve = (report) => {
+    setSelectedReport(report);
+    setAdminNotes("");
+    setResolveModalOpen(true);
   };
 
-  const handleResolveReport = async () => {
+  const handleResolveSubmit = async () => {
     if (!selectedReport || !adminNotes.trim()) {
       showToast({
         type: "error",
@@ -175,37 +186,12 @@ const Reports = () => {
       return;
     }
 
-    setResolving(true);
+    setProcessing(true);
 
     try {
-      const token = storageService.getToken();
-      if (!token) {
-        throw new Error(t('admin.reports.authRequired'));
-      }
+      const response = await reportService.resolveReport(selectedReport.id, adminNotes.trim());
 
-      const response = await fetch(`${API_BASE_URL}/admin/reports/${selectedReport.id}/resolve`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          notes: adminNotes.trim()
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-
-      if (data.status === 'success') {
-        // Update local state
-        const updated = reports.map((r) =>
-          r.id === selectedReport.id ? { ...r, status: "handled" } : r
-        );
-        setReports(updated);
+      if (response.status === 'success') {
         setResolveModalOpen(false);
         setSelectedReport(null);
         setAdminNotes("");
@@ -214,8 +200,10 @@ const Reports = () => {
           title: t('admin.reports.reportResolved'),
           message: t('admin.reports.reportResolvedSuccess')
         });
+        fetchReports();
+        fetchStats();
       } else {
-        throw new Error(data.message || t('admin.reports.failedToResolve'));
+        throw new Error(response.message || t('admin.reports.failedToResolve'));
       }
     } catch (error) {
       console.error('Error resolving report:', error);
@@ -225,8 +213,62 @@ const Reports = () => {
         message: error.message || t('admin.reports.failedToResolve')
       });
     } finally {
-      setResolving(false);
+      setProcessing(false);
     }
+  };
+
+  // Handle dismiss
+  const handleDismiss = (report) => {
+    setSelectedReport(report);
+    setAdminNotes("");
+    setDismissModalOpen(true);
+  };
+
+  const handleDismissSubmit = async () => {
+    if (!selectedReport || !adminNotes.trim()) {
+      showToast({
+        type: "error",
+        title: t('admin.reports.validationError'),
+        message: t('admin.reports.enterAdminNotes')
+      });
+      return;
+    }
+
+    setProcessing(true);
+
+    try {
+      const response = await reportService.dismissReport(selectedReport.id, adminNotes.trim());
+
+      if (response.status === 'success') {
+        setDismissModalOpen(false);
+        setSelectedReport(null);
+        setAdminNotes("");
+        showToast({
+          type: "success",
+          title: t('admin.reports.reportDismissed'),
+          message: t('admin.reports.reportDismissedSuccess')
+        });
+        fetchReports();
+        fetchStats();
+      } else {
+        throw new Error(response.message || t('admin.reports.failedToDismiss'));
+      }
+    } catch (error) {
+      console.error('Error dismissing report:', error);
+      showToast({
+        type: "error",
+        title: t('admin.reports.dismissFailed'),
+        message: error.message || t('admin.reports.failedToDismiss')
+      });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // Handle view details
+  const handleViewDetails = (report) => {
+    setSelectedReport(report);
+    setDetailModalOpen(true);
   };
 
   return (
@@ -241,7 +283,7 @@ const Reports = () => {
         </div>
         <div className="flex gap-2">
           <Button
-            onClick={fetchReports}
+            onClick={() => { fetchReports(); fetchStats(); }}
             variant="outline"
             disabled={loading}
             className="flex items-center gap-2"
@@ -259,7 +301,6 @@ const Reports = () => {
                 { header: t('admin.reports.reason'), key: 'reason' },
                 { header: t('admin.reports.description'), key: 'description' },
                 { header: t('admin.reports.status'), key: 'status' },
-                { header: t('admin.reports.priority'), key: 'priority' },
                 { header: t('admin.reports.date'), key: 'date' },
               ],
               sheetName: 'Reports'
@@ -274,21 +315,26 @@ const Reports = () => {
       </div>
 
       {/* Stats Summary */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         {[
           {
             label: t('admin.reports.pending'),
-            count: reports.filter(r => r.status === 'pending').length,
+            count: stats.pending,
             color: "#D6BA69"
           },
           {
-            label: t('admin.reports.handled'),
-            count: reports.filter(r => r.status === 'handled').length,
+            label: t('admin.reports.resolved'),
+            count: stats.resolved,
             color: "#4CAF50"
           },
           {
+            label: t('admin.reports.dismissed'),
+            count: stats.dismissed,
+            color: "#9E9E9E"
+          },
+          {
             label: t('admin.reports.totalReports'),
-            count: reports.length,
+            count: stats.total,
             color: "#2196F3"
           },
         ].map((stat, i) => (
@@ -314,19 +360,32 @@ const Reports = () => {
         ))}
       </div>
 
-      {/* Search Bar */}
+      {/* Filters */}
       <Card className="border border-border shadow-sm hover:shadow-md transition bg-white">
         <CardHeader>
           <CardTitle className="text-lg font-semibold">{t('admin.reports.searchTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              className="pl-10"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                className="pl-10"
+                placeholder={t('admin.reports.searchPlaceholder')}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D6BA69] focus:border-[#D6BA69]"
+            >
+              <option value="all">{t('admin.reports.allStatuses')}</option>
+              <option value="pending">{t('admin.reports.pending')}</option>
+              <option value="resolved">{t('admin.reports.resolved')}</option>
+              <option value="dismissed">{t('admin.reports.dismissed')}</option>
+            </select>
           </div>
         </CardContent>
       </Card>
@@ -355,25 +414,23 @@ const Reports = () => {
                     <TableHead>{t('admin.reports.type')}</TableHead>
                     <TableHead>{t('admin.reports.reportedContent')}</TableHead>
                     <TableHead>{t('admin.reports.reporter')}</TableHead>
-                    <TableHead>{t('admin.reports.contactSeller')}</TableHead>
                     <TableHead>{t('admin.reports.reason')}</TableHead>
-                    <TableHead>{t('admin.reports.priority')}</TableHead>
                     <TableHead>{t('admin.reports.status')}</TableHead>
                     <TableHead>{t('admin.reports.date')}</TableHead>
-                    <TableHead className="text-right">{t('admin.reports.adminNotes')}</TableHead>
+                    <TableHead className="text-right">{t('admin.reports.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center py-8">
+                      <TableCell colSpan={7} className="text-center py-8">
                         <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
                         <p className="text-gray-600">{t('admin.reports.loading')}</p>
                       </TableCell>
                     </TableRow>
                   ) : filteredReports.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center py-8">
+                      <TableCell colSpan={7} className="text-center py-8">
                         <p className="text-gray-600">{t('admin.reports.noReports')}</p>
                       </TableCell>
                     </TableRow>
@@ -381,57 +438,67 @@ const Reports = () => {
                     filteredReports.map((report) => (
                       <TableRow
                         key={report.id}
-                        className="hover:bg-muted/30 transition cursor-pointer"
+                        className="hover:bg-muted/30 transition"
                       >
-                        <TableCell>
-                          <Badge className="border border-[#D6BA69] text-[#D6BA69]">
-                            {report.type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="font-medium text-foreground max-w-[250px] truncate">
+                        <TableCell>{getTypeBadge(report.type)}</TableCell>
+                        <TableCell className="font-medium text-foreground max-w-[200px] truncate">
                           {report.title}
                         </TableCell>
                         <TableCell className="text-muted-foreground">
                           {report.reporter}
                         </TableCell>
-                        <TableCell>
-                          {report.sellerPhone && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => {
-                                setSelectedReportForContact(report);
-                                setMessage('');
-                                setContactModalOpen(true);
-                              }}
-                              title="Contact seller via WhatsApp"
-                            >
-                              <Phone className="h-4 w-4 text-green-600" />
-                            </Button>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-foreground">
+                        <TableCell className="text-foreground max-w-[150px] truncate">
                           {report.reason}
                         </TableCell>
-                        <TableCell>{getPriorityBadge(report.priority)}</TableCell>
                         <TableCell>{getStatusBadge(report.status)}</TableCell>
                         <TableCell className="text-muted-foreground text-sm">
                           {report.date}
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            {report.status === "pending" ? (
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleViewDetails(report)}
+                              title={t('admin.reports.viewDetails')}
+                            >
+                              <Eye className="h-4 w-4 text-blue-600" />
+                            </Button>
+                            {report.sellerPhone && (
                               <Button
                                 size="sm"
-                                className="bg-[#D6BA69] text-white hover:bg-[#c3a55d] transition"
-                                onClick={() => handleApprove(report.id)}
+                                variant="ghost"
+                                onClick={() => {
+                                  setSelectedReportForContact(report);
+                                  setMessage('');
+                                  setContactModalOpen(true);
+                                }}
+                                title={t('admin.reports.contactSeller')}
                               >
-                                {t('admin.reports.resolve')}
+                                <Phone className="h-4 w-4 text-green-600" />
                               </Button>
-                            ) : (
-                              <span className="text-sm text-gray-600 italic">
-                                {report.admin_notes || "-"}
-                              </span>
+                            )}
+                            {report.status === "pending" && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleResolve(report)}
+                                  title={t('admin.reports.resolve')}
+                                  className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                >
+                                  <Check className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleDismiss(report)}
+                                  title={t('admin.reports.dismiss')}
+                                  className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </>
                             )}
                           </div>
                         </TableCell>
@@ -449,9 +516,21 @@ const Reports = () => {
       <Dialog open={resolveModalOpen} onOpenChange={setResolveModalOpen}>
         <DialogContent className="sm:max-w-[425px] bg-white">
           <DialogHeader>
-            <DialogTitle>{t('admin.reports.resolveReport')}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Check className="h-5 w-5 text-green-600" />
+              {t('admin.reports.resolveReport')}
+            </DialogTitle>
+            <DialogDescription>
+              {t('admin.reports.resolveDescription')}
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            {selectedReport && (
+              <div className="bg-gray-50 p-3 rounded-lg text-sm">
+                <p><strong>{t('admin.reports.reportedContent')}:</strong> {selectedReport.title}</p>
+                <p><strong>{t('admin.reports.reason')}:</strong> {selectedReport.reason}</p>
+              </div>
+            )}
             <div className="space-y-2">
               <label htmlFor="admin-notes" className="text-sm font-medium">
                 {t('admin.reports.adminNotes')} <span className="text-red-500">*</span>
@@ -460,6 +539,7 @@ const Reports = () => {
                 id="admin-notes"
                 value={adminNotes}
                 onChange={(e) => setAdminNotes(e.target.value)}
+                placeholder={t('admin.reports.resolveNotesPlaceholder')}
                 className="min-h-[100px]"
               />
             </div>
@@ -469,17 +549,139 @@ const Reports = () => {
               type="button"
               variant="outline"
               onClick={() => setResolveModalOpen(false)}
-              disabled={resolving}
+              disabled={processing}
             >
               {t('admin.reports.cancel')}
             </Button>
             <Button
               type="button"
-              onClick={handleResolveReport}
-              disabled={!adminNotes.trim() || resolving}
-              className="bg-[#D6BA69] text-white hover:bg-[#c3a55d]"
+              onClick={handleResolveSubmit}
+              disabled={!adminNotes.trim() || processing}
+              className="bg-green-600 text-white hover:bg-green-700"
             >
-              {resolving ? t('admin.reports.resolving') : t('admin.reports.resolveReport')}
+              {processing ? t('admin.reports.processing') : t('admin.reports.confirmResolve')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dismiss Report Modal */}
+      <Dialog open={dismissModalOpen} onOpenChange={setDismissModalOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <X className="h-5 w-5 text-gray-600" />
+              {t('admin.reports.dismissReport')}
+            </DialogTitle>
+            <DialogDescription>
+              {t('admin.reports.dismissDescription')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {selectedReport && (
+              <div className="bg-gray-50 p-3 rounded-lg text-sm">
+                <p><strong>{t('admin.reports.reportedContent')}:</strong> {selectedReport.title}</p>
+                <p><strong>{t('admin.reports.reason')}:</strong> {selectedReport.reason}</p>
+              </div>
+            )}
+            <div className="space-y-2">
+              <label htmlFor="dismiss-notes" className="text-sm font-medium">
+                {t('admin.reports.adminNotes')} <span className="text-red-500">*</span>
+              </label>
+              <Textarea
+                id="dismiss-notes"
+                value={adminNotes}
+                onChange={(e) => setAdminNotes(e.target.value)}
+                placeholder={t('admin.reports.dismissNotesPlaceholder')}
+                className="min-h-[100px]"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDismissModalOpen(false)}
+              disabled={processing}
+            >
+              {t('admin.reports.cancel')}
+            </Button>
+            <Button
+              type="button"
+              onClick={handleDismissSubmit}
+              disabled={!adminNotes.trim() || processing}
+              className="bg-gray-600 text-white hover:bg-gray-700"
+            >
+              {processing ? t('admin.reports.processing') : t('admin.reports.confirmDismiss')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Report Details Modal */}
+      <Dialog open={detailModalOpen} onOpenChange={setDetailModalOpen}>
+        <DialogContent className="sm:max-w-[500px] bg-white">
+          <DialogHeader>
+            <DialogTitle>{t('admin.reports.reportDetails')}</DialogTitle>
+          </DialogHeader>
+          {selectedReport && (
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">{t('admin.reports.type')}</p>
+                  <p className="font-medium">{getTypeBadge(selectedReport.type)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">{t('admin.reports.status')}</p>
+                  <p className="font-medium">{getStatusBadge(selectedReport.status)}</p>
+                </div>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">{t('admin.reports.reportedContent')}</p>
+                <p className="font-medium">{selectedReport.title}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">{t('admin.reports.reporter')}</p>
+                <p className="font-medium">{selectedReport.reporter}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">{t('admin.reports.reason')}</p>
+                <p className="font-medium">{selectedReport.reason}</p>
+              </div>
+              {selectedReport.description && (
+                <div>
+                  <p className="text-sm text-gray-500">{t('admin.reports.description')}</p>
+                  <p className="text-gray-700">{selectedReport.description}</p>
+                </div>
+              )}
+              {selectedReport.sellerName && (
+                <div>
+                  <p className="text-sm text-gray-500">{t('admin.reports.seller')}</p>
+                  <p className="font-medium">{selectedReport.sellerName}</p>
+                  {selectedReport.sellerPhone && (
+                    <p className="text-sm text-gray-600">{selectedReport.sellerPhone}</p>
+                  )}
+                </div>
+              )}
+              <div>
+                <p className="text-sm text-gray-500">{t('admin.reports.date')}</p>
+                <p className="font-medium">{selectedReport.date}</p>
+              </div>
+              {selectedReport.admin_notes && (
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-sm text-gray-500">{t('admin.reports.adminNotes')}</p>
+                  <p className="text-gray-700">{selectedReport.admin_notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDetailModalOpen(false)}
+            >
+              {t('common.close')}
             </Button>
           </DialogFooter>
         </DialogContent>
